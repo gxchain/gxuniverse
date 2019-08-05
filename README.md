@@ -246,7 +246,7 @@ config_t getGlobal(){
 }
 ```
 
-### 3. 建立邀请关系
+### 2. 建立邀请关系
 
 ``` C++
 void invite(uint64_t original_sender,std:string inviter){
@@ -259,7 +259,7 @@ void invite(uint64_t original_sender,std:string inviter){
     }
 }
 ```
-### 4. 小行星给超级星投票
+### 3. 小行星给超级星投票
 ``` C++
 void vote(uint64_t orig_sender,std:string superstar){
   uint64_t star_acc_id = get_account_id(superstar);
@@ -270,55 +270,55 @@ void vote(uint64_t orig_sender,std:string superstar){
   }
 }
 ```
-### 5. 是否已经是超级星
+### 4. 是否已经是超级星
 
 ``` C++
 bool isSuperStar(uint64_t sender);
 ```
 
-### 6. 添加超级星
+### 5. 添加超级星
 
 ``` C++
 bool addSuperStar(uint64_t sender);
 ```
 
-### 7. 是否已经是小行星
+### 6. 是否已经是小行星
 
 ``` C++
 bool isSmallPlanet(uint64_t sender);
 ```
 
-### 8. 添加小行星
+### 7. 添加小行星
 
 ``` C++
 bool addSmallPlanet(uint64_t sender);
 ```
 
-### 9. 是否已经是大行星
+### 8. 是否已经是大行星
 
 ``` C++
 bool isBigPlanet(uint64_t sender);
 ```
 
-### 10. 添加大行星
+### 9. 添加大行星
 
 ``` C++
 bool addBigPlanet(uint64_t sender);
 ```
 
-### 11. 获取当前轮数
+### 10. 获取当前轮数
 
 ``` C++
 uint32_t currentRound();
 ```
 
-### 12. 获取总邀请数
+### 11. 获取总邀请数
 
 ``` C++
 uint32_t totalInvites();
 ```
 
-### 13. 判断是否开启新一小轮
+### 12. 判断是否开启新一小轮
 
 - case1: 当前区块头时间 - 上一个大行星加入时间 > 12小时
 - case2: totalInvites() - currentRound() * roundSize > roundSize
@@ -332,7 +332,7 @@ bool bSmallRound(){
 }
 ```
 
-### 14. 结束当前一小轮
+### 13. 结束当前一小轮
 
 ``` C++
 void endSmallRound(){
@@ -345,8 +345,6 @@ void endSmallRound(){
     }
 }
 ```
-
-
 
 
 
