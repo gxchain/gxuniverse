@@ -54,7 +54,9 @@ struct tbglobal {
 struct tbround{                      
   uint64_t round;                     // 当前轮数&索引
   uint64_t current_round_invites;     // 当前轮完成邀请数
-  uint64_t pool_amount;								// 当前轮奖池资产数
+  uint64_t pool_amount;								// 当前轮奖池资产数，在当前轮结束后计算
+  uint64_t random_pool_amount;				// 当前随机池资产数
+  uint64_t invite_pool_amount;				// 当前邀请奖励池资产数
   uint64_t start_time;               	// 当前轮的启动时间
   uint64_t end_time;               		// 当前轮的结束时间
 };
@@ -338,16 +340,65 @@ bool bSmallRound(){
 void endSmallRound(){
     if(bSmallRound()){
     	calcCurrentRoundPoolAmount();	// 计算当前轮奖励数额，保存到round表中
-      updateActivePlanets();				// 根据当前轮的邀请统计出活力星，保存到round表中
+      updateActivePlanets();				// 统计当前轮活力星数据，保存到round表中
+      randomReward();								// 发放随机奖励池
       rewardBigPlanet(); 						// 发放当前轮晋升的大行星奖励 = 当前轮总奖池的10%
       rewardActivePlanet(); 				// 发放活力星奖励 = 当前轮总奖池的50%
-      rewardSuperStar(); 						// 发放活力星奖励 = 当前轮总奖池的40%
+      rewardSuperStar(); 						// 发放超级星奖励 = 当前轮总奖池的40%
     }
 }
 ```
 
+### 14. 发送邀请人奖励
+
+```C++
+void sendInviteReward(uint64_t inviter, uint64_t amount);
+```
+
+### 15. 计算当前轮奖励数额
+
+在当前轮结束时，需要计算当前轮奖励数额：
+
+- 每一轮默认底池为default_amount = 2000GXC（不包含邀请增加的部分）
+- 每一轮总底池pool_amount = default_amount + 当前轮邀请数 * z1
+- 超过4小时没有结束，则底池会减少，没隔1小时底池减少x-1次，其中x=(current_round % bigRoundSize)+1
+
+```C++
+void calcCurrentRoundPoolAmount();
+```
+
+### 16. 统计当前轮活力星数据
+
+- 大行星邀请满5人后，可以升级为活力星
+- 活力星的权重初始为1，即晋升的那一小轮，按照100%的权重分发，之后每一小轮权重降为原来的0.85，直至权重为0，权重取3位小数
+- 重新邀请满5人后（这5人可以跨多轮邀请到），活力星的权重可重回1
+
+```C++
+void updateActivePlanets();
+```
 
 
+### 17. 发放随机奖励池
 
+```C++
+void randomReward();
+```
 
+### 18. 发放当前轮晋升的大行星奖励
+
+```C++
+void rewardBigPlanet();
+```
+
+### 19. 发放活力星奖励
+
+```C++
+void rewardActivePlanet();
+```
+
+### 20. 发放超级星奖励
+
+```C++
+void rewardSuperStar();
+```
 
