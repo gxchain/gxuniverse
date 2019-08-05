@@ -41,7 +41,7 @@ const float bDecay=0.85; 						// 活力星奖励的影响因子衰减系数（0
 ```C++
 struct tbglobal {
   uint64_t index;					// 自增索引
-  uint64_t poll_amount;		// 总资金池剩余资产
+  uint64_t pool_amount;		// 总资金池剩余资产
   uint64_t current_round;	// 当前轮数
 };
 ```
@@ -66,21 +66,21 @@ struct tbround{
 
 ```C++
 struct tbvote {
-  uint64_t index;					// 自增索引
-  uint64_t round;					// 当前轮数
-  uint64_t stack_amount;	// 抵押GXC数量
-  uint64_t from;					// 投票者id
-  uint64_t to;						// 被投票者id
-  uint64_t vote_time;			// 投票时间
+  uint64_t index;						// 自增索引
+  uint64_t round;						// 当前轮数
+  uint64_t staking_amount;	// 抵押GXC数量
+  uint64_t from;						// 投票者id
+  uint64_t to;							// 被投票者id
+  uint64_t vote_time;				// 投票时间
 }
 ```
 
-### Stack
+### Staking
 
-锁仓表，每一次升级小行星（投票）和升级超级星，都会产生一条stacking记录
+锁仓表，每一次升级小行星（投票）和升级超级星，都会产生一条staking记录
 
 ```C++
-struct tbstack {
+struct tbstaking {
   uint64_t index;				// 自增索引
   uint64_t account;			// 账号id
   uint64_t amount;			// 锁仓金额
