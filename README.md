@@ -401,4 +401,3 @@ void rewardActivePlanet();
 ```C++
 void rewardSuperStar();
 ```
-
