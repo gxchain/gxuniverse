@@ -337,8 +337,8 @@ bool bSmallRound(){
 ``` C++
 void endSmallRound(){
     if(bSmallRound()){
-    	calcCurrentRoundPoolAmount(); // 计算当前轮奖励数额，保存到round表中
-    	updateActivePlanets(); 				// 根据当前轮的邀请统计出活力星，保存到round表中
+    	calcCurrentRoundPoolAmount();	// 计算当前轮奖励数额，保存到round表中
+      updateActivePlanets();				// 根据当前轮的邀请统计出活力星，保存到round表中
       rewardBigPlanet(); 						// 发放当前轮晋升的大行星奖励 = 当前轮总奖池的10%
       rewardActivePlanet(); 				// 发放活力星奖励 = 当前轮总奖池的50%
       rewardSuperStar(); 						// 发放活力星奖励 = 当前轮总奖池的40%
