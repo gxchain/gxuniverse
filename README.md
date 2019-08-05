@@ -13,7 +13,7 @@
 
 ```c++
 const uint64_t superStarLimit = 50;	// 超级星最大数量（50）
-const uint64_t bigRoundSize = 50; 	// 一个大轮包含小轮数（50）
+const uint64_t bigRoundSize = 50;		// 一个大轮包含小轮数（50）
 const uint64_t roundAmount = 2000;	// 每一小轮的底池资产数（2000GXC）
 const uint64_t roundSize = 100; 		// 每一轮的参与人数（100）
 const uint64_t x = 20000; 					// 成为超级星需要抵押的资产数（20000GXC）
