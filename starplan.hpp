@@ -8,7 +8,7 @@
 
 using namespace graphene;
 
-const uint64_t      adminId              = 426;                      //admin账户id
+const uint64_t      adminId              = 100;                      //admin账户id
 const uint64_t      superStarLimit       = 50;                       //超级星最大数量（50）
 const uint64_t      bigRoundSize         = 50;                       //一个大轮包含小轮数（50）                     
 const uint64_t      roundAmount          = 2000;                     //每一小轮的底池资产数（2000GXC）                      
@@ -46,13 +46,22 @@ class starplan : public contract
     starplan(uint64_t id)
         : contract(id),tbglobals(_self,_self),tbrounds(_self,_self),tbvotes(_self,_self),tbstakes(_self,_self),tbsmallplans(_self,_self),tbbigplanets(_self,_self)\
             ,tbactiveplans(_self,_self),tbsuperstars(_self,_self),tbinvites(_self,_self){}
-    
-    PAYABLE     init();
-    PAYABLE     uptosmall(std::string inviter,std::string superStar);
-    PAYABLE     uptobig(std::string inviter);
-    PAYABLE     uptosuper(std::string inviter);
-    ACTION      endround();
-    ACTION      unstake(std::string account);
+    //@abi action
+    //@abi payable
+    void     init();
+    //@abi action
+    //@abi payable
+    void     uptosmall(std::string inviter,std::string superstar);
+    //@abi action
+    //@abi payable
+    void     uptobig(std::string inviter);
+    //@abi action
+    //@abi payable
+    void     uptosuper(std::string inviter);
+    //@abi action
+    void     endround();
+    //@abi action
+    void     unstake(std::string account);
 
   private:     
 
