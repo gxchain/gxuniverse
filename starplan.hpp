@@ -3,10 +3,12 @@
 #include <graphenelib/dispatcher.hpp>
 #include <graphenelib/types.h>
 #include <graphenelib/multi_index.hpp>
+#include <graphenelib/crypto.h>
+#include <graphenelib/asset.h>
 
 using namespace graphene;
 
-const uint64_t      adminId              = 100;                      //admin账户id
+const uint64_t      adminId              = 426;                      //admin账户id
 const uint64_t      superStarLimit       = 50;                       //超级星最大数量（50）
 const uint64_t      bigRoundSize         = 50;                       //一个大轮包含小轮数（50）                     
 const uint64_t      roundAmount          = 2000;                     //每一小轮的底池资产数（2000GXC）                      
@@ -64,7 +66,6 @@ class starplan : public contract
     bool        isBigPlanet(uint64_t sender);
     bool        addBigPlanet(uint64_t sender);
     uint32_t    currentRound(); 
-    uint32_t    totalInvites();
     bool        bSmallRound();
     void        endSmallRound();
 
@@ -256,4 +257,4 @@ class starplan : public contract
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
 };
-GRAPHENE_ABI(starplan, (init)(uptosmall)(uptobig)(uptosuper)(endround)(unstake))
+GRAPHENE_ABI(starplan, (init)(uptosmall)(uptobig)(uptosuper))
