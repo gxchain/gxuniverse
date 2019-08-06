@@ -360,6 +360,7 @@ void starplan::addStake(uint64_t sender,uint64_t amount)
 
 void starplan::sendInviteReward(uint64_t sender)
 {
+    std::string   inviter_withdraw     = "inviter withdraw 1 GXC"; //提现一个1GXC到邀请人账户
     auto round_itor = tbrounds.rend();
     graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
@@ -468,6 +469,7 @@ void starplan::updateActivePlanets()
 
 void starplan::randomReward()
 {
+    std::string   random_withdraw      = "random withdraw";        //随机提现资产
     // 1 获取本轮所有大行星
     std::vector<uint64_t> cround_big_list;
     auto big_idx = tbbigplanets.get_index<N(byround)>();
@@ -523,6 +525,7 @@ void starplan::randomReward()
 }
 void starplan::rewardBigPlanet()
 {
+    std::string   bigplanet_withdraw   = "bigplanet withdraw";     //大行星奖励刮分
     // 1 获取本轮所有大行星
     std::vector<uint64_t> cround_big_list;
     auto big_idx = tbbigplanets.get_index<N(byround)>();
@@ -555,6 +558,7 @@ void starplan::rewardBigPlanet()
 }
 void starplan::rewardActivePlanet()
 {
+    std::string   actplanet_withdraw   = "active planet withdraw"; //活力星奖励刮分
     // 1 获取所有活力星
     auto act_idx = tbactiveplans.get_index<N(byweight)>();
     uint64_t total_weight = 0;
@@ -591,6 +595,7 @@ void starplan::rewardActivePlanet()
 }
 void starplan::rewardSuperStar()
 {
+    const std::string   supstar_withdraw     = "superstar withdraw";     //超级星奖励刮分
     // 1 获取所有超级星
     uint64_t total_vote = 0;
     for(auto itor = tbsuperstars.begin(); itor != tbsuperstars.end();itor++ ){
@@ -646,6 +651,7 @@ void starplan::createnewround()
 }
 void starplan::unstake(std::string account)
 {
+    const std::string   unstake_withdraw     = "unstake withdraw";       //抵押提现
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
     auto sta_idx = tbstakes.get_index<N(byaccid)>();
     auto itor = sta_idx.find(acc_id);
