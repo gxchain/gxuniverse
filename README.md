@@ -345,7 +345,7 @@ void endSmallRound(){
       rewardBigPlanet(); 						// 发放当前轮晋升的大行星奖励 = 当前轮总奖池的10%
       rewardActivePlanet(); 				// 发放活力星奖励 = 当前轮总奖池的50%
       rewardSuperStar(); 						// 发放超级星奖励 = 当前轮总奖池的40%
-      addNewRound();								// 新增新的一轮
+      startNewRound();								// 开始新的一轮
     }
 }
 ```
@@ -403,9 +403,9 @@ void rewardActivePlanet();
 void rewardSuperStar();
 ```
 
-### 21. 增加新的一轮
+### 21. 开始新的一轮
 
 ```c++
-void addNewRound();	
+void startNewRound();	
 ```
 
