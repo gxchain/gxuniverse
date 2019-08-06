@@ -7,19 +7,26 @@
         content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Star Program Test Page</title>
     <script src="//unpkg.com/gscatterjs-core@0.3.4/build/bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 
 <body>
-    <h3 id="accountName"></h3>
-
-    <button onclick="login()">Login</button>
-    <button onclick="logout()">Logout</button>
-    <button onclick="init()">init</button>
-    <button onclick="uptosmall()">uptosmall</button>
-    <button onclick="uptobig()">uptobig</button>
-    <button onclick="uptosuper()">uptosuper</button>
-    <button onclick="endround()">endround</button>
-
+    <div id='app'>
+        <h3>{{accountName}}</h3>
+        <div>
+            <button @click="login()">Login</button>
+            <button @click="logout()">Logout</button>
+            <button @click="init()">init</button>
+            <button @click="uptosmall()">uptosmall</button>
+            <button @click="uptobig()">uptobig</button>
+            <button @click="uptosuper()">uptosuper</button>
+            <button @click="endround()">endround</button>
+        </div>
+        <h3>Logs</h3>
+        <div>
+            <p style="font-size:.5rem" v-for="log in logs"><span style="display: inline-block;color:green">{{log.time.toLocaleString()}}:</span>&nbsp;{{log.text}}</p>
+        </div>
+    </div>    
     <script>
         const network = {
             blockchain: 'gxc',
@@ -28,111 +35,98 @@
             port: 443,
             chainId: 'c2af30ef9340ff81fd61654295e98a1ff04b23189748f86727d0b26b40bb0ff4'
         }
-        const requiredFields = {
-            personal: []
-        }
-        const accountNameElem = document.getElementById('accountName')
+
         let gscatter
         let gxc
-                
-        function output() {
-            const combined = Array.from(arguments).map(arg => {
-                if (typeof arg === 'object') {
-                    return JSON.stringify(arg)
-                } else {
-                    return arg
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                accountName: '',
+                logs:[]
+            },
+            methods:{
+                output(){
+                    const combined = Array.from(arguments).map(arg => {
+                        if (typeof arg === 'object') {
+                            return JSON.stringify(arg)
+                        } else {
+                            return arg
+                        }
+                    })
+                    console.log(...arguments)
+                    this.logs.push({time:new Date(),text:combined.join('\n--------------\n')})
+                },
+                async login () {
+                    // required fields, it will appear at gscatter.identity
+                    const identity = await GScatterJS.gscatter.getIdentity({ accounts: [network] })
+                    if (identity) {
+                        const account = gscatter.identity.accounts.find(x => x.blockchain === 'gxc')
+                        this.accountName=account.name
+                    }
+                    this.output(identity)
+                },
+                async logout(){
+                    try {
+                        await GScatterJS.gscatter.forgetIdentity()
+                        this.accountName="";
+                    } catch (err) {
+                        // no identity found
+                        this.output(err)
+                    }
+                },
+                init(){
+                    gxc.callContract('starprogram', 'init', {}, '10 GXC', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
+                },
+                uptosmall(){
+                    gxc.callContract('starprogram', 'uptosmall', {inviter:"",superstar:""}, '100 GXC', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
+                },
+                uptobig(){
+                    gxc.callContract('starprogram', 'uptobig', {inviter:""}, '10 GXC', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
+                },
+                uptosuper(){
+                    gxc.callContract('starprogram', 'uptosuper', {inviter:""}, '20000 GXC', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
+                },
+                endround(){
+                    gxc.callContract('starprogram', 'endround', {}, '', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
                 }
-            })
-            console.log(...arguments)
-            alert(combined.join('\n--------------\n'))
-        }
-        function setAccountName(account) {
-            accountNameElem.innerText = account.name + ', welcome!'
-        }
-        function clearAccountName(account) {
-            accountNameElem.innerText = ''
-        }
-        GScatterJS.gscatter.connect('starProgram').then(async connected => {
-            if (!connected) return false
-            let account
-            gscatter = GScatterJS.gscatter
-            // require version, if user's plugin is less than the version, when operate, plugin will prompt a tips
-            // gscatter.requireVersion('9.9.9')
-            // when user not login, you could use api which not need identity, like generateKey
-            gxc = gscatter.gxc(network)
-            // if identity exist, means user has authorize the website and already unlock, you could display user info then
-            if (gscatter.identity) {
-                account = gscatter.identity.accounts.find(x => x.blockchain === 'gxc')
-                setAccountName(account)
+            },
+            mounted(){
+                GScatterJS.gscatter.connect('starProgram').then(async connected => {
+                    if (!connected) return false
+                    gscatter = GScatterJS.gscatter
+                    // require version, if user's plugin is less than the version, when operate, plugin will prompt a tips
+                    // gscatter.requireVersion('9.9.9')
+                    // when user not login, you could use api which not need identity, like generateKey
+                    gxc = gscatter.gxc(network)
+                    // if identity exist, means user has authorize the website and already unlock, you could display user info then
+                    if (gscatter.identity) {
+                        let account = gscatter.identity.accounts.find(x => x.blockchain === 'gxc')
+                        this.accountName=account.name
+                    }
+                })
             }
         })
-        window.login = async () => {
-            // required fields, it will appear at gscatter.identity
-            const identity = await GScatterJS.gscatter.getIdentity({ accounts: [network] })
-            if (identity) {
-                const account = gscatter.identity.accounts.find(x => x.blockchain === 'gxc')
-                setAccountName(account)
-            }
-            output(identity)
-        }
-        window.logout = async () => {
-            try {
-                await GScatterJS.gscatter.forgetIdentity()
-                clearAccountName()
-            } catch (err) {
-                // no identity found
-                output(err)
-            }
-        }
-        window.init = () => {
-            gxc.callContract('starprogram', 'init', {}, '10 GXC', true).then(trx=>{
-                output(`call contract success`, trx)
-            }).catch(error => {
-                output(error)
-            })
-        }
-        
-
-        window.init = () => {
-            gxc.callContract('starprogram', 'init', {}, '10000 GXC', true).then(trx=>{
-                output(`call contract success`, trx)
-            }).catch(error => {
-                output(error)
-            })
-        }
-
-        window.uptosmall = () => {
-            gxc.callContract('starprogram', 'uptosmall', {inviter:"",superstar:""}, '100 GXC', true).then(trx=>{
-                output(`call contract success`, trx)
-            }).catch(error => {
-                output(error)
-            })
-        }
-
-        window.uptobig = () => {
-            gxc.callContract('starprogram', 'uptobig', {inviter:""}, '10 GXC', true).then(trx=>{
-                output(`call contract success`, trx)
-            }).catch(error => {
-                output(error)
-            })
-        }
-
-        window.uptosuper = () => {
-            gxc.callContract('starprogram', 'uptosuper', {inviter:""}, '20000 GXC', true).then(trx=>{
-                output(`call contract success`, trx)
-            }).catch(error => {
-                output(error)
-            })
-        }
-
-        window.endround = () => {
-            gxc.callContract('starprogram', 'endround', {}, '', true).then(trx=>{
-                output(`call contract success`, trx)
-            }).catch(error => {
-                output(error)
-            })
-        }
-
     </script>
     
 </body>
