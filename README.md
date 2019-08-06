@@ -345,6 +345,7 @@ void endSmallRound(){
       rewardBigPlanet(); 						// 发放当前轮晋升的大行星奖励 = 当前轮总奖池的10%
       rewardActivePlanet(); 				// 发放活力星奖励 = 当前轮总奖池的50%
       rewardSuperStar(); 						// 发放超级星奖励 = 当前轮总奖池的40%
+      addNewRound();								// 新增新的一轮
     }
 }
 ```
@@ -360,8 +361,8 @@ void sendInviteReward(uint64_t inviter, uint64_t amount);
 在当前轮结束时，需要计算当前轮奖励数额：
 
 - 每一轮默认底池为default_amount = 2000GXC（不包含邀请增加的部分）
-- 每一轮总底池pool_amount = default_amount + 当前轮邀请数 * z1
 - 超过4小时没有结束，则底池会减少，没隔1小时底池减少x-1次，其中x=(current_round % bigRoundSize)+1
+- 每一轮总底池pool_amount = default_amount + rounds.upper_bound().invite_pool_amount;
 
 ```C++
 void calcCurrentRoundPoolAmount();
@@ -401,3 +402,10 @@ void rewardActivePlanet();
 ```C++
 void rewardSuperStar();
 ```
+
+### 21. 增加新的一轮
+
+```c++
+void addNewRound();	
+```
+
