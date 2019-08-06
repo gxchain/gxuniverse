@@ -27,16 +27,19 @@ const uint64_t z3                   = 1;                        //大行星投�
 const uint64_t decayTime            = 4 * 3600;                 //衰减时间阈值，单位秒（4*3600s）
 const uint64_t decayDur             = 1 * 3600;                 //衰减时间间隔，单位秒（1*3600s）
 const uint64_t maxDecayCount        = 20;                       //最大衰减次数（20）
-const float payBackPercent          = 0.1;                      //返现比例（0.1）   
-const float activePercent           = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
-const float a                       = 1;                        //超级星奖励的影响因子（1）
-const float bDecay                  = 0.85;                     //活力星奖励的影响因子（0.85）
+const float    payBackPercent       = 0.1;                      //返现比例（0.1）   
+const float    activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
+const float    a                    = 1;                        //超级星奖励的影响因子（1）
+const float    bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
 
 const uint64_t initPool             = 2000000;                  //初始化充值200万GXC
 const uint64_t coreAsset            = 1;                        //核心资产id
 const uint64_t precision            = 100000;                   //核心资产精度
 const uint64_t delayDay             = 90 * 24 * 3600;           //抵押90天后解锁
 const uint64_t depositToBig         = 3;                        //升级成大行星充值3GXC
+const std::string inviter_withdraw  = "inviter withdraw 1 GXC"; //提现一个1GXC到邀请人账户
+const uint64_t weight               = 1000;                     //权重，带三位精度
+const uint64_t delaytime            = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
 
 class starplan : public contract
 {
@@ -45,31 +48,37 @@ class starplan : public contract
         : contract(id),tbglobals(_self,_self),tbrounds(_self,_self),tbvotes(_self,_self),tbstakes(_self,_self),tbsmallplans(_self,_self),tbbigplanets(_self,_self)\
             tbactiveplans(_self,_self),tbsuperstars(_self,_self),tbinvites(_self,_self){}
     
-    PAYABLE init();
-    PAYABLE uptosmall(std:string inviter,std:string superStar);
-    PAYABLE uptobig(std:string inviter);
-    PAYABLE uptosuper(std:string inviter);
+    PAYABLE     init();
+    PAYABLE     uptosmall(std:string inviter,std:string superStar);
+    PAYABLE     uptobig(std:string inviter);
+    PAYABLE     uptosuper(std:string inviter);
+    ACTION      endround();
 
   private:     
 
-    tbglobal& getGlobal(){ return globals.find(0); }
-    void invite(uint64_t original_sender,std:string inviter) 
-    void vote(uint64_t original_sender,std:string superstar)
-    bool isSuperStar(uint64_t sender);
-    bool addSuperStar(uint64_t sender);
-    bool isSmallPlanet(uint64_t sender);
-    bool addSmallPlanet(uint64_t sender);
-    bool isBigPlanet(uint64_t sender);
-    bool addBigPlanet(uint64_t sender);
-    uint32_t currentRound(); 
-    uint32_t totalInvites();
-    bool bSmallRound();
-    void endSmallRound();
+    tbglobal&   getGlobal(){ return globals.find(0); }
+    void        invite(uint64_t original_sender,std:string inviter); 
+    void        actinvite(uint64_t original_sender);                           //激活邀请关系
+    void        vote(uint64_t original_sender,std:string superstar);
+    bool        isSuperStar(uint64_t sender);
+    bool        addSuperStar(uint64_t sender);
+    bool        isSmallPlanet(uint64_t sender);
+    bool        addSmallPlanet(uint64_t sender);
+    bool        isBigPlanet(uint64_t sender);
+    bool        addBigPlanet(uint64_t sender);
+    uint32_t    currentRound(); 
+    uint32_t    totalInvites();
+    bool        bSmallRound();
+    void        endSmallRound();
 
-    bool isInviter(std::string accname);
-    void check_account(uint64_t accid);
-    void check_stat();
-    bool hasInvited(uint64_t original_sender,std:string inviter);
+    bool        isInviter(std::string accname);
+    bool        isAccount(std::string accname)
+    bool        isInit()
+    bool        hasInvited(uint64_t original_sender,std:string inviter);
+    void        addStake(uint64_t sender,uint64_t amount);
+    void        sendInviteReward(uint64_t sender);
+    void        updateActivePlanetsbybig(uint64_t sender);
+    void        updateActivePlanetsbysuper(uint64_t sender);
 
   private:
     //@abi table tbglobal i64
@@ -90,12 +99,14 @@ class starplan : public contract
         uint64_t round;                     // 索引
         uint64_t current_round_invites;     // 当前轮完成邀请数
         uint64_t pool_amount;               // 当前轮奖池资产数
+        uint64_t random_pool_amount;        // 当前随机池资产数
+        uint64_t invite_pool_amount;        // 当前邀请奖励池资产数
         uint64_t start_time;               	// 当前轮的启动时间
         uint64_t end_time;               	// 当前轮的结束时间
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(pool_amount)(big_stars)(start_time)(end_time))
+        GRAPHENE_SERIALIZE(tbround, (round)(pool_amount)(random_pool_amount)(invite_pool_amount)(start_time)(end_time))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
@@ -179,9 +190,9 @@ class starplan : public contract
     struct tbactiveplan {
         uint64_t index;                     // 索引
         uint64_t id;                        // 账户id
+        uint64_t invite_count;              // 邀请人数，每达到5个大行星，置为0，记录create_round=当前轮，weight=1
         uint64_t create_time;               // 创建时间 
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
-        std::vector<uint64_t> child_b_nodes;// 邀请的已经成为大行星的子节点
         uint64_t weight;                    // 权重，每小轮0.85的幅度衰减，衰减为0，重新计算
 
         uint64_t primary_key() const { return index; }
@@ -190,7 +201,7 @@ class starplan : public contract
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_weight() const { return weight; }
 
-        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(create_time)(create_round)(child_b_nodes)(weight))
+        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invite_count)(create_time)(create_round)(weight))
     };
     typedef multi_index<N(tbactiveplan), tbactiveplan,
                         indexed_by<N(byaccid), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_acc_id>>,
@@ -225,7 +236,7 @@ class starplan : public contract
         uint64_t index;						// 自增索引
         uint64_t invitee;				    // 被邀请账户
         uint64_t inviter;					// 邀请账户
-        bool     enabled;                   // 邀请关系是否⽣生效(invitee是否升级为⼤大⾏行行星)
+        bool     enabled;                   // 邀请关系是否⽣生效(invitee是否升级为⼤行星)
         uint64_t create_round;			    // 当前轮数
         uint64_t create_time;				// 邀请时间
 
@@ -240,7 +251,7 @@ class starplan : public contract
     typedef multi_index<N(tbinvite), tbinvite,
                         indexed_by<N(byaccid), const_mem_fun<invite, uint64_t, &invite::by_acc_id>>,
                         indexed_by<N(byinviteid), const_mem_fun<invite, uint64_t, &invite::by_invite_id>>,
-                        indexed_by<N(bystatus), const_mem_fun<invite, uint64_t, &invite::by_enable>>,
+                        indexed_by<N(byenable), const_mem_fun<invite, uint64_t, &invite::by_enable>>,
                         indexed_by<N(byround), const_mem_fun<invite, uint64_t, &invite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
 };
