@@ -33,7 +33,10 @@ const uint64_t      delayDay             = 90 * 24 * 3600;           //抵押90�
 const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
 const uint64_t      weight               = 1000;                     //权重，带三位精度
 const uint64_t      delaytime            = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
-const uint64_t      defaultinviter       = 0;                        //默认邀请账户id       
+const uint64_t      defaultinviter       = 0;                        //默认邀请账户id  
+
+const char*         vote_reason          = "vote to super star";     //给超级星投票
+const char*         stake_reason         = "super star stake";       //超级星晋升
 
 class starplan : public contract
 {
@@ -44,7 +47,7 @@ class starplan : public contract
 
     PAYABLE     init();
     PAYABLE     uptosmall(std::string inviter,std::string superstar);
-    PAYABLE     uptobig(std::string inviter);
+    PAYABLE     uptobig();
     PAYABLE     uptosuper(std::string inviter);
     ACTION      endround();
     ACTION      unstake(std::string account);
@@ -68,7 +71,7 @@ class starplan : public contract
     bool        isAccount(std::string accname);
     bool        isInit();
     bool        hasInvited(uint64_t original_sender,std::string inviter);
-    void        addStake(uint64_t sender,uint64_t amount);
+    void        addStake(uint64_t sender,uint64_t amount,uint64_t to,std::string reason);
     void        sendInviteReward(uint64_t sender);
     void        updateActivePlanetsbybig(uint64_t sender);
     void        updateActivePlanetsbysuper(uint64_t sender);
@@ -139,11 +142,13 @@ class starplan : public contract
         uint64_t account;                   // account id
         uint64_t amount;                    // 抵押数量
         uint64_t end_time;                  // 抵押时间
+        uint64_t staketo;                   // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
+        std::string reason;                 // 抵押原因 
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
 
-        GRAPHENE_SERIALIZE(tbstake, (index)(account)(amount)(end_time))
+        GRAPHENE_SERIALIZE(tbstake, (index)(account)(amount)(end_time)(staketo)(reason))
     };
     typedef multi_index<N(tbstake), tbstake,
                         indexed_by<N(byaccid), const_mem_fun<tbstake, uint64_t, &tbstake::by_acc_id>>> tbstake_index;
