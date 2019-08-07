@@ -10,7 +10,7 @@ void starplan::init()
     // 2、校验充值的资产是否为2000000GXC
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
-    graphene_assert(ast_id == coreAsset && amount == initPool * precision, "StarPlan Contract Error: Init amount must is 2000000 GXC and Only can deposit GXC asset!");
+    //graphene_assert(ast_id == coreAsset && amount == initPool * precision, "StarPlan Contract Error: Init amount must is 2000000 GXC and Only can deposit GXC asset!");
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -45,18 +45,19 @@ void starplan::uptosmall(std::string inviter,std::string superstar)
     uint64_t amount = get_action_asset_amount();
 
     //1、判断是否存入足够GXC
-    graphene_assert(ast_id == coreAsset && amount == y * precision, "100 GXC required");
-
-    //2、验证账户
-    if(inviter != "")
-        graphene_assert(isAccount(inviter), "inviter account is invalid");
-    graphene_assert(isAccount(superstar), "superStar account is invalid");
-
-    //3、验证邀请账户
-    graphene_assert(isInviter(inviter), "StarPlan Contract Error: Inviters must be big planets and super star"); 
+    //graphene_assert(ast_id == coreAsset && amount == y * precision, "100 GXC required");
+    
     uint64_t sender_id = get_trx_origin();
-    uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
-    graphene_assert(inviter_id != sender_id, "StarPlan Contract Error: Can't invite yourself ");
+    //2、验证账户
+    if(inviter != ""){
+        graphene_assert(isAccount(inviter), "inviter account is invalid");
+        //3、验证邀请账户
+        uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
+        graphene_assert(isInviter(inviter), "StarPlan Contract Error: Inviters must be big planets and super star"); 
+        graphene_assert(inviter_id != sender_id, "StarPlan Contract Error: Can't invite yourself ");
+        
+    }
+    graphene_assert(isAccount(superstar), "superStar account is invalid");
 
     //4、验证当前轮是否结束
     graphene_assert(!bSmallRound(),"Current round is end, can't create small planet");
@@ -133,21 +134,20 @@ void starplan::uptosuper(std::string inviter)
     uint64_t amount = get_action_asset_amount();
 
     //1、判断是否存入足够GXC
-    graphene_assert(ast_id == coreAsset && amount == x * precision, "20000 GXC required");
+    //graphene_assert(ast_id == coreAsset && amount == x * precision, "20000 GXC required");
 
     //2、判断是否已经是superstar，如果已经是，则提示"You are already a super star"
     uint64_t sender_id = get_trx_origin();
     graphene_assert(!isSuperStar(sender_id), "You are already a super star");
 
     //3、验证账户是否存在
-    if(inviter != "")
+    if(inviter != ""){
         graphene_assert(isAccount(inviter), "inviter account is invalid");
-
-    //4、验证邀请账户
-    graphene_assert(isInviter(inviter), "StarPlan Contract Error: Inviters must be big planets and super star"); 
-    uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
-    graphene_assert(inviter_id != sender_id, "StarPlan Contract Error: Can't invite yourself ");
-
+        // 4、验证邀请账户
+        graphene_assert(isInviter(inviter), "StarPlan Contract Error: Inviters must be big planets and super star"); 
+        uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
+        graphene_assert(inviter_id != sender_id, "StarPlan Contract Error: Can't invite yourself ");
+    }
     //5、验证当前轮是否结束
     graphene_assert(!bSmallRound(),"Current round is end, can't create super star");
 
@@ -155,12 +155,13 @@ void starplan::uptosuper(std::string inviter)
     graphene_assert(isInit(), "Please initialize the game first");
 
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
+
     //7、创建超级星
     addSuperStar(sender_id);
-
+    
     //8、创建抵押项
     addStake(sender_id,amount);
-
+    
     //9、保存邀请关系，激活邀请关系
     invite(sender_id,inviter);
     actinvite(sender_id);
@@ -233,10 +234,11 @@ bool starplan::addSuperStar(uint64_t sender)
     tbsuperstars.emplace(_self,[&](auto &obj) {                 //创建超级星
         obj.index                   = tbsuperstars.available_primary_key();
         obj.id                      = sender;
-        obj.create_time             = get_head_block_time();      
+        obj.create_time             = get_head_block_time();  
         obj.create_round            = currentRound();
         obj.vote_num                = 0; 
     });
+    return true;
 }
 bool starplan::isSmallPlanet(uint64_t sender)
 {
@@ -273,7 +275,7 @@ bool starplan::addBigPlanet(uint64_t sender)
             obj.index                   = tbbigplanets.available_primary_key();
             obj.id                      = sender;
             obj.create_time             = get_head_block_time();
-            obj.create_round           = currentRound();
+            obj.create_round            = currentRound();
         });
     return true;
 }
@@ -290,24 +292,32 @@ bool starplan::bSmallRound()
 {
     bool retValue = false;
     // 获取最后一个大行星
-    auto big_itor = tbbigplanets.rend();
+    auto big_itor = tbbigplanets.end();
+    if(big_itor == tbbigplanets.begin()){
+        return retValue;
+    }
+    big_itor--;
     graphene_assert(get_head_block_time() > (big_itor->create_time), "StarPlan Contract Error: big planet create time is error ");
     bool isDelay = (get_head_block_time() - (big_itor->create_time)) > delaytime;
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
-    bool isFull = round_itor->invite_pool_amount >= roundSize;
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
+    bool isFull = round_itor->current_round_invites >= roundSize;
     if( isDelay || isFull) { retValue = true; }
     return retValue;
 }
-uint32_t starplan::currentRound()
+uint64_t starplan::currentRound()
 {
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     return round_itor->round;
 }
 void starplan::invite(uint64_t original_sender,std::string inviter)
 {
     uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
+    if(inviter_id == -1)
+        inviter_id = defaultinviter;
     if(!hasInvited(original_sender,inviter)){                                 //不存在邀请关系则创建，
         tbinvites.emplace(_self,[&](auto &obj) {
             obj.index                   = tbinvites.available_primary_key();
@@ -329,8 +339,9 @@ void starplan::actinvite(uint64_t original_sender)
         obj.create_time             = get_head_block_time();
     });
     // 当前轮邀请数自增1
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     tbrounds.modify(*round_itor,_self,[&](auto &obj){                        
         obj.current_round_invites   = obj.current_round_invites + 1;
     });
@@ -361,8 +372,9 @@ void starplan::addStake(uint64_t sender,uint64_t amount)
 void starplan::sendInviteReward(uint64_t sender)
 {
     std::string   inviter_withdraw     = "inviter withdraw 1 GXC"; //提现一个1GXC到邀请人账户
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
     auto invite_itor = invite_idx.find(sender);
     tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额
@@ -405,8 +417,6 @@ void starplan::updateActivePlanetsbybig(uint64_t sender)
 }
 void starplan::updateActivePlanetsbysuper(uint64_t sender)
 {
-    auto invite_idx = tbinvites.get_index<N(byaccid)>();
-    auto invite_itor = invite_idx.find(sender);
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(sender);
     if(act_itor != act_idx.end()){
@@ -418,7 +428,7 @@ void starplan::updateActivePlanetsbysuper(uint64_t sender)
     }else{
         tbactiveplans.emplace(_self,[&](auto &obj){                                      //创建活力星
             obj.index           = tbactiveplans.available_primary_key();
-            obj.id              = invite_itor->inviter;
+            obj.id              = sender;
             obj.invite_count    = 0;
             obj.create_time     = get_head_block_time();
             obj.create_round    = currentRound();
@@ -430,8 +440,9 @@ void starplan::updateActivePlanetsbysuper(uint64_t sender)
 void starplan::calcCurrentRoundPoolAmount()
 {
     // 1、获取平均奖励池
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
 
     // 2、默认底池
     auto pool_amount = roundAmount * precision + round_itor->invite_pool_amount;
@@ -502,8 +513,9 @@ void starplan::randomReward()
             }
         }
     }
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     auto total_amount = round_itor->random_pool_amount;
     auto price = total_amount / bigplanet_size;
     
@@ -536,9 +548,10 @@ void starplan::rewardBigPlanet()
         itor++;
     }
     // 2 平均分配百分之10的奖励
-    auto round_itor = tbrounds.rend();
+    auto round_itor = tbrounds.end();
     auto bigplanet_size = cround_big_list.size();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     uint64_t upayBackPercent = payBackPercent * 100;
     uint64_t total_amount = (round_itor->pool_amount) * upayBackPercent / 100 ;
     uint64_t price = total_amount / bigplanet_size;
@@ -569,8 +582,9 @@ void starplan::rewardActivePlanet()
         itor++;
     }
     // 2 提现资产
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     uint64_t uactivePercent = activePercent * 100;
     uint64_t total_amount = (round_itor->pool_amount) * uactivePercent / 100 ;
     // 2.1 修改当前轮底池
@@ -589,7 +603,8 @@ void starplan::rewardActivePlanet()
             break;
     }
     // 3 最后一个活力星提现
-    auto ritor = act_idx.rend();
+    auto ritor = act_idx.end();
+    ritor--;
     auto to = ritor->id;
     inline_transfer(_self , to , coreAsset , total_amount, actplanet_withdraw.c_str(),actplanet_withdraw.length());
 }
@@ -602,8 +617,9 @@ void starplan::rewardSuperStar()
         total_vote += itor->vote_num;
     }
     // 2 提现资产
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     uint64_t total_amount = round_itor->pool_amount;
     // 2.1 修改当前轮底池
     tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
@@ -622,15 +638,17 @@ void starplan::rewardSuperStar()
             break;
     }
     // 3 最后一个超级星提现
-    auto ritor = tbsuperstars.rend();
+    auto ritor = tbsuperstars.end();
+    ritor--;
     auto to = ritor->id;
     inline_transfer(_self , to , coreAsset , total_amount, supstar_withdraw.c_str(),supstar_withdraw.length());
 }
 void starplan::createnewround()
 {
     // 1 结束当前轮，修改round表和global表
-    auto round_itor = tbrounds.rend();
-    graphene_assert(round_itor != tbrounds.rbegin(), "StarPlan Contract Error: Found round table wrong! ");
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), "StarPlan Contract Error: Found round table wrong! ");
+    round_itor--;
     tbrounds.modify(*round_itor, _self, [&](auto &obj){                               
         obj.end_time            = get_head_block_time();
     });

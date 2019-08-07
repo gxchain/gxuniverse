@@ -8,7 +8,7 @@
 
 using namespace graphene;
 
-const uint64_t      adminId              = 100;                      //admin账户id
+const uint64_t      adminId              = 426;                      //admin账户id
 const uint64_t      superStarLimit       = 50;                       //超级星最大数量（50）
 const uint64_t      bigRoundSize         = 50;                       //一个大轮包含小轮数（50）                     
 const uint64_t      roundAmount          = 2000;                     //每一小轮的底池资产数（2000GXC）                      
@@ -25,6 +25,7 @@ const float         payBackPercent       = 0.1;                      //返现比
 const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
 const float         a                    = 1;                        //超级星奖励的影响因子（1）
 const float         bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
+
 const uint64_t      initPool             = 2000000;                  //初始化充值200万GXC
 const uint64_t      coreAsset            = 1;                        //核心资产id
 const uint64_t      precision            = 100000;                   //核心资产精度
@@ -32,6 +33,7 @@ const uint64_t      delayDay             = 90 * 24 * 3600;           //抵押90�
 const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
 const uint64_t      weight               = 1000;                     //权重，带三位精度
 const uint64_t      delaytime            = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
+const uint64_t      defaultinviter       = 0;                        //默认邀请账户id       
 
 class starplan : public contract
 {
@@ -39,22 +41,13 @@ class starplan : public contract
     starplan(uint64_t id)
         : contract(id),tbglobals(_self,_self),tbrounds(_self,_self),tbvotes(_self,_self),tbstakes(_self,_self),tbsmallplans(_self,_self),tbbigplanets(_self,_self)\
             ,tbactiveplans(_self,_self),tbsuperstars(_self,_self),tbinvites(_self,_self){}
-    //@abi action
-    //@abi payable
-    void     init();
-    //@abi action
-    //@abi payable
-    void     uptosmall(std::string inviter,std::string superstar);
-    //@abi action
-    //@abi payable
-    void     uptobig(std::string inviter);
-    //@abi action
-    //@abi payable
-    void     uptosuper(std::string inviter);
-    //@abi action
-    void     endround();
-    //@abi action
-    void     unstake(std::string account);
+
+    PAYABLE     init();
+    PAYABLE     uptosmall(std::string inviter,std::string superstar);
+    PAYABLE     uptobig(std::string inviter);
+    PAYABLE     uptosuper(std::string inviter);
+    ACTION      endround();
+    ACTION      unstake(std::string account);
 
   private:     
 
@@ -67,7 +60,7 @@ class starplan : public contract
     bool        addSmallPlanet(uint64_t sender);
     bool        isBigPlanet(uint64_t sender);
     bool        addBigPlanet(uint64_t sender);
-    uint32_t    currentRound(); 
+    uint64_t    currentRound(); 
     bool        bSmallRound();
     void        endSmallRound();
 
