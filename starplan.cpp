@@ -438,8 +438,8 @@ void starplan::updateActivePlanetsbybig(uint64_t sender)
     auto act_itor = act_idx.find(invite_itor->inviter);
     if(act_itor != act_idx.end()){
         act_idx.modify(act_itor,_self,[&](auto &obj){                                   //修改活力星
-            if(obj.invite_count == 4){
-                obj.invite_count = 0;
+            if(obj.invite_count == 5){
+                obj.invite_count = 1;
                 obj.create_round = currentRound();
                 obj.weight       = weight;
             }else{
@@ -450,7 +450,7 @@ void starplan::updateActivePlanetsbybig(uint64_t sender)
         tbactiveplans.emplace(_self,[&](auto &obj){                                      //创建活力星
             obj.index           = tbactiveplans.available_primary_key();
             obj.id              = invite_itor->inviter;
-            obj.invite_count    = 0;
+            obj.invite_count    = 1;
             obj.create_time     = get_head_block_time();
             obj.create_round    = 0;
             obj.weight          = 0;
