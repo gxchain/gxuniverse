@@ -111,6 +111,7 @@ class starplan : public contract
     void        createnewround();
     bool        canupdatesmall(uint64_t sender);
     void        deletevote(uint64_t sender,uint64_t time);
+    void        checkwithdraw(uint64_t pool,uint64_t amount);
 
   private:
     //@abi table tbglobal i64
