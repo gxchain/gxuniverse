@@ -3,63 +3,64 @@
 #include <graphenelib/dispatcher.hpp>
 #include <graphenelib/types.h>
 #include <graphenelib/multi_index.hpp>
+#include <graphenelib/crypto.h>
+#include <graphenelib/asset.h>
 
 using namespace graphene;
 
-enum startype {
-    none    = 0,            // 非行星
-    small   = 1,            // 小行星
-    big     = 2,            // 大行星
-    active  = 4,            // 活力星
-    super   = 8             // 超级星
-};
-
-const uint64_t adminId              = 100;
-const uint64_t superStarLimit       = 50;                       //超级星最大数量（50）
-const uint64_t bigRoundSize         = 50;                       //一个大轮包含小轮数（50）                     
-const uint64_t roundAmount          = 2000;                     //每一小轮的底池资产数（2000GXC）                      
-const uint64_t roundSize            = 100;                      //每一轮的参与人数（100）
-const uint64_t x                    = 20000;                    //成为超级星需要抵押的资产数（20000GXC）
-const uint64_t y                    = 100;                      //成为小行星需要抵押的资产数（100GXC）
-const uint64_t z1                   = 1;                        //大行星投入每轮平均激励池资产数（1GXC）
-const uint64_t z2                   = 1;                        //大行星奖励给邀请人的资产数（1GXC）
-const uint64_t z3                   = 1;                        //大行星投入每轮随机奖励池资产数（1GXC）
-const uint64_t decayTime            = 4 * 3600;                 //衰减时间阈值，单位秒（4*3600s）
-const uint64_t decayDur             = 1 * 3600;                 //衰减时间间隔，单位秒（1*3600s）
-const uint64_t maxDecayCount        = 20;                       //最大衰减次数（20）
-const float    payBackPercent       = 0.1;                      //返现比例（0.1）   
-const float    activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
-const float    a                    = 1;                        //超级星奖励的影响因子（1）
-const float    bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
-
-const uint64_t initPool             = 2000000;                  //初始化充值200万GXC
-const uint64_t coreAsset            = 1;                        //核心资产id
-const uint64_t precision            = 100000;                   //核心资产精度
-const uint64_t delayDay             = 90 * 24 * 3600;           //抵押90天后解锁
-const uint64_t depositToBig         = 3;                        //升级成大行星充值3GXC
-const std::string inviter_withdraw  = "inviter withdraw 1 GXC"; //提现一个1GXC到邀请人账户
-const uint64_t weight               = 1000;                     //权重，带三位精度
-const uint64_t delaytime            = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
+const uint64_t      adminId              = 100;                      //admin账户id
+const uint64_t      superStarLimit       = 50;                       //超级星最大数量（50）
+const uint64_t      bigRoundSize         = 50;                       //一个大轮包含小轮数（50）                     
+const uint64_t      roundAmount          = 2000;                     //每一小轮的底池资产数（2000GXC）                      
+const uint64_t      roundSize            = 100;                      //每一轮的参与人数（100）
+const uint64_t      x                    = 20000;                    //成为超级星需要抵押的资产数（20000GXC）
+const uint64_t      y                    = 100;                      //成为小行星需要抵押的资产数（100GXC）
+const uint64_t      z1                   = 1;                        //大行星投入每轮平均激励池资产数（1GXC）
+const uint64_t      z2                   = 1;                        //大行星奖励给邀请人的资产数（1GXC）
+const uint64_t      z3                   = 1;                        //大行星投入每轮随机奖励池资产数（1GXC）
+const uint64_t      decayTime            = 4 * 3600;                 //衰减时间阈值，单位秒（4*3600s）
+const uint64_t      decayDur             = 1 * 3600;                 //衰减时间间隔，单位秒（1*3600s）
+const uint64_t      maxDecayCount        = 20;                       //最大衰减次数（20）
+const float         payBackPercent       = 0.1;                      //返现比例（0.1）   
+const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
+const float         a                    = 1;                        //超级星奖励的影响因子（1）
+const float         bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
+const uint64_t      initPool             = 2000000;                  //初始化充值200万GXC
+const uint64_t      coreAsset            = 1;                        //核心资产id
+const uint64_t      precision            = 100000;                   //核心资产精度
+const uint64_t      delayDay             = 90 * 24 * 3600;           //抵押90天后解锁
+const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
+const uint64_t      weight               = 1000;                     //权重，带三位精度
+const uint64_t      delaytime            = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
 
 class starplan : public contract
 {
   public:
     starplan(uint64_t id)
         : contract(id),tbglobals(_self,_self),tbrounds(_self,_self),tbvotes(_self,_self),tbstakes(_self,_self),tbsmallplans(_self,_self),tbbigplanets(_self,_self)\
-            tbactiveplans(_self,_self),tbsuperstars(_self,_self),tbinvites(_self,_self){}
-    
-    PAYABLE     init();
-    PAYABLE     uptosmall(std:string inviter,std:string superStar);
-    PAYABLE     uptobig(std:string inviter);
-    PAYABLE     uptosuper(std:string inviter);
-    ACTION      endround();
+            ,tbactiveplans(_self,_self),tbsuperstars(_self,_self),tbinvites(_self,_self){}
+    //@abi action
+    //@abi payable
+    void     init();
+    //@abi action
+    //@abi payable
+    void     uptosmall(std::string inviter,std::string superstar);
+    //@abi action
+    //@abi payable
+    void     uptobig(std::string inviter);
+    //@abi action
+    //@abi payable
+    void     uptosuper(std::string inviter);
+    //@abi action
+    void     endround();
+    //@abi action
+    void     unstake(std::string account);
 
   private:     
 
-    tbglobal&   getGlobal(){ return globals.find(0); }
-    void        invite(uint64_t original_sender,std:string inviter); 
+    void        invite(uint64_t original_sender,std::string inviter); 
     void        actinvite(uint64_t original_sender);                           //激活邀请关系
-    void        vote(uint64_t original_sender,std:string superstar);
+    void        vote(uint64_t original_sender,std::string superstar);
     bool        isSuperStar(uint64_t sender);
     bool        addSuperStar(uint64_t sender);
     bool        isSmallPlanet(uint64_t sender);
@@ -67,18 +68,24 @@ class starplan : public contract
     bool        isBigPlanet(uint64_t sender);
     bool        addBigPlanet(uint64_t sender);
     uint32_t    currentRound(); 
-    uint32_t    totalInvites();
     bool        bSmallRound();
     void        endSmallRound();
 
     bool        isInviter(std::string accname);
-    bool        isAccount(std::string accname)
-    bool        isInit()
-    bool        hasInvited(uint64_t original_sender,std:string inviter);
+    bool        isAccount(std::string accname);
+    bool        isInit();
+    bool        hasInvited(uint64_t original_sender,std::string inviter);
     void        addStake(uint64_t sender,uint64_t amount);
     void        sendInviteReward(uint64_t sender);
     void        updateActivePlanetsbybig(uint64_t sender);
     void        updateActivePlanetsbysuper(uint64_t sender);
+    void        calcCurrentRoundPoolAmount();
+    void        updateActivePlanets();
+    void        randomReward(); 
+    void        rewardBigPlanet();
+    void        rewardActivePlanet();
+    void        rewardSuperStar();
+    void        createnewround();
 
   private:
     //@abi table tbglobal i64
@@ -106,7 +113,7 @@ class starplan : public contract
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(pool_amount)(random_pool_amount)(invite_pool_amount)(start_time)(end_time))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(pool_amount)(random_pool_amount)(invite_pool_amount)(start_time)(end_time))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
@@ -126,7 +133,7 @@ class starplan : public contract
         uint64_t by_round() const { return round;}
 
         GRAPHENE_SERIALIZE(tbvote, (index)(round)(stake_amount)(from)(to)(vote_time))
-    }
+    };
     typedef multi_index<N(tbvote), tbvote,
                         indexed_by<N(byfrom), const_mem_fun<tbvote, uint64_t, &tbvote::by_vote_from>>,
                         indexed_by<N(byto), const_mem_fun<tbvote, uint64_t, &tbvote::by_vote_to>>,
@@ -144,9 +151,9 @@ class starplan : public contract
         uint64_t by_acc_id() const { return account; }
 
         GRAPHENE_SERIALIZE(tbstake, (index)(account)(amount)(end_time))
-    }
+    };
     typedef multi_index<N(tbstake), tbstake,
-                        indexed_by<N(byaccid), const_mem_fun<stake, uint64_t, &stake::by_acc_id>>> tbstake_index;
+                        indexed_by<N(byaccid), const_mem_fun<tbstake, uint64_t, &tbstake::by_acc_id>>> tbstake_index;
     tbstake_index tbstakes;
 
     //@abi table tbsmallplan i64
@@ -176,7 +183,6 @@ class starplan : public contract
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
-        uint64_t by_create_time() const { return create_time; }
         uint64_t by_create_round() const { return create_round; }
 
         GRAPHENE_SERIALIZE(tbbigplanet, (index)(id)(create_time)(create_round))
@@ -197,7 +203,6 @@ class starplan : public contract
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
-        uint64_t by_create_time() const { return create_time; }
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_weight() const { return weight; }
 
@@ -218,8 +223,7 @@ class starplan : public contract
         uint64_t vote_num;                  // 得票数
 
         uint64_t primary_key() const { return index; }
-        uint64_t by_acc_id() const { return acc_id; }
-        uint64_t by_create_time() const { return create_time; }
+        uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_vote_num() const { return vote_num; }
 
@@ -246,13 +250,13 @@ class starplan : public contract
         uint64_t by_round() const { return create_round; }
         uint64_t by_enable() const { return enabled; }
 
-        GRAPHENE_SERIALIZE(invite, (index)(invitee)(inviter)(enabled)(create_round)(create_time))
+        GRAPHENE_SERIALIZE(tbinvite, (index)(invitee)(inviter)(enabled)(create_round)(create_time))
     };
     typedef multi_index<N(tbinvite), tbinvite,
-                        indexed_by<N(byaccid), const_mem_fun<invite, uint64_t, &invite::by_acc_id>>,
-                        indexed_by<N(byinviteid), const_mem_fun<invite, uint64_t, &invite::by_invite_id>>,
-                        indexed_by<N(byenable), const_mem_fun<invite, uint64_t, &invite::by_enable>>,
-                        indexed_by<N(byround), const_mem_fun<invite, uint64_t, &invite::by_round>>> tbinvite_index;
+                        indexed_by<N(byaccid), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_acc_id>>,
+                        indexed_by<N(byinviteid), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_invite_id>>,
+                        indexed_by<N(byenable), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_enable>>,
+                        indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
 };
-GRAPHENE_ABI(starplan, (init)(uptosmall)(uptobig)(uptosuper))
+GRAPHENE_ABI(starplan, (init)(uptosmall)(uptobig)(uptosuper)(endround)(unstake))
