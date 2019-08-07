@@ -71,7 +71,8 @@ void starplan::uptosmall(std::string inviter,std::string superstar)
 
     //////////////////////////////////////// 校验通过后，创建一个小行星 //////////////////////////////////////////
     //7、存到smallPlanet表(不允许重复创建)
-    addSmallPlanet(sender_id);
+    if(canupdatesmall(sender_id))
+        addSmallPlanet(sender_id);
 
     //8、保存邀请关系(不允许重复邀请)
     invite(sender_id,inviter);
@@ -211,6 +212,9 @@ void starplan::unstake(std::string account)
                             obj.vote_num  = obj.vote_num - itor->amount;
                         });
                 }
+                // 1.2 从vote表中删除该次投票
+                deletevote(itor->account,itor->end_time -delayDay );
+                
             }else if(itor->reason == stake_reason){
                 // 1.2 判断超级星是否还存在，存在则删除超级星
                 if(isSuperStar(itor->staketo)){
@@ -438,8 +442,8 @@ void starplan::updateActivePlanetsbybig(uint64_t sender)
     auto act_itor = act_idx.find(invite_itor->inviter);
     if(act_itor != act_idx.end()){
         act_idx.modify(act_itor,_self,[&](auto &obj){                                   //修改活力星
-            if(obj.invite_count == 5){
-                obj.invite_count = 1;
+            if(obj.invite_count == 4){
+                obj.invite_count = 0;
                 obj.create_round = currentRound();
                 obj.weight       = weight;
             }else{
@@ -450,11 +454,11 @@ void starplan::updateActivePlanetsbybig(uint64_t sender)
         tbactiveplans.emplace(_self,[&](auto &obj){                                      //创建活力星
             obj.index           = tbactiveplans.available_primary_key();
             obj.id              = invite_itor->inviter;
-            obj.invite_count    = 1;
+            obj.invite_count    = 0;
             obj.create_time     = get_head_block_time();
             obj.create_round    = 0;
             obj.weight          = 0;
-        });c
+        });
     }
 }
 void starplan::updateActivePlanetsbysuper(uint64_t sender)
@@ -709,4 +713,35 @@ void starplan::createnewround()
         obj.start_time              = get_head_block_time();
         obj.end_time                = 0;
     });
+}
+bool starplan::canupdatesmall(uint64_t sender)
+{
+    bool retValue = false;
+    auto vot_idx = tbvotes.get_index<N(byfrom)>();
+    uint64_t total_vote = 0;
+    auto itor = vot_idx.find(sender); 
+    for(;itor != vot_idx.end();itor++){
+        if(itor->from == sender){
+            total_vote += itor->stake_amount;
+        }else{
+            break;
+        }
+    }
+    if(total_vote>=y*precision){ retValue = true; }
+    return retValue;
+}
+void starplan::deletevote(uint64_t sender,uint64_t time)
+{
+    auto vot_idx = tbvotes.get_index<N(byfrom)>();
+    auto itor = vot_idx.find(sender);
+    for(;itor != vot_idx.end();){
+        if(itor->from == sender){
+            if(itor->vote_time == time + delayDay){
+                itor = vot_idx.erase(itor);
+                break;
+            }else{ itor++ ;}
+        }else{
+            break;
+        }
+    }
 }

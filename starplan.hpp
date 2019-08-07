@@ -7,7 +7,7 @@
 #include <graphenelib/asset.h>
 
 using namespace graphene;
-
+/*
 const uint64_t      adminId              = 426;                      //admin账户id
 const uint64_t      superStarLimit       = 50;                       //超级星最大数量（50）
 const uint64_t      bigRoundSize         = 50;                       //一个大轮包含小轮数（50）                     
@@ -33,6 +33,33 @@ const uint64_t      delayDay             = 90 * 24 * 3600;           //抵押90�
 const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
 const uint64_t      weight               = 1000;                     //权重，带三位精度
 const uint64_t      delaytime            = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
+const uint64_t      defaultinviter       = 0;                        //默认邀请账户id  
+*/
+const uint64_t      adminId              = 426;                      //admin账户id
+const uint64_t      superStarLimit       = 5;                        //超级星最大数量（50）
+const uint64_t      bigRoundSize         = 5;                        //一个大轮包含小轮数（50）                     
+const uint64_t      roundAmount          = 20;                       //每一小轮的底池资产数（2000GXC）                      
+const uint64_t      roundSize            = 10;                       //每一轮的参与人数（10）
+const uint64_t      x                    = 20;                       //成为超级星需要抵押的资产数（20GXC）
+const uint64_t      y                    = 10;                       //成为小行星需要抵押的资产数（10GXC）
+const uint64_t      z1                   = 1;                        //大行星投入每轮平均激励池资产数（1GXC）
+const uint64_t      z2                   = 1;                        //大行星奖励给邀请人的资产数（1GXC）
+const uint64_t      z3                   = 1;                        //大行星投入每轮随机奖励池资产数（1GXC）
+const uint64_t      decayTime            = 4 * 60;                   //衰减时间阈值，单位秒（4*3600s）
+const uint64_t      decayDur             = 1 * 60;                   //衰减时间间隔，单位秒（1*3600s）
+const uint64_t      maxDecayCount        = 20;                       //最大衰减次数（20）
+const float         payBackPercent       = 0.1;                      //返现比例（0.1）   
+const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
+const float         a                    = 1;                        //超级星奖励的影响因子（1）
+const float         bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
+
+const uint64_t      initPool             = 200;                      //初始化充值200万GXC
+const uint64_t      coreAsset            = 1;                        //核心资产id
+const uint64_t      precision            = 100000;                   //核心资产精度
+const uint64_t      delayDay             = 1800;                     //抵押90天后解锁
+const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
+const uint64_t      weight               = 1000;                     //权重，带三位精度
+const uint64_t      delaytime            = 2 * 3600;                 //最后一个大行星的延迟时间（12小时）
 const uint64_t      defaultinviter       = 0;                        //默认邀请账户id  
 
 const char*         vote_reason          = "vote to super star";     //给超级星投票
@@ -82,6 +109,8 @@ class starplan : public contract
     void        rewardActivePlanet();
     void        rewardSuperStar();
     void        createnewround();
+    bool        canupdatesmall(uint64_t sender);
+    void        deletevote(uint64_t sender,uint64_t time);
 
   private:
     //@abi table tbglobal i64
