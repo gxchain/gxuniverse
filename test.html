@@ -76,35 +76,35 @@
                     }
                 },
                 init(){
-                    gxc.callContract('starprogram', 'init', {}, '10 GXC', true).then(trx=>{
+                    gxc.callContract('stattest01', 'init', {}, '10 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 uptosmall(){
-                    gxc.callContract('starprogram', 'uptosmall', {inviter:"",superstar:""}, '100 GXC', true).then(trx=>{
+                    gxc.callContract('stattest01', 'uptosmall', {inviter:"",superstar:""}, '100 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 uptobig(){
-                    gxc.callContract('starprogram', 'uptobig', {inviter:""}, '10 GXC', true).then(trx=>{
+                    gxc.callContract('stattest01', 'uptobig', {inviter:""}, '10 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 uptosuper(){
-                    gxc.callContract('starprogram', 'uptosuper', {inviter:""}, '20000 GXC', true).then(trx=>{
+                    gxc.callContract('stattest01', 'uptosuper', {inviter:""}, '20000 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 endround(){
-                    gxc.callContract('starprogram', 'endround', {}, '', true).then(trx=>{
+                    gxc.callContract('stattest01', 'endround', {}, '', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
