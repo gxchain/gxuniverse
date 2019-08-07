@@ -28,6 +28,17 @@ const float payBackPercent = 0.1; 	// 返现比例（0.1）
 const float activePercent = 0.5; 		// 活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例
 const float a=1;										// 超级星奖励的影响因子
 const float bDecay=0.85; 						// 活力星奖励的影响因子衰减系数（0.85）
+const uint64_t initPool = 2000000;  // 初始化充值200万GXC
+const uint64_t coreAsset = 1;       // 核心资产id
+const uint64_t precision = 100000;  // 核心资产精度
+const uint64_t delayDay = 90 * 24 * 3600; // 抵押90天后解锁
+const uint64_t depositToBig = 3;    // 升级成大行星充值3GXC
+const uint64_t weight = 1000;       // 权重，带三位精度
+const uint64_t delaytime = 12 * 3600; // 最后一个大行星的延迟时间（12小时）
+const uint64_t defaultinviter = 0;  // 默认邀请账户id  
+
+const char* vote_reason  = "vote to super star";  // 给超级星投票
+const char* stake_reason = "super star stake";    // 超级星晋升
 ```
 
 
@@ -82,11 +93,13 @@ struct tbvote {
 锁仓表，每一次升级小行星（投票）和升级超级星，都会产生一条staking记录
 
 ```C++
-struct tbstaking {
+struct tbstake {
   uint64_t index;				// 自增索引
   uint64_t account;			// 账号id
   uint64_t amount;			// 锁仓金额
   uint64_t end_time;		// 锁仓结束时间
+  uint64_t staketo;     // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
+  std::string reason;   // 抵押原因 
 }
 ```
 
@@ -217,7 +230,7 @@ PAYABLE uptosmall(std:string inviter,std:string superStar){
 ### 4. 升级成为大行星
 
 ``` C++
-PAYABLE uptobig(std:string inviter){
+PAYABLE uptobig(){
     uint64_t orig_sender = get_trx_origin();
     uint64_t ast_id = get_action_asset_id();
     int64_t amount = get_action_asset_amount();
@@ -240,15 +253,7 @@ PAYABLE uptobig(std:string inviter){
 
 ## 内部方法（Private methods）
 
-### 1. 获取全局参数
-
-```C++
-config_t getGlobal(){
-    return globals.find(0);
-}
-```
-
-### 2. 建立邀请关系
+### 1. 建立邀请关系
 
 ``` C++
 void invite(uint64_t original_sender,std:string inviter){
@@ -261,7 +266,7 @@ void invite(uint64_t original_sender,std:string inviter){
     }
 }
 ```
-### 3. 小行星给超级星投票
+### 2. 小行星给超级星投票
 ``` C++
 void vote(uint64_t orig_sender,std:string superstar){
   uint64_t star_acc_id = get_account_id(superstar);
@@ -272,55 +277,49 @@ void vote(uint64_t orig_sender,std:string superstar){
   }
 }
 ```
-### 4. 是否已经是超级星
+### 3. 是否已经是超级星
 
 ``` C++
 bool isSuperStar(uint64_t sender);
 ```
 
-### 5. 添加超级星
+### 4. 添加超级星
 
 ``` C++
 bool addSuperStar(uint64_t sender);
 ```
 
-### 6. 是否已经是小行星
+### 5. 是否已经是小行星
 
 ``` C++
 bool isSmallPlanet(uint64_t sender);
 ```
 
-### 7. 添加小行星
+### 6. 添加小行星
 
 ``` C++
 bool addSmallPlanet(uint64_t sender);
 ```
 
-### 8. 是否已经是大行星
+### 7. 是否已经是大行星
 
 ``` C++
 bool isBigPlanet(uint64_t sender);
 ```
 
-### 9. 添加大行星
+### 8. 添加大行星
 
 ``` C++
 bool addBigPlanet(uint64_t sender);
 ```
 
-### 10. 获取当前轮数
+### 9. 获取当前轮数
 
 ``` C++
 uint32_t currentRound();
 ```
 
-### 11. 获取总邀请数
-
-``` C++
-uint32_t totalInvites();
-```
-
-### 12. 判断是否开启新一小轮
+### 10. 判断是否开启新一小轮
 
 - case1: 当前区块头时间 - 上一个大行星加入时间 > 12小时
 - case2: totalInvites() - currentRound() * roundSize > roundSize
@@ -334,7 +333,7 @@ bool bSmallRound(){
 }
 ```
 
-### 13. 结束当前一小轮
+### 11. 结束当前一小轮
 
 ``` C++
 void endSmallRound(){
@@ -350,13 +349,13 @@ void endSmallRound(){
 }
 ```
 
-### 14. 发送邀请人奖励
+### 12. 发送邀请人奖励
 
 ```C++
 void sendInviteReward(uint64_t inviter, uint64_t amount);
 ```
 
-### 15. 计算当前轮奖励数额
+### 13. 计算当前轮奖励数额
 
 在当前轮结束时，需要计算当前轮奖励数额：
 
@@ -368,7 +367,7 @@ void sendInviteReward(uint64_t inviter, uint64_t amount);
 void calcCurrentRoundPoolAmount();
 ```
 
-### 16. 统计当前轮活力星数据
+### 14. 统计当前轮活力星数据
 
 - 大行星邀请满5人后，可以升级为活力星
 - 活力星的权重初始为1，即晋升的那一小轮，按照100%的权重分发，之后每一小轮权重降为原来的0.85，直至权重为0，权重取3位小数
@@ -379,33 +378,87 @@ void updateActivePlanets();
 ```
 
 
-### 17. 发放随机奖励池
+### 15. 发放随机奖励池
 
 ```C++
 void randomReward();
 ```
 
-### 18. 发放当前轮晋升的大行星奖励
+### 16. 发放当前轮晋升的大行星奖励
 
 ```C++
 void rewardBigPlanet();
 ```
 
-### 19. 发放活力星奖励
+### 17. 发放活力星奖励
 
 ```C++
 void rewardActivePlanet();
 ```
 
-### 20. 发放超级星奖励
+### 18. 发放超级星奖励
 
 ```C++
 void rewardSuperStar();
 ```
 
-### 21. 开始新的一轮
+### 19. 开始新的一轮
 
 ```c++
 void startNewRound();	
 ```
 
+### 20. 激活邀请关系
+
+```c++
+void actinvite(uint64_t original_sender);
+```
+
+### 21. 是否满足邀请条件
+
+```c++
+bool isInviter(std::string accname);
+
+```
+
+### 22. 是否为账户
+
+```c++
+bool isAccount(std::string accname);
+```
+
+### 23. 是否初始化
+
+```c++
+bool isInit();
+```
+
+### 24. 是否存在邀请关系
+
+```c++
+bool hasInvited(uint64_t original_sender,std::string inviter);
+```
+
+### 25. 添加一个抵押项
+
+```c++
+void addStake(uint64_t sender,uint64_t amount,uint64_t to,std::string reason);
+```
+
+### 26. 大行星升级时，更新活力星
+
+```c++
+void updateActivePlanetsbybig(uint64_t sender);
+```
+
+### 27. 超级星升级时，更新活力星
+
+```c++
+void updateActivePlanetsbysuper(uint64_t sender);
+```
+
+### 28. 开启新的一轮
+
+```c++
+void createnewround();
+```
