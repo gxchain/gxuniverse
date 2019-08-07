@@ -22,7 +22,7 @@
             <button @click="uptosuper()">uptosuper</button>
             <button @click="endround()">endround</button>
         </div>
-        <h3>Logs</h3>
+        <h3>Logs<button @click="logs=[]">Clear</button></h3>
         <div>
             <p style="font-size:.5rem" v-for="log in logs"><span style="display: inline-block;color:green">{{log.time.toLocaleString()}}:</span>&nbsp;{{log.text}}</p>
         </div>
