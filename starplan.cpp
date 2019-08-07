@@ -454,7 +454,7 @@ void starplan::updateActivePlanetsbybig(uint64_t sender)
             obj.create_time     = get_head_block_time();
             obj.create_round    = 0;
             obj.weight          = 0;
-        });
+        });c
     }
 }
 void starplan::updateActivePlanetsbysuper(uint64_t sender)
@@ -493,6 +493,7 @@ void starplan::calcCurrentRoundPoolAmount()
     // 4、计算当前小轮的运行时间
     if(get_head_block_time() - round_itor->start_time > decayTime){
         auto dursize = ((get_head_block_time() - round_itor->start_time) / decayDur) + 1;
+        dursize = dursize > maxDecayCount ? maxDecayCount:dursize;
         graphene_assert(pool_amount > (dursize * x), "PoolAmount is error !");
         pool_amount = pool_amount - dursize * x;
     }
