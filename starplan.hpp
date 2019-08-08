@@ -66,10 +66,19 @@ const uint64_t      defaultinviter       = 0;                        //默认邀
 const char*         vote_reason          = "vote to super star";     //给超级星投票
 const char*         stake_reason         = "super star stake";       //超级星晋升
 
-#define RWD_TYPE_RANDOM     1
-#define RWD_TYPE_POOL       2
-#define RWD_TYPE_ACTIVE     3
-#define RWD_TYPE_SUPER      4
+#define RWD_TYPE_RANDOM     0
+#define RWD_TYPE_POOL       1
+#define RWD_TYPE_ACTIVE     2
+#define RWD_TYPE_SUPER      3
+const char* reward_reasons[4] = {
+        "RWD_TYPE_RANDOM",
+        "RWD_TYPE_POOL",
+        "RWD_TYPE_ACTIVE",
+        "RWD_TYPE_SUPER"
+};
+#define MAX_ROUND_REWARD    1000000 //TODO calc the max reward per round
+#define MAX_USER_REWARD     100000  //TODO calc the max reward per user in one round
+
 struct reward {
     uint64_t to;
     uint64_t amount;

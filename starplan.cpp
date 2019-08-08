@@ -873,12 +873,31 @@ uint64_t starplan::calcSuperStarReward(vector<reward> &rewardList, uint64_t rewa
 
 bool starplan::baseSecureCheck(vector<reward> &rewardList)
 {
+    uint64_t totalReward = 0;
+    for(auto &reward : rewardList) {
+        totalReward + reward.amount;
+        graphene_assert(reward.amount > 0 && reward.amount < MAX_USER_REWARD, "");
 
+    }
+
+    graphene_assert(totalReward > 0 && totalReward < MAX_ROUND_REWARD, "");
+
+    //TODO add other secure check
 }
 
 void starplan::doReward(vector<reward> &rewardList)
 {
-
+    for (auto &reward : rewardList)
+    {
+        inline_transfer(
+                _self,
+                reward.to,
+                coreAsset,
+                reward.amount,
+                reward_reasons[reward.type],
+                strlen(reward_reasons[reward.type])
+        );
+    }
 }
 
 void starplan::createNewRound()
