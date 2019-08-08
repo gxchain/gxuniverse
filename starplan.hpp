@@ -10,8 +10,8 @@ using namespace graphene;
 /*
 const uint64_t      adminId              = 426;                      //admin账户id
 const uint64_t      superStarLimit       = 50;                       //超级星最大数量（50）
-const uint64_t      bigRoundSize         = 50;                       //一个大轮包含小轮数（50）                     
-const uint64_t      roundAmount          = 2000;                     //每一小轮的底池资产数（2000GXC）                      
+const uint64_t      bigRoundSize         = 50;                       //一个大轮包含小轮数（50）
+const uint64_t      roundAmount          = 2000;                     //每一小轮的底池资产数（2000GXC）
 const uint64_t      roundSize            = 100;                      //每一轮的参与人数（100）
 const uint64_t      x                    = 20000;                    //成为超级星需要抵押的资产数（20000GXC）
 const uint64_t      y                    = 100;                      //成为小行星需要抵押的资产数（100GXC）
@@ -21,8 +21,8 @@ const uint64_t      z3                   = 1;                        //大行星
 const uint64_t      decayTime            = 4 * 3600;                 //衰减时间阈值，单位秒（4*3600s）
 const uint64_t      decayDur             = 1 * 3600;                 //衰减时间间隔，单位秒（1*3600s）
 const uint64_t      maxDecayCount        = 20;                       //最大衰减次数（20）
-const float         payBackPercent       = 0.1;                      //返现比例（0.1）   
-const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
+const float         payBackPercent       = 0.1;                      //返现比例（0.1）
+const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例
 const float         a                    = 1;                        //超级星奖励的影响因子（1）
 const float         bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
 
@@ -33,12 +33,12 @@ const uint64_t      delayDay             = 90 * 24 * 3600;           //抵押90�
 const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
 const uint64_t      weight               = 1000;                     //权重，带三位精度
 const uint64_t      delaytime            = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
-const uint64_t      defaultinviter       = 0;                        //默认邀请账户id  
+const uint64_t      defaultinviter       = 0;                        //默认邀请账户id
 */
 const uint64_t      adminId              = 426;                      //admin账户id
 const uint64_t      superStarLimit       = 5;                        //超级星最大数量（50）
-const uint64_t      bigRoundSize         = 5;                        //一个大轮包含小轮数（50）                     
-const uint64_t      roundAmount          = 20;                       //每一小轮的底池资产数（2000GXC）                      
+const uint64_t      bigRoundSize         = 5;                        //一个大轮包含小轮数（50）
+const uint64_t      roundAmount          = 20;                       //每一小轮的底池资产数（2000GXC）
 const uint64_t      roundSize            = 10;                       //每一轮的参与人数（10）
 const uint64_t      x                    = 20;                       //成为超级星需要抵押的资产数（20GXC）
 const uint64_t      y                    = 10;                       //成为小行星需要抵押的资产数（10GXC）
@@ -48,8 +48,8 @@ const uint64_t      z3                   = 1;                        //大行星
 const uint64_t      decayTime            = 4 * 60;                   //衰减时间阈值，单位秒（4*3600s）
 const uint64_t      decayDur             = 1 * 60;                   //衰减时间间隔，单位秒（1*3600s）
 const uint64_t      maxDecayCount        = 20;                       //最大衰减次数（20）
-const float         payBackPercent       = 0.1;                      //返现比例（0.1）   
-const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例      
+const float         payBackPercent       = 0.1;                      //返现比例（0.1）
+const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例
 const float         a                    = 1;                        //超级星奖励的影响因子（1）
 const float         bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
 
@@ -60,10 +60,18 @@ const uint64_t      delayDay             = 1800;                     //抵押90�
 const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
 const uint64_t      weight               = 1000;                     //权重，带三位精度
 const uint64_t      delaytime            = 2 * 3600;                 //最后一个大行星的延迟时间（12小时）
-const uint64_t      defaultinviter       = 0;                        //默认邀请账户id  
+const uint64_t      defaultinviter       = 0;                        //默认邀请账户id
 
 const char*         vote_reason          = "vote to super star";     //给超级星投票
 const char*         stake_reason         = "super star stake";       //超级星晋升
+
+#define RWD_TYPE_RANDOM 1
+#define RWD_TYPE_POOL   2
+struct reward {
+    uint64_t to;
+    uint64_t amount;
+    uint64_t type;
+};
 
 class starplan : public contract
 {
@@ -79,9 +87,9 @@ class starplan : public contract
     ACTION      endround();
     ACTION      unstake(std::string account);
 
-  private:     
+  private:
 
-    void        invite(uint64_t original_sender,std::string inviter); 
+    void        invite(uint64_t original_sender,std::string inviter);
     void        actInvite(uint64_t original_sender);                           //激活邀请关系
     void        vote(uint64_t original_sender,std::string superstar);
     bool        isSuperStar(uint64_t sender);
@@ -90,7 +98,7 @@ class starplan : public contract
     bool        addSmallPlanet(uint64_t sender);
     bool        isBigPlanet(uint64_t sender);
     bool        addBigPlanet(uint64_t sender);
-    uint64_t    currentRound(); 
+    uint64_t    currentRound();
     bool        bSmallRound();
     void        endSmallRound();
 
@@ -104,10 +112,17 @@ class starplan : public contract
     void        updateActivePlanetsBySuper(uint64_t sender);
     void        calcCurrentRoundPoolAmount();
     void        updateActivePlanets();
-    void        randomReward(); 
+
+    void        randomReward();
     void        rewardBigPlanet();
     void        rewardActivePlanet();
     void        rewardSuperStar();
+
+    uint64_t    randomReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    uint64_t    rewardBigPlanet(vector<reward> &rewardList, uint64_t rewardBudget);
+    uint64_t    rewardActivePlanet(vector<reward> &rewardList, uint64_t rewardBudget);
+    uint64_t    rewardSuperStar(vector<reward> &rewardList, uint64_t rewardBudget);
+
     void        createNewRound();
     bool        canUpdateSmall(uint64_t sender);
     void        deleteVote(uint64_t sender,uint64_t time);
@@ -118,7 +133,7 @@ class starplan : public contract
     struct tbglobal {                       // 全局状态表
         uint64_t index;
         uint64_t pool_amount;               // 总资金池剩余资产
-        uint64_t current_round;	            // 当前轮数
+        uint64_t current_round;             // 当前轮数
 
         uint64_t primary_key() const { return index; }
 
@@ -128,14 +143,14 @@ class starplan : public contract
     tbglobal_index tbglobals;
 
     //@abi table tbround i64
-    struct tbround {                      
+    struct tbround {
         uint64_t round;                     // 索引
         uint64_t current_round_invites;     // 当前轮完成邀请数
         uint64_t pool_amount;               // 当前轮奖池资产数
         uint64_t random_pool_amount;        // 当前随机池资产数
         uint64_t invite_pool_amount;        // 当前邀请奖励池资产数
-        uint64_t start_time;               	// 当前轮的启动时间
-        uint64_t end_time;               	// 当前轮的结束时间
+        uint64_t start_time;                // 当前轮的启动时间
+        uint64_t end_time;                  // 当前轮的结束时间
 
         uint64_t primary_key() const { return round; }
 
@@ -146,12 +161,12 @@ class starplan : public contract
 
     //@abi table tbvote i64
     struct tbvote {
-        uint64_t index;					    // 自增索引
-        uint64_t round;					    // 当前轮数
-        uint64_t stake_amount;	            // 抵押GXC数量
-        uint64_t from;					    // 投票者id
-        uint64_t to;						// 被投票者id
-        uint64_t vote_time;			        // 投票时间
+        uint64_t index;                     // 自增索引
+        uint64_t round;                     // 当前轮数
+        uint64_t stake_amount;              // 抵押GXC数量
+        uint64_t from;                      // 投票者id
+        uint64_t to;                        // 被投票者id
+        uint64_t vote_time;                 // 投票时间
 
         uint64_t primary_key() const { return index; }
         uint64_t by_vote_from() const { return from; }
@@ -173,7 +188,7 @@ class starplan : public contract
         uint64_t amount;                    // 抵押数量
         uint64_t end_time;                  // 抵押时间
         uint64_t staketo;                   // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
-        std::string reason;                 // 抵押原因 
+        std::string reason;                 // 抵押原因
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
@@ -225,7 +240,7 @@ class starplan : public contract
         uint64_t index;                     // 索引
         uint64_t id;                        // 账户id
         uint64_t invite_count;              // 邀请人数，每达到5个大行星，置为0，记录create_round=当前轮，weight=1
-        uint64_t create_time;               // 创建时间 
+        uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t weight;                    // 权重，每小轮0.85的幅度衰减，衰减为0，重新计算
 
@@ -265,12 +280,12 @@ class starplan : public contract
 
     //@abi table tbinvite i64
     struct tbinvite {
-        uint64_t index;						// 自增索引
-        uint64_t invitee;				    // 被邀请账户
-        uint64_t inviter;					// 邀请账户
+        uint64_t index;                     // 自增索引
+        uint64_t invitee;                   // 被邀请账户
+        uint64_t inviter;                   // 邀请账户
         bool     enabled;                   // 邀请关系是否⽣生效(invitee是否升级为⼤行星)
-        uint64_t create_round;			    // 当前轮数
-        uint64_t create_time;				// 邀请时间
+        uint64_t create_round;              // 当前轮数
+        uint64_t create_time;               // 邀请时间
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return invitee; }
