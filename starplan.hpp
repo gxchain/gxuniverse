@@ -66,12 +66,25 @@ const uint64_t      defaultinviter       = 0;                        //默认邀
 const char*         vote_reason          = "vote to super star";     //给超级星投票
 const char*         stake_reason         = "super star stake";       //超级星晋升
 
-#define RWD_TYPE_RANDOM 1
-#define RWD_TYPE_POOL   2
+#define RWD_TYPE_RANDOM     1
+#define RWD_TYPE_POOL       2
+#define RWD_TYPE_ACTIVE     3
+#define RWD_TYPE_SUPER      4
 struct reward {
     uint64_t to;
     uint64_t amount;
     uint64_t type;
+};
+
+struct ActivePlanet {
+    uint64_t id;
+    uint64_t weight;
+};
+
+struct SuperStar {
+    uint64_t id;
+    uint64_t vote;
+    bool end = false;
 };
 
 class starplan : public contract
@@ -119,17 +132,23 @@ class starplan : public contract
     void        rewardActivePlanet();
     void        rewardSuperStar();
 
-    uint64_t    randomReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    uint64_t    rewardBigPlanet(vector<reward> &rewardList, uint64_t rewardBudget);
-    uint64_t    rewardActivePlanet(vector<reward> &rewardList, uint64_t rewardBudget);
-    uint64_t    rewardSuperStar(vector<reward> &rewardList, uint64_t rewardBudget);
+    void        getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
+    uint64_t    getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
+    uint64_t    getCurrentRoundSuperStars(vector<SuperStar> &superStars);
+    void        chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
+    uint64_t    calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    uint64_t    calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    uint64_t    calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    uint64_t    calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    bool        baseSecureCheck(vector<reward> &rewardList);
+    void        doReward(vector<reward> &rewardList);
 
     void        createNewRound();
     bool        canUpdateSmall(uint64_t sender);
     void        deleteVote(uint64_t sender,uint64_t time);
     void        checkWithdraw(uint64_t pool,uint64_t amount);
 
-    bool        checkSender();                                                  //验证调用者和原始调用者是否相同     
+    bool        checkSender();                                                  //验证调用者和原始调用者是否相同
 
   private:
     //@abi table tbglobal i64
