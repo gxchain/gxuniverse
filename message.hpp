@@ -1,0 +1,30 @@
+const char* checkSenderMsg  =   "StarPlan Contract Error: Prohibit inline contract calls ";
+const char* checkAdminMsg   =   "StarPlan Contract Error: Only admin account can init!";
+const char* initGlobalMsg   =   "StarPlan Contract Error: The bonus pool has been initialized";
+const char* initRountMsg    =   "StarPlan Contract Error: The Current bonus pool has been initialized";
+const char* checkAccountMsg =   "StarPlan Contract Error: Account is invalid";
+const char* checkInviterMsg =   "StarPlan Contract Error: Inviters must be big planets and super star";
+const char* checkInvSendMsg =   "StarPlan Contract Error: Can't invite yourself ";
+const char* checkRouEndMsg  =   "StarPlan Contract Error: Current round is end, can't create planet";
+const char* checkSuperMsg   =   "StarPlan Contract Error: No found super planet account in superplanets table";
+const char* isInitMsg       =   "StarPlan Contract Error: Please initialize the game first";
+const char* initDepoMsg     =   "StarPlan Contract Error: Init amount must is 2000000 GXC and Only can deposit GXC asset!";
+const char* smallDepoMsg    =   "StarPlan Contract Error: 0.1 GXC required";
+const char* bigDepoMsg      =   "StarPlan Contract Error: 3 GXC required";
+const char* supDepoMsg      =   "StarPlan Contract Error: 20000 GXC required";
+const char* checkSmallMsg   =   "StarPlan Contract Error: You have to become a small planet first";
+const char* checkBigMsg     =   "StarPlan Contract Error: You are already a big planet";
+const char* IsSuperMsg      =   "StarPlan Contract Error: You are already a super star";
+const char* checkBigTimeMsg =   "StarPlan Contract Error: Big planet create time is error";
+const char* findRoundMsg    =   "StarPlan Contract Error: Found round table wrong";
+const char* checkAttenMsg   =   "StarPlan Contract Error: Pool Amount is error";
+const char* checkAmountMsg  =   "StarPlan Contract Error: Withdraw asset over";
+const char* isEndRoundMsg   =   "StarPlan Contract Error: Current round is not end";
+const char* unstakeLog      =   "Log: unstake withdraw";
+const char* inviterLog      =   "Log: inviter withdraw 1 GXC";
+const char* randomLog       =   "Log: random withdraw";
+const char* bigplanetLog    =   "Log: big planet withdraw";
+const char* actplanetLog    =   "Log: active planet withdraw";
+const char* supstarLog      =   "Log: super star withdraw";
+
+

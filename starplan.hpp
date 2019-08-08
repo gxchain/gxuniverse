@@ -5,6 +5,7 @@
 #include <graphenelib/multi_index.hpp>
 #include <graphenelib/crypto.h>
 #include <graphenelib/asset.h>
+#include "message.hpp"
 
 using namespace graphene;
 /*
