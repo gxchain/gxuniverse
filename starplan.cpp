@@ -71,7 +71,7 @@ void starplan::uptosmall(std::string inviter,std::string superstar)
 
     //////////////////////////////////////// 校验通过后，创建一个小行星 //////////////////////////////////////////
     //7、存到smallPlanet表(不允许重复创建)
-    if(canupdatesmall(sender_id))
+    if(canUpdateSmall(sender_id))
         addSmallPlanet(sender_id);
 
     //8、保存邀请关系(不允许重复邀请)
@@ -118,13 +118,13 @@ void starplan::uptobig()
     addBigPlanet(sender_id);
 
     //7、激活邀请关系
-    actinvite(sender_id);
+    actInvite(sender_id);
 
     //8、将3个GXC转移到奖池，将其中一个GXC发送给邀请人
     sendInviteReward(sender_id);
 
     //9、创建/更新活力星
-    updateActivePlanetsbybig(sender_id);
+    updateActivePlanetsByBig(sender_id);
 }
 
 // inviter为0，表示没有邀请账户
@@ -165,10 +165,10 @@ void starplan::uptosuper(std::string inviter)
     
     //9、保存邀请关系，激活邀请关系
     invite(sender_id,inviter);
-    actinvite(sender_id);
+    actInvite(sender_id);
 
     //10、插入更新一条活力星记录，权重为1
-    updateActivePlanetsbysuper(sender_id);
+    updateActivePlanetsBySuper(sender_id);
 }
 void starplan::endround()
 {
@@ -190,7 +190,7 @@ void starplan::endround()
     // 8 发放超级星奖励
     rewardSuperStar();
     // 9 开启新的一轮
-    createnewround();
+    createNewRound();
 }
 void starplan::unstake(std::string account)
 {
@@ -213,7 +213,7 @@ void starplan::unstake(std::string account)
                         });
                 }
                 // 1.2 从vote表中删除该次投票
-                deletevote(itor->account,itor->end_time -delayDay );
+                deleteVote(itor->account,itor->end_time -delayDay );
                 
             }else if(itor->reason == stake_reason){
                 // 1.2 判断超级星是否还存在，存在则删除超级星
@@ -374,7 +374,7 @@ void starplan::invite(uint64_t original_sender,std::string inviter)
         });
     }
 }
-void starplan::actinvite(uint64_t original_sender)
+void starplan::actInvite(uint64_t original_sender)
 {
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
     auto invite_itor = invite_idx.find(original_sender);
@@ -435,7 +435,7 @@ void starplan::sendInviteReward(uint64_t sender)
         inline_transfer(_self , invite_itor->inviter , coreAsset , z2 * precision,inviter_withdraw.c_str(),inviter_withdraw.length());
     
 }
-void starplan::updateActivePlanetsbybig(uint64_t sender)
+void starplan::updateActivePlanetsByBig(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
     auto invite_itor = invite_idx.find(sender);
@@ -462,7 +462,7 @@ void starplan::updateActivePlanetsbybig(uint64_t sender)
         });
     }
 }
-void starplan::updateActivePlanetsbysuper(uint64_t sender)
+void starplan::updateActivePlanetsBySuper(uint64_t sender)
 {
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(sender);
@@ -572,10 +572,10 @@ void starplan::randomReward()
         auto index = random_list[i];
         auto to = cround_big_list[index];
         if(i == bigplanet_size -1){
-            checkwithdraw(round_itor->pool_amount , total_amount);
+            checkWithdraw(round_itor->pool_amount , total_amount);
             inline_transfer(_self , to , coreAsset , total_amount, random_withdraw.c_str(),random_withdraw.length());
         }else{
-            checkwithdraw(round_itor->pool_amount , price);
+            checkWithdraw(round_itor->pool_amount , price);
             inline_transfer(_self , to , coreAsset , price, random_withdraw.c_str(),random_withdraw.length());
             total_amount -= price;
         }
@@ -612,11 +612,11 @@ void starplan::rewardBigPlanet()
     for(auto i = 0; i< bigplanet_size ; i++){
         auto to = cround_big_list[i];
         if(i == bigplanet_size-1){
-            checkwithdraw(round_itor->pool_amount , total_amount);
+            checkWithdraw(round_itor->pool_amount , total_amount);
             inline_transfer(_self , to , coreAsset , total_amount, bigplanet_withdraw.c_str(),bigplanet_withdraw.length());
         }
         else{
-            checkwithdraw(round_itor->pool_amount , price);
+            checkWithdraw(round_itor->pool_amount , price);
             inline_transfer(_self , to , coreAsset , price, bigplanet_withdraw.c_str(),bigplanet_withdraw.length());
             total_amount -= price;
         }
@@ -647,7 +647,7 @@ void starplan::rewardActivePlanet()
     while(itor_bak != act_idx.end() && itor_bak->weight > 0){
         auto to = itor_bak->id;
         uint64_t amount = total_amount * itor_bak->weight / total_weight;
-        checkwithdraw(round_itor->pool_amount , amount);
+        checkWithdraw(round_itor->pool_amount , amount);
         inline_transfer(_self , to , coreAsset , amount, actplanet_withdraw.c_str(),actplanet_withdraw.length());
         total_amount -= amount;
         itor_bak++;
@@ -661,7 +661,7 @@ void starplan::rewardActivePlanet()
     ritor--;
     auto to = ritor->id;
     if(total_amount > 0){
-        checkwithdraw(round_itor->pool_amount , total_amount);
+        checkWithdraw(round_itor->pool_amount , total_amount);
         inline_transfer(_self , to , coreAsset , total_amount, actplanet_withdraw.c_str(), actplanet_withdraw.length());
     }
 }
@@ -696,7 +696,7 @@ void starplan::rewardSuperStar()
         auto to = itor->id;
         if( itor->vote_num == 0 ){continue;}
         uint64_t amount = total_amount * itor->vote_num / total_vote;
-        checkwithdraw(round_itor->pool_amount , amount);
+        checkWithdraw(round_itor->pool_amount , amount);
         inline_transfer(_self , to , coreAsset , amount, supstar_withdraw.c_str(),supstar_withdraw.length());
         total_amount -= amount;
         if(!itor_increase(itor_bak)) break;
@@ -707,11 +707,11 @@ void starplan::rewardSuperStar()
     ritor--;
     auto to = ritor->id;
     if(total_amount > 0){
-        checkwithdraw(round_itor->pool_amount , total_amount);
+        checkWithdraw(round_itor->pool_amount , total_amount);
         inline_transfer(_self , to , coreAsset , total_amount, supstar_withdraw.c_str(), supstar_withdraw.length());
     }
 }
-void starplan::createnewround()
+void starplan::createNewRound()
 {
     // 1 结束当前轮，修改round表和global表
     auto round_itor = tbrounds.end();
@@ -735,7 +735,7 @@ void starplan::createnewround()
         obj.end_time                = 0;
     });
 }
-bool starplan::canupdatesmall(uint64_t sender)
+bool starplan::canUpdateSmall(uint64_t sender)
 {
     bool retValue = false;
     auto vot_idx = tbvotes.get_index<N(byfrom)>();
@@ -751,7 +751,7 @@ bool starplan::canupdatesmall(uint64_t sender)
     if(total_vote>=y*precision){ retValue = true; }
     return retValue;
 }
-void starplan::deletevote(uint64_t sender,uint64_t time)
+void starplan::deleteVote(uint64_t sender,uint64_t time)
 {
     auto vot_idx = tbvotes.get_index<N(byfrom)>();
     auto itor = vot_idx.find(sender);
@@ -766,7 +766,7 @@ void starplan::deletevote(uint64_t sender,uint64_t time)
         }
     }
 }
-void starplan::checkwithdraw(uint64_t pool,uint64_t amount)
+void starplan::checkWithdraw(uint64_t pool,uint64_t amount)
 {
     if(pool<amount){
         graphene_assert(false, "withdraw asset over! ");

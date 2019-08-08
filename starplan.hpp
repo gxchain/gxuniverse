@@ -82,7 +82,7 @@ class starplan : public contract
   private:     
 
     void        invite(uint64_t original_sender,std::string inviter); 
-    void        actinvite(uint64_t original_sender);                           //激活邀请关系
+    void        actInvite(uint64_t original_sender);                           //激活邀请关系
     void        vote(uint64_t original_sender,std::string superstar);
     bool        isSuperStar(uint64_t sender);
     bool        addSuperStar(uint64_t sender);
@@ -100,18 +100,18 @@ class starplan : public contract
     bool        hasInvited(uint64_t original_sender,std::string inviter);
     void        addStake(uint64_t sender,uint64_t amount,uint64_t to,std::string reason);
     void        sendInviteReward(uint64_t sender);
-    void        updateActivePlanetsbybig(uint64_t sender);
-    void        updateActivePlanetsbysuper(uint64_t sender);
+    void        updateActivePlanetsByBig(uint64_t sender);
+    void        updateActivePlanetsBySuper(uint64_t sender);
     void        calcCurrentRoundPoolAmount();
     void        updateActivePlanets();
     void        randomReward(); 
     void        rewardBigPlanet();
     void        rewardActivePlanet();
     void        rewardSuperStar();
-    void        createnewround();
-    bool        canupdatesmall(uint64_t sender);
-    void        deletevote(uint64_t sender,uint64_t time);
-    void        checkwithdraw(uint64_t pool,uint64_t amount);
+    void        createNewRound();
+    bool        canUpdateSmall(uint64_t sender);
+    void        deleteVote(uint64_t sender,uint64_t time);
+    void        checkWithdraw(uint64_t pool,uint64_t amount);
 
   private:
     //@abi table tbglobal i64

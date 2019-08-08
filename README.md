@@ -108,7 +108,7 @@ struct tbstake {
 小行星表
 
 ```C++
-struct tbsmallplanet{
+struct tbsmallplan{
   uint64_t index;							// 自增索引 
   uint64_t id;                // 账户id
   uint64_t create_time;       // 创建时间
@@ -411,7 +411,7 @@ void startNewRound();
 ### 20. 激活邀请关系
 
 ```c++
-void actinvite(uint64_t original_sender);
+void actInvite(uint64_t original_sender);
 ```
 
 ### 21. 是否满足邀请条件
@@ -448,17 +448,37 @@ void addStake(uint64_t sender,uint64_t amount,uint64_t to,std::string reason);
 ### 26. 大行星升级时，更新活力星
 
 ```c++
-void updateActivePlanetsbybig(uint64_t sender);
+void updateActivePlanetsByBig(uint64_t sender);
 ```
 
 ### 27. 超级星升级时，更新活力星
 
 ```c++
-void updateActivePlanetsbysuper(uint64_t sender);
+void updateActivePlanetsBySuper(uint64_t sender);
 ```
 
 ### 28. 开启新的一轮
 
 ```c++
 void createnewround();
+```
+
+### 29. 是否升级小行星
+
+投票满100票时，可以升级小行星
+
+```c++
+bool canUpdateSmall(uint64_t sender);
+```
+
+### 30. 解除抵押时，删除投票信息
+
+```c++
+void deleteVote();
+```
+
+### 31. 检查提现金额
+
+```c++
+void checkWithdraw();
 ```
