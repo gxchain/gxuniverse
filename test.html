@@ -36,6 +36,7 @@
             chainId: 'c2af30ef9340ff81fd61654295e98a1ff04b23189748f86727d0b26b40bb0ff4'
         }
 
+        let contractName = 'startest001'
         let gscatter
         let gxc
 
@@ -76,35 +77,35 @@
                     }
                 },
                 init(){
-                    gxc.callContract('stattest01', 'init', {}, '10 GXC', true).then(trx=>{
+                    gxc.callContract(contractName, 'init', {}, '100 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 uptosmall(){
-                    gxc.callContract('stattest01', 'uptosmall', {inviter:"",superstar:""}, '100 GXC', true).then(trx=>{
+                    gxc.callContract(contractName, 'uptosmall', {inviter:"",superstar:"gxb122"}, '10 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 uptobig(){
-                    gxc.callContract('stattest01', 'uptobig', {inviter:""}, '10 GXC', true).then(trx=>{
+                    gxc.callContract(contractName, 'uptobig', {}, '3 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 uptosuper(){
-                    gxc.callContract('stattest01', 'uptosuper', {inviter:""}, '20000 GXC', true).then(trx=>{
+                    gxc.callContract(contractName, 'uptosuper', {inviter:""}, '20 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
                 endround(){
-                    gxc.callContract('stattest01', 'endround', {}, '', true).then(trx=>{
+                    gxc.callContract(contractName, 'endround', {}, '', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
