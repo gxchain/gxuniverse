@@ -460,7 +460,7 @@ void updateActivePlanetsBySuper(uint64_t sender);
 ### 28. 开启新的一轮
 
 ```c++
-void createnewround();
+void createNewRound();
 ```
 
 ### 29. 是否升级小行星
