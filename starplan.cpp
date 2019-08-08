@@ -3,6 +3,9 @@
 void starplan::init()
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
+    // 0 防止跨合约调用
+    graphene_assert(checkSender(), "StarPlan Contract Error: Prohibit inline contract calls ");
+
     // 1 校验调用者，只有调用者可以初始化底池，只许调用一次
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == adminId, "StarPlan Contract Error: Only admin account can init! ");
@@ -41,6 +44,10 @@ void starplan::init()
 void starplan::uptosmall(std::string inviter,std::string superstar)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
+
+    // 0 防止跨合约调用
+    graphene_assert(checkSender(), "StarPlan Contract Error: Prohibit inline contract calls ");
+
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
@@ -94,6 +101,10 @@ void starplan::uptosmall(std::string inviter,std::string superstar)
 void starplan::uptobig()
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
+
+    // 0 防止跨合约调用
+    graphene_assert(checkSender(), "StarPlan Contract Error: Prohibit inline contract calls ");
+
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
@@ -131,6 +142,10 @@ void starplan::uptobig()
 void starplan::uptosuper(std::string inviter)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
+
+    // 0 防止跨合约调用
+    graphene_assert(checkSender(), "StarPlan Contract Error: Prohibit inline contract calls ");
+
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
@@ -172,6 +187,9 @@ void starplan::uptosuper(std::string inviter)
 }
 void starplan::endround()
 {
+    // 0 防止跨合约调用
+    graphene_assert(checkSender(), "StarPlan Contract Error: Prohibit inline contract calls ");
+
     // 1 验证调用者账户是否为admin账户
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == adminId, "StarPlan Contract Error: Only support admin account! ");
@@ -194,6 +212,9 @@ void starplan::endround()
 }
 void starplan::unstake(std::string account)
 {
+    // 0 防止跨合约调用
+    graphene_assert(checkSender(), "StarPlan Contract Error: Prohibit inline contract calls ");
+
     const std::string unstake_withdraw = "unstake withdraw";                    //抵押提现
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
     auto sta_idx = tbstakes.get_index<N(byaccid)>();
@@ -792,4 +813,12 @@ void starplan::checkWithdraw(uint64_t pool,uint64_t amount)
     if(pool<amount){
         graphene_assert(false, "withdraw asset over! ");
     }
+}
+bool starplan::checkSender()
+{
+    bool retValue = false;
+    auto sender_id = get_trx_sender();
+    auto origin_id = get_trx_origin();
+    if(sender_id == origin_id){ retValue = true; }
+    return retValue;
 }

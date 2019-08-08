@@ -128,6 +128,8 @@ class starplan : public contract
     void        deleteVote(uint64_t sender,uint64_t time);
     void        checkWithdraw(uint64_t pool,uint64_t amount);
 
+    bool        checkSender();                                                  //验证调用者和原始调用者是否相同     
+
   private:
     //@abi table tbglobal i64
     struct tbglobal {                       // 全局状态表
