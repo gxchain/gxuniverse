@@ -494,11 +494,12 @@ void starplan::actInvite(uint64_t original_sender)
 
 void starplan::createVote(uint64_t original_sender,std::string superstar)
 {
+    uint64_t amount = get_action_asset_amount();
     uint64_t super_id = get_account_id(superstar.c_str(), superstar.length());
     tbvotes.emplace(_self,[&](auto &obj) {
         obj.index                   = tbvotes.available_primary_key();
         obj.round                   = currentRound();
-        obj.stake_amount            = y * precision;
+        obj.stake_amount            = amount;
         obj.from                    = original_sender;
         obj.to                      = super_id;
         obj.vote_time               = get_head_block_time();
