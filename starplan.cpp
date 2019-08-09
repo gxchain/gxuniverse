@@ -144,7 +144,7 @@ void starplan::uptobig()
     updateActivePlanetsByBig(sender_id);
 
     //10、当邀请关系满100人，开启新的一轮
-    if(getLastRounditor()->current_round_invites >= roundSize ){
+    if(lastRound().current_round_invites >= roundSize ){
         endround();
     }
 }
@@ -203,7 +203,7 @@ void starplan::endround()
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
     // 1 验证调用者账户是否为admin账户
-    if(getLastRounditor()->current_round_invites < roundSize ){
+    if(lastRound().current_round_invites < roundSize ){
         uint64_t sender_id = get_trx_origin();
         graphene_assert(sender_id == adminId, CHECKADMINMSG);
     }
@@ -376,11 +376,11 @@ bool starplan::addBigPlanet(uint64_t sender)
     }
     return false;
 }
-bool starplan::hasInvited(uint64_t original_sender)
+bool starplan::hasInvited(uint64_t sender)
 {
     bool retValue = false;
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
-    auto invite_itor = invite_idx.find(original_sender);
+    auto invite_itor = invite_idx.find(sender);
     if(invite_itor != invite_idx.end()) { retValue = true; }
     return retValue;
 }
@@ -441,15 +441,15 @@ uint64_t starplan::currentRound()
     auto itor = tbglobals.find(0);
     return itor->current_round;
 }
-void starplan::invite(uint64_t original_sender,std::string inviter)
+void starplan::invite(uint64_t sender,std::string inviter)
 {
     uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
     if(inviter_id == -1)
         inviter_id = defaultinviter;
-    if(!hasInvited(original_sender,inviter)){                                 //不存在邀请关系则创建，
+    if(!hasInvited(sender,inviter)){                                 //不存在邀请关系则创建，
         tbinvites.emplace(_self,[&](auto &obj) {
             obj.index                   = tbinvites.available_primary_key();
-            obj.invitee                 = original_sender;
+            obj.invitee                 = sender;
             obj.inviter                 = inviter_id;
             obj.enabled                 = false;
             obj.create_round            = currentRound();                      //升级为大行星或者超级星时，重新设置
@@ -457,20 +457,20 @@ void starplan::invite(uint64_t original_sender,std::string inviter)
         });
     }
 }
-void starplan::actInvite(uint64_t original_sender)
+void starplan::actInvite(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
-    auto invite_itor = invite_idx.find(original_sender);
+    auto invite_itor = invite_idx.find(sender);
     invite_idx.modify(invite_itor,_self,[&](auto &obj){
         obj.enabled                 = true;
     });
     // 当前轮邀请数自增1
-    tbrounds.modify(getLastRounditor(),_self,[&](auto &obj){
+    tbrounds.modify(lastRound(),_self,[&](auto &obj){
         obj.current_round_invites   = obj.current_round_invites + 1;
     });
 }
 
-void starplan::createVote(uint64_t original_sender,std::string superstar)
+void starplan::createVote(uint64_t sender,std::string superstar)
 {
     uint64_t amount = get_action_asset_amount();
     uint64_t super_id = get_account_id(superstar.c_str(), superstar.length());
@@ -478,7 +478,7 @@ void starplan::createVote(uint64_t original_sender,std::string superstar)
         obj.index                   = tbvotes.available_primary_key();
         obj.round                   = currentRound();
         obj.stake_amount            = amount;
-        obj.from                    = original_sender;
+        obj.from                    = sender;
         obj.to                      = super_id;
         obj.vote_time               = get_head_block_time();
     });
@@ -502,7 +502,7 @@ void starplan::distriInvRewards(uint64_t sender)
     std::string   inviter_withdraw     = INVITERLOG;  //提现一个1GXC到邀请人账户
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
     auto invite_itor = invite_idx.find(sender);
-    tbrounds.modify(getLastRounditor(), _self, [&](auto &obj){                               //修改奖池金额
+    tbrounds.modify(lastRound(), _self, [&](auto &obj){                               //修改奖池金额
             obj.random_pool_amount      = obj.random_pool_amount + z3 * precision;
             obj.invite_pool_amount      = obj.invite_pool_amount + z1 * precision;
     });
@@ -560,21 +560,21 @@ void starplan::updateActivePlanetsBySuper(uint64_t sender)
 void starplan::calcCurrentRoundPoolAmount()
 {
     // 1、获取平均奖励池
-    auto round_itor = getLastRounditor();
+    auto &round = lastRound();
 
     // 2、默认底池
-    auto pool_amount = roundAmount * precision + round_itor->invite_pool_amount;
+    auto pool_amount = roundAmount * precision + round.invite_pool_amount;
     // 3、超过四小时，每小时减少底池金额
     auto x = currentRound()%bigRoundSize + 1;
     // 4、计算当前小轮的运行时间
-    if(get_head_block_time() - round_itor->start_time > decayTime){
-        auto dursize = ((get_head_block_time() - round_itor->start_time - decayTime) / decayDur) + 1;
+    if(get_head_block_time() - round.start_time > decayTime){
+        auto dursize = ((get_head_block_time() - round.start_time - decayTime) / decayDur) + 1;
         dursize = dursize > maxDecayCount ? maxDecayCount:dursize;
         graphene_assert(pool_amount > (dursize * x * precision), CHECKATTENMSG);
         pool_amount = pool_amount - dursize * x * precision;
     }
     // 5、修改当前轮底池 pool_amount
-    tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
+    tbrounds.modify(round, _self, [&](auto &obj){                               //修改奖池金额pool_amount
         obj.pool_amount      = pool_amount;
     });
     // 6、修改总的资金池
@@ -810,8 +810,7 @@ void starplan::doReward(vector<reward> &rewardList)
 void starplan::createNewRound()
 {
     // 1 结束当前轮，修改round表和global表
-    auto round_itor = getLastRounditor();
-    tbrounds.modify(*round_itor, _self, [&](auto &obj){
+    tbrounds.modify(lastRound(), _self, [&](auto &obj){
         obj.end_time            = get_head_block_time();
     });
     // 2 创建新的一轮
@@ -884,11 +883,4 @@ bool starplan::isUpgrade()
     auto itor = tbglobals.find(0);
     if(itor->is_upgrade > 0){retValue = true;}
     return retValue;
-}
-auto& starplan::getLastRounditor()
-{
-    auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
-    round_itor--;
-    return round_itor;
 }
