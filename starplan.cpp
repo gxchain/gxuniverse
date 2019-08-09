@@ -138,7 +138,7 @@ void starplan::uptobig()
     actInvite(sender_id);
 
     //8、将3个GXC转移到奖池，将其中一个GXC发送给邀请人
-    sendInviteReward(sender_id);
+    distriInvRewards(sender_id);
 
     //9、创建/更新活力星
     updateActivePlanetsByBig(sender_id);
@@ -518,7 +518,7 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
     });
 }
 
-void starplan::sendInviteReward(uint64_t sender)
+void starplan::distriInvRewards(uint64_t sender)
 {
     std::string   inviter_withdraw     = INVITERLOG;  //提现一个1GXC到邀请人账户
     auto round_itor = tbrounds.end();
