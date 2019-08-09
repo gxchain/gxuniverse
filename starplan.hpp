@@ -145,10 +145,17 @@ class starplan : public contract
     uint64_t    getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
     uint64_t    getCurrentRoundSuperStars(vector<SuperStar> &superStars);
     void        chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
-    uint64_t    calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    uint64_t    calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    uint64_t    calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    uint64_t    calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
+
+    inline uint64_t    getRandomRewardBudget();
+    inline uint64_t    getBigPlanetRewardBudget();
+    inline uint64_t    getActivePlanetRewardBudget();
+    inline uint64_t    getSuperStarRewardBudget();
+
+    inline uint64_t    calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    inline uint64_t    calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    inline uint64_t    calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    inline uint64_t    calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
+
     bool        baseSecureCheck(vector<reward> &rewardList);
     void        doReward(vector<reward> &rewardList);
 

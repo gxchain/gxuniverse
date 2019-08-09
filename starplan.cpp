@@ -205,14 +205,40 @@ void starplan::endround()
     calcCurrentRoundPoolAmount();
     // 4 更新活力星权重
     updateActivePlanets();
-    // 5 发放随机奖池奖励
-    randomReward();
-    // 6 发放当轮晋升的大行星奖励
-    rewardBigPlanet();
-    // 7 发放活力星奖励
-    rewardActivePlanet();
-    // 8 发放超级星奖励
-    rewardSuperStar();
+
+    {
+        // 5 发放随机奖池奖励
+        randomReward();
+        // 6 发放当轮晋升的大行星奖励
+        rewardBigPlanet();
+        // 7 发放活力星奖励
+        rewardActivePlanet();
+        // 8 发放超级星奖励
+        rewardSuperStar();
+    }
+
+    {
+        uint64_t randomBudget = getRandomRewardBudget();
+        uint64_t bigPlanetBudget = getBigPlanetRewardBudget();
+        uint64_t activePlanetBudget = getActivePlanetRewardBudget();
+        uint64_t superStarBudget = getSuperStarRewardBudget();
+
+        uint64_t actualReward = 0;
+        vector<reward> rewardList;
+
+        actualReward += calcRandomReward(rewardList, randomBudget);
+        actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
+        actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
+        actualReward += calcSuperStarReward(rewardList, superStarBudget);
+
+        if(baseSecureCheck(rewardList)) {
+            doReward(rewardList);
+        }
+
+        //TODO modify tbrounds.random_pool_amount - actualReward
+        //TODO modify tbglobals.pool_amount - actualReward
+    }
+
     // 9 开启新的一轮
     createNewRound();
 }
@@ -809,6 +835,40 @@ void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64
     }
 }
 
+uint64_t starplan::getRandomRewardBudget()
+{
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
+    round_itor--;
+    return round_itor->random_pool_amount;
+}
+
+uint64_t starplan::getBigPlanetRewardBudget()
+{
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
+    round_itor--;
+    uint64_t upayBackPercent = payBackPercent * 100;
+    return (round_itor->pool_amount) * upayBackPercent / 100 ;
+}
+
+uint64_t starplan::getActivePlanetRewardBudget()
+{
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
+    round_itor--;
+    uint64_t uactivePercent = activePercent * 100;
+    return (round_itor->pool_amount) * uactivePercent / 100 ;
+}
+
+uint64_t starplan::getSuperStarRewardBudget()
+{
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
+    round_itor--;
+    return round_itor->pool_amount;
+}
+
 uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget)
 {
     vector<uint64_t> &bigPlanets;
@@ -816,6 +876,8 @@ uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardB
 
     getCurrentRoundBigPlanets(bigPlanets);
     chooseBigPlanet(bigPlanets, bigPlanetsToReward);
+
+    if(bigPlanetsToReward.size() == 0) return 0;
 
     uint64_t actualRewardAmount = 0;
     uint64_t rewardPerPlanet = rewardBudget / bigPlanetsToReward.size();
@@ -832,6 +894,8 @@ uint64_t starplan::calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewa
 {
     vector<uint64_t> &bigPlanets;
     getCurrentRoundBigPlanets(bigPlanets);
+
+    if(bigPlanets.size() == 0) return 0;
 
     uint64_t actualRewardAmount = 0;
     uint64_t rewardPerPlanet = rewardBudget / bigPlanets.size();
@@ -865,6 +929,8 @@ uint64_t starplan::calcSuperStarReward(vector<reward> &rewardList, uint64_t rewa
     vector<SuperStar> superStars;
 
     uint64_t totalVote = getCurrentRoundSuperStars(superStars);
+    if(totalVote == 0) return 0;
+
     uint64_t amount = 0;
     uint64_t totalAmount = 0;
     for(auto &superStar : superStars) {
@@ -888,6 +954,7 @@ bool starplan::baseSecureCheck(vector<reward> &rewardList)
 
     graphene_assert(totalReward > 0 && totalReward < MAX_ROUND_REWARD, "");
 
+    return true;
     //TODO add other secure check
 }
 
@@ -895,6 +962,8 @@ void starplan::doReward(vector<reward> &rewardList)
 {
     for (auto &reward : rewardList)
     {
+        if(reward.amount == 0) continue;
+
         inline_transfer(
                 _self,
                 reward.to,
