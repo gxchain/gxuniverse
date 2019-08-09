@@ -49,7 +49,7 @@ const char* stake_reason = "super star stake";    // 超级星晋升
 
 全局状态表，**只有1条记录**，初始化的时候存入
 
-```C++
+```c++
 struct tbglobal {
   uint64_t index;					// 自增索引
   uint64_t pool_amount;		// 总资金池剩余资产
@@ -61,7 +61,7 @@ struct tbglobal {
 
 每一轮都会产生一条记录，记录当前轮次的信息
 
-```C++
+```c++
 struct tbround{                      
   uint64_t round;                     // 当前轮数&索引
   uint64_t current_round_invites;     // 当前轮完成邀请数
@@ -77,7 +77,7 @@ struct tbround{
 
 投票操作表
 
-```C++
+```c++
 struct tbvote {
   uint64_t index;						// 自增索引
   uint64_t round;						// 当前轮数
@@ -92,7 +92,7 @@ struct tbvote {
 
 锁仓表，每一次升级小行星（投票）和升级超级星，都会产生一条staking记录
 
-```C++
+```c++
 struct tbstake {
   uint64_t index;				// 自增索引
   uint64_t account;			// 账号id
@@ -107,7 +107,7 @@ struct tbstake {
 
 小行星表
 
-```C++
+```c++
 struct tbsmallplan{
   uint64_t index;							// 自增索引 
   uint64_t id;                // 账户id
@@ -120,7 +120,7 @@ struct tbsmallplan{
 
 大行星表
 
-```C++
+```c++
 struct tbbigplanet{
   uint64_t index;							// 自增索引 
   uint64_t id;                // 账户id
@@ -133,7 +133,7 @@ struct tbbigplanet{
 
 活跃星表
 
-```C++
+```c++
 struct tbactiveplan {
   uint64_t index;								// 自增索引
   uint64_t id;                  // 账户id
@@ -148,7 +148,7 @@ struct tbactiveplan {
 
 超级星表
 
-```C++
+```c++
 struct tbsuperstar {
   uint64_t index;											// 自增索引
   uint64_t id;                        // 账户id
@@ -162,7 +162,7 @@ struct tbsuperstar {
 
 邀请关系表
 
-```C++
+```c++
 struct tbinvite {
   uint64_t index;											// 自增索引
   uint64_t invitee;										// 被邀请账户
@@ -179,7 +179,7 @@ struct tbinvite {
 
 ### 1. 初始化存入底池
 
-``` C++
+``` c++
 PAYABLE init(){
   // globals[0].index = 0;
   // globals[0].poll_amount = 2000000;
@@ -189,7 +189,7 @@ PAYABLE init(){
 
 ### 2. 升级成为超级星
 
-``` C++
+``` c++
 PAYABLE uptosuper(std:string inviter){
     uint64_t orig_sender = get_trx_origin();
     uint64_t ast_id = get_action_asset_id();
@@ -208,7 +208,7 @@ PAYABLE uptosuper(std:string inviter){
 ```
 
 ### 3. 升级成为小行星
-``` C++
+``` c++
 PAYABLE uptosmall(std:string inviter,std:string superStar){
     uint64_t orig_sender = get_trx_origin();
     uint64_t ast_id = get_action_asset_id();
@@ -229,7 +229,7 @@ PAYABLE uptosmall(std:string inviter,std:string superStar){
 ```
 ### 4. 升级成为大行星
 
-``` C++
+``` c++
 PAYABLE uptobig(){
     uint64_t orig_sender = get_trx_origin();
     uint64_t ast_id = get_action_asset_id();
@@ -255,7 +255,7 @@ PAYABLE uptobig(){
 
 ### 1. 建立邀请关系
 
-``` C++
+``` c++
 void invite(uint64_t original_sender,std:string inviter){
     if(inviter!=null){
         int64_t acc_id = get_account_id(inviter.c_str(), inviter.length());
@@ -267,7 +267,7 @@ void invite(uint64_t original_sender,std:string inviter){
 }
 ```
 ### 2. 小行星给超级星投票
-``` C++
+``` c++
 void vote(uint64_t orig_sender,std:string superstar){
   uint64_t star_acc_id = get_account_id(superstar);
   graphene_assert(!isSuperStar(star_acc_id),“The account you voted is not a superstar”);
@@ -279,43 +279,43 @@ void vote(uint64_t orig_sender,std:string superstar){
 ```
 ### 3. 是否已经是超级星
 
-``` C++
+``` c++
 bool isSuperStar(uint64_t sender);
 ```
 
 ### 4. 添加超级星
 
-``` C++
+``` c++
 bool addSuperStar(uint64_t sender);
 ```
 
 ### 5. 是否已经是小行星
 
-``` C++
+``` c++
 bool isSmallPlanet(uint64_t sender);
 ```
 
 ### 6. 添加小行星
 
-``` C++
+``` c++
 bool addSmallPlanet(uint64_t sender);
 ```
 
 ### 7. 是否已经是大行星
 
-``` C++
+``` c++
 bool isBigPlanet(uint64_t sender);
 ```
 
 ### 8. 添加大行星
 
-``` C++
+``` c++
 bool addBigPlanet(uint64_t sender);
 ```
 
 ### 9. 获取当前轮数
 
-``` C++
+``` c++
 uint32_t currentRound();
 ```
 
@@ -324,7 +324,7 @@ uint32_t currentRound();
 - case1: 当前区块头时间 - 上一个大行星加入时间 > 12小时
 - case2: totalInvites() - currentRound() * roundSize > roundSize
 
-``` C++
+``` c++
 bool bSmallRound(){
     if(case1||case2){
         return true;
@@ -335,7 +335,7 @@ bool bSmallRound(){
 
 ### 11. 结束当前一小轮
 
-``` C++
+``` c++
 void endSmallRound(){
     if(bSmallRound()){
       calcCurrentRoundPoolAmount();	// 计算当前轮奖励数额，保存到round表中
@@ -351,7 +351,7 @@ void endSmallRound(){
 
 ### 12. 发送邀请人奖励
 
-```C++
+```c++
 void sendInviteReward(uint64_t inviter, uint64_t amount);
 ```
 
@@ -363,7 +363,7 @@ void sendInviteReward(uint64_t inviter, uint64_t amount);
 - 超过4小时没有结束，则底池会减少，没隔1小时底池减少x-1次，其中x=(current_round % bigRoundSize)+1
 - 每一轮总底池pool_amount = default_amount + rounds.upper_bound().invite_pool_amount;
 
-```C++
+```c++
 void calcCurrentRoundPoolAmount();
 ```
 
@@ -373,32 +373,32 @@ void calcCurrentRoundPoolAmount();
 - 活力星的权重初始为1，即晋升的那一小轮，按照100%的权重分发，之后每一小轮权重降为原来的0.85，直至权重为0，权重取3位小数
 - 重新邀请满5人后（这5人可以跨多轮邀请到），活力星的权重可重回1
 
-```C++
+```c++
 void updateActivePlanets();
 ```
 
 
 ### 15. 发放随机奖励池
 
-```C++
+```c++
 void randomReward();
 ```
 
 ### 16. 发放当前轮晋升的大行星奖励
 
-```C++
+```c++
 void rewardBigPlanet();
 ```
 
 ### 17. 发放活力星奖励
 
-```C++
+```c++
 void rewardActivePlanet();
 ```
 
 ### 18. 发放超级星奖励
 
-```C++
+```c++
 void rewardSuperStar();
 ```
 
