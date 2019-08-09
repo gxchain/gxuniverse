@@ -73,11 +73,13 @@ const char*         stake_reason         = "super star stake";       //超级星
 #define RWD_TYPE_POOL       1
 #define RWD_TYPE_ACTIVE     2
 #define RWD_TYPE_SUPER      3
-const char* const reward_reasons[4] = {
+#define RWD_TYPE_TIMEOUT    4
+const char* const reward_reasons[5] = {
         "RWD_TYPE_RANDOM",
         "RWD_TYPE_POOL",
         "RWD_TYPE_ACTIVE",
-        "RWD_TYPE_SUPER"
+        "RWD_TYPE_SUPER",
+        "RWD_TYPE_TIMEOUT"
 };
 #define MAX_ROUND_REWARD    1000000 //TODO calc the max reward per round
 #define MAX_USER_REWARD     100000  //TODO calc the max reward per user in one round
@@ -127,7 +129,7 @@ class starplan : public contract
     bool        addBigPlanet(uint64_t sender);
     uint64_t    currentRound();
     bool        bSmallRound();
-    inline bool isInviteTimeout(uint64_t lastBigPlanetCreateTime);//>12 hours
+    inline bool isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
     inline bool isRoundFull();//>=100 inviatees
     bool        isRoundFinish();
 
