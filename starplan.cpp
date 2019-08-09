@@ -41,7 +41,7 @@ void starplan::init()
             obj.end_time                = 0;
         });
 }
-void starplan::uptosmall(std::string inviter,std::string superstar)
+void starplan::vote(std::string inviter,std::string superstar)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
@@ -87,7 +87,7 @@ void starplan::uptosmall(std::string inviter,std::string superstar)
     invite(sender_id,inviter);
 
     //9、vote(允许重复投票)
-    vote(sender_id,superstar);
+    createVote(sender_id,superstar);
 
     //10、添加一个新的抵押金额
     addStake(sender_id,amount,super_id,vote_reason);
@@ -445,7 +445,7 @@ void starplan::actInvite(uint64_t original_sender)
     });
 }
 
-void starplan::vote(uint64_t original_sender,std::string superstar)
+void starplan::createVote(uint64_t original_sender,std::string superstar)
 {
     uint64_t super_id = get_account_id(superstar.c_str(), superstar.length());
     tbvotes.emplace(_self,[&](auto &obj) {

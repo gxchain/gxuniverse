@@ -104,7 +104,7 @@ class starplan : public contract
             ,tbactiveplans(_self,_self),tbsuperstars(_self,_self),tbinvites(_self,_self){}
 
     PAYABLE     init();
-    PAYABLE     uptosmall(std::string inviter,std::string superstar);
+    PAYABLE     vote(std::string inviter,std::string superstar);
     PAYABLE     uptobig();
     PAYABLE     uptosuper(std::string inviter);
     ACTION      endround();
@@ -114,7 +114,7 @@ class starplan : public contract
 
     void        invite(uint64_t original_sender,std::string inviter);
     void        actInvite(uint64_t original_sender);                           //激活邀请关系
-    void        vote(uint64_t original_sender,std::string superstar);
+    void        createVote(uint64_t original_sender,std::string superstar);
     bool        isSuperStar(uint64_t sender);
     bool        addSuperStar(uint64_t sender);
     bool        isSmallPlanet(uint64_t sender);
@@ -340,4 +340,4 @@ class starplan : public contract
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
 };
-GRAPHENE_ABI(starplan, (init)(uptosmall)(uptobig)(uptosuper)(endround)(unstake))
+GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake))
