@@ -127,15 +127,12 @@ void starplan::uptobig()
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isSmallPlanet(sender_id), CHECKSMALLMSG);
 
-    //4、判断是否已经是bigPlanet，如果已经是，则提示"You are already a big planet"
-    graphene_assert(!isBigPlanet(sender_id), CHECKBIGMSG);
-
     //5、验证当前轮是否结束
     graphene_assert(!bSmallRound(),CHECKROUENDMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
     //6、存到bigPlanet表
-    addBigPlanet(sender_id);
+    graphene_assert(addBigPlanet(sender_id), CHECKBIGMSG);
 
     //7、激活邀请关系
     actInvite(sender_id);
@@ -163,9 +160,7 @@ void starplan::uptosuper(std::string inviter)
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(x));
     graphene_assert(ast_id == coreAsset && amount == x * precision, depomsg.c_str());
 
-    //2、判断是否已经是superstar，如果已经是，则提示"You are already a super star"
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(!isSuperStar(sender_id), ISSUPERMSG);
 
     //3、验证账户是否存在
     if(inviter != ""){
@@ -185,7 +180,7 @@ void starplan::uptosuper(std::string inviter)
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
     //7、创建超级星
-    addSuperStar(sender_id);
+    graphene_assert(addSuperStar(sender_id), ISSUPERMSG);
 
     //8、创建抵押项
     addStake(sender_id, amount, sender_id, STAKE_TYPE_TOSUPER);
@@ -333,14 +328,17 @@ bool starplan::isSuperStar(uint64_t sender)
 }
 bool starplan::addSuperStar(uint64_t sender)
 {
-    tbsuperstars.emplace(_self,[&](auto &obj) {                 //创建超级星
-        obj.index                   = tbsuperstars.available_primary_key();
-        obj.id                      = sender;
-        obj.create_time             = get_head_block_time();
-        obj.create_round            = currentRound();
-        obj.vote_num                = 0;
-    });
-    return true;
+    if(!isBigPlanet(sender)){ 
+        tbsuperstars.emplace(_self,[&](auto &obj) {                 //创建超级星
+            obj.index                   = tbsuperstars.available_primary_key();
+            obj.id                      = sender;
+            obj.create_time             = get_head_block_time();
+            obj.create_round            = currentRound();
+            obj.vote_num                = 0;
+        });
+        return true;
+    }
+    return false;
 }
 bool starplan::isSmallPlanet(uint64_t sender)
 {
@@ -373,13 +371,16 @@ bool starplan::isBigPlanet(uint64_t sender)
 }
 bool starplan::addBigPlanet(uint64_t sender)
 {
-    tbbigplanets.emplace(_self,[&](auto &obj){                            //创建一个大行星
-            obj.index                   = tbbigplanets.available_primary_key();
-            obj.id                      = sender;
-            obj.create_time             = get_head_block_time();
-            obj.create_round            = currentRound();
-        });
-    return true;
+    if(!isBigPlanet(sender)){  
+        tbbigplanets.emplace(_self,[&](auto &obj){                            //创建一个大行星
+                obj.index                   = tbbigplanets.available_primary_key();
+                obj.id                      = sender;
+                obj.create_time             = get_head_block_time();
+                obj.create_round            = currentRound();
+            });
+        return true;
+    }
+    return false;
 }
 bool starplan::hasInvited(uint64_t original_sender,std::string inviter)
 {
