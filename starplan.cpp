@@ -81,18 +81,19 @@ void starplan::vote(std::string inviter,std::string superstar)
     graphene_assert(isSuperStar(super_id), CHECKSUPERMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个小行星 //////////////////////////////////////////
-    //7、存到smallPlanet表(不允许重复创建)
-    if(canUpdateSmall(sender_id))
-        addSmallPlanet(sender_id);
 
-    //8、保存邀请关系(不允许重复邀请)
+    //6、保存邀请关系(不允许重复邀请)
     invite(sender_id,inviter);
 
-    //9、vote(允许重复投票)
+    //7、vote(允许重复投票)
     createVote(sender_id,superstar);
 
-    //10、添加一个新的抵押金额
+    //8、添加一个新的抵押金额
     addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE);
+
+    //9、存到smallPlanet表(不允许重复创建)
+    if(canUpdateSmall(sender_id))
+        addSmallPlanet(sender_id);
 
     //11、修改超级星的得票数
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
@@ -263,11 +264,13 @@ void starplan::unstake(std::string account)
     auto itor = sta_idx.find(acc_id);
     for(; itor != sta_idx.end() && itor->account == acc_id;){
         if(get_head_block_time() > itor->end_time){
-            auto itor_bak = itor;
             // 解除抵押提现
             inline_transfer(_self , acc_id , coreAsset , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
+            sta_idx.modify(itor,_self,[&](auto &obj){                 
+                obj.is_unstake          =   true;
+                obj.unstake_time        =   get_head_block_time();
+            });
             itor++;
-            sta_idx.erase(itor_bak);
         }else{
             itor++;
         }
@@ -467,6 +470,8 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
         obj.end_time                = get_head_block_time() + delayDay;
         obj.staketo                 = to;
         obj.reason                  = reason;
+        obj.is_unstake              = 0;
+        obj.unstake_time            = 0;
     });
 }
 
@@ -1004,17 +1009,20 @@ void starplan::createNewRound()
 bool starplan::canUpdateSmall(uint64_t sender)
 {
     bool retValue = false;
-    auto vot_idx = tbvotes.get_index<N(byfrom)>();
+    auto stk_idx = tbstakes.get_index<N(byaccid)>();
     uint64_t total_vote = 0;
-    auto itor = vot_idx.find(sender);
-    for(;itor != vot_idx.end();itor++){
-        if(itor->from == sender){
-            total_vote += itor->stake_amount;
+    auto itor = stk_idx.find(sender);
+    for(;itor != stk_idx.end();itor++){
+        if(itor->account == sender && itor->is_unstake == 0){
+            total_vote += itor->amount;
+            if(total_vote>=y*precision){
+                retValue = true;
+                break;
+            }
         }else{
             break;
         }
     }
-    if(total_vote>=y*precision){ retValue = true; }
     return retValue;
 }
 void starplan::deleteVote(uint64_t sender,uint64_t time)
