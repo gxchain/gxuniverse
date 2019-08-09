@@ -135,7 +135,7 @@ class starplan : public contract
     bool        isInviter(std::string accname);
     bool        isAccount(std::string accname);
     bool        isInit();
-    bool        hasInvited(uint64_t original_sender,std::string inviter);
+    bool        hasInvited(uint64_t original_sender);
     void        addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason);
     void        sendInviteReward(uint64_t sender);
     void        updateActivePlanetsByBig(uint64_t sender);

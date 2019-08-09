@@ -395,7 +395,7 @@ bool starplan::addBigPlanet(uint64_t sender)
     }
     return false;
 }
-bool starplan::hasInvited(uint64_t original_sender,std::string inviter)
+bool starplan::hasInvited(uint64_t original_sender)
 {
     bool retValue = false;
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
