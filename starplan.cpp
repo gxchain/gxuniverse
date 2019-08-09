@@ -25,14 +25,14 @@ void starplan::init()
 
     //////////////////////////////////////// 校验通过后，初始化资金池 //////////////////////////////////////////
     // 1、初始化总资金池
-    tbglobals.emplace(_self,[&](auto &obj) {
+    tbglobals.emplace(sender_id,[&](auto &obj) {
             obj.index           = 0;
             obj.pool_amount     = amount;
             obj.current_round   = 0;
             obj.is_upgrade      = 0;
         });
     // 2、初始化第一轮资金池，并启动第一轮
-    tbrounds.emplace(_self,[&](auto &obj) {
+    tbrounds.emplace(sender_id,[&](auto &obj) {
             obj.round                   = tbrounds.available_primary_key();
             obj.current_round_invites   = 0;
             obj.pool_amount             = 0;
@@ -98,7 +98,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     //11、修改超级星的得票数
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(super_id);
-    sup_idx.modify(sup_itor,_self,[&](auto &obj) {
+    sup_idx.modify(sender_id,_self,[&](auto &obj) {
             obj.vote_num  = obj.vote_num + amount;
         });
 }
@@ -257,7 +257,7 @@ void starplan::unstake(std::string account)
         if(get_head_block_time() > itor->end_time){
             // 解除抵押提现
             inline_transfer(_self , acc_id , coreAsset , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
-            sta_idx.modify(itor,_self,[&](auto &obj){
+            sta_idx.modify(itor,get_trx_sender(),[&](auto &obj){
                 obj.is_unstake          =   true;
                 obj.unstake_time        =   get_head_block_time();
             });
@@ -279,7 +279,7 @@ void starplan::upgrade(uint64_t flag)
     graphene_assert(isInit(), ISINITMSG);
     // 3 修改global表
     auto itor = tbglobals.find(0);
-    tbglobals.modify(itor,_self,[&](auto &obj) {
+    tbglobals.modify(itor,sender_id,[&](auto &obj) {
         obj.is_upgrade          =   flag;
     });
 }
@@ -324,7 +324,7 @@ bool starplan::isSuperStar(uint64_t sender)
 bool starplan::addSuperStar(uint64_t sender)
 {
     if(!isBigPlanet(sender)){
-        tbsuperstars.emplace(_self,[&](auto &obj) {                 //创建超级星
+        tbsuperstars.emplace(sender,[&](auto &obj) {                 //创建超级星
             obj.index                   = tbsuperstars.available_primary_key();
             obj.id                      = sender;
             obj.create_time             = get_head_block_time();
@@ -346,7 +346,7 @@ bool starplan::isSmallPlanet(uint64_t sender)
 bool starplan::addSmallPlanet(uint64_t sender)
 {
     if(!isSmallPlanet(sender)){                                                  //创建小行星
-        tbsmallplans.emplace(_self,[&](auto &obj){
+        tbsmallplans.emplace(sender,[&](auto &obj){
             obj.index                   = tbsmallplans.available_primary_key();
             obj.id                      = sender;
             obj.create_time             = get_head_block_time();
@@ -367,7 +367,7 @@ bool starplan::isBigPlanet(uint64_t sender)
 bool starplan::addBigPlanet(uint64_t sender)
 {
     if(!isBigPlanet(sender)){
-        tbbigplanets.emplace(_self,[&](auto &obj){                            //创建一个大行星
+        tbbigplanets.emplace(sender,[&](auto &obj){                            //创建一个大行星
                 obj.index                   = tbbigplanets.available_primary_key();
                 obj.id                      = sender;
                 obj.create_time             = get_head_block_time();
@@ -430,7 +430,7 @@ void starplan::invite(uint64_t sender,std::string inviter)
     if(inviter_id == -1)
         inviter_id = defaultinviter;
     if(!hasInvited(sender,inviter)){                                 //不存在邀请关系则创建，
-        tbinvites.emplace(_self,[&](auto &obj) {
+        tbinvites.emplace(sender,[&](auto &obj) {
             obj.index                   = tbinvites.available_primary_key();
             obj.invitee                 = sender;
             obj.inviter                 = inviter_id;
@@ -444,11 +444,11 @@ void starplan::actInvite(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
     auto invite_itor = invite_idx.find(sender);
-    invite_idx.modify(invite_itor,_self,[&](auto &obj){
+    invite_idx.modify(invite_itor,sender,[&](auto &obj){
         obj.enabled                 = true;
     });
     // 当前轮邀请数自增1
-    tbrounds.modify(lastRound(),_self,[&](auto &obj){
+    tbrounds.modify(lastRound(),sender,[&](auto &obj){
         obj.current_round_invites   = obj.current_round_invites + 1;
     });
 }
@@ -457,7 +457,7 @@ void starplan::createVote(uint64_t sender,std::string superstar)
 {
     uint64_t amount = get_action_asset_amount();
     uint64_t super_id = get_account_id(superstar.c_str(), superstar.length());
-    tbvotes.emplace(_self,[&](auto &obj) {
+    tbvotes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbvotes.available_primary_key();
         obj.round                   = currentRound();
         obj.stake_amount            = amount;
@@ -468,7 +468,7 @@ void starplan::createVote(uint64_t sender,std::string superstar)
 }
 void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason)
 {
-    tbstakes.emplace(_self,[&](auto &obj) {
+    tbstakes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbstakes.available_primary_key();
         obj.account                 = sender;
         obj.amount                  = amount;
@@ -485,7 +485,7 @@ void starplan::distriInvRewards(uint64_t sender)
     std::string   inviter_withdraw     = INVITERLOG;  //提现一个1GXC到邀请人账户
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
     auto invite_itor = invite_idx.find(sender);
-    tbrounds.modify(lastRound(), _self, [&](auto &obj){                               //修改奖池金额
+    tbrounds.modify(lastRound(), sender, [&](auto &obj){                               //修改奖池金额
             obj.random_pool_amount      = obj.random_pool_amount + z3 * precision;
             obj.invite_pool_amount      = obj.invite_pool_amount + z1 * precision;
     });
@@ -498,7 +498,7 @@ void starplan::updateActivePlanetsByBig(uint64_t sender)
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(invite_itor->inviter);
     if(act_itor != act_idx.end()){
-        act_idx.modify(act_itor,_self,[&](auto &obj){                                   //修改活力星
+        act_idx.modify(act_itor,sender,[&](auto &obj){                                   //修改活力星
             if(obj.invite_count == 5){
                 obj.invite_count = 1;
                 obj.create_round = currentRound();
@@ -508,7 +508,7 @@ void starplan::updateActivePlanetsByBig(uint64_t sender)
             }
         });
     }else{
-        tbactiveplans.emplace(_self,[&](auto &obj){                                      //创建活力星
+        tbactiveplans.emplace(sender,[&](auto &obj){                                      //创建活力星
             obj.index           = tbactiveplans.available_primary_key();
             obj.id              = invite_itor->inviter;
             obj.invite_count    = 1;
@@ -523,13 +523,13 @@ void starplan::updateActivePlanetsBySuper(uint64_t sender)
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(sender);
     if(act_itor != act_idx.end()){
-        act_idx.modify(act_itor,_self,[&](auto &obj){                                   //修改活力星
+        act_idx.modify(act_itor,sender,[&](auto &obj){                                   //修改活力星
             obj.invite_count    = 0;
             obj.create_round    = currentRound();
             obj.weight          = weight;
         });
     }else{
-        tbactiveplans.emplace(_self,[&](auto &obj){                                      //创建活力星
+        tbactiveplans.emplace(sender,[&](auto &obj){                                      //创建活力星
             obj.index           = tbactiveplans.available_primary_key();
             obj.id              = sender;
             obj.invite_count    = 0;
@@ -557,12 +557,13 @@ void starplan::calcCurrentRoundPoolAmount()
         pool_amount = pool_amount - dursize * x * precision;
     }
     // 5、修改当前轮底池 pool_amount
-    tbrounds.modify(round, _self, [&](auto &obj){                               //修改奖池金额pool_amount
+    auto sender = get_trx_sender();
+    tbrounds.modify(round, sender, [&](auto &obj){                               //修改奖池金额pool_amount
         obj.pool_amount      = pool_amount;
     });
     // 6、修改总的资金池
     auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor,_self,[&](auto &obj){
+    tbglobals.modify(g_itor,sender,[&](auto &obj){
         obj.pool_amount      = obj.pool_amount - pool_amount;
     });
 }
@@ -571,7 +572,7 @@ void starplan::updateActivePlanets()
     // 更新活力星的权重
     auto act_itor = tbactiveplans.begin();
     for( ; act_itor != tbactiveplans.end(); act_itor++){
-        tbactiveplans.modify(act_itor,_self,[&](auto &obj){                           //修改活力星的权重
+        tbactiveplans.modify(act_itor,get_trx_sender(),[&](auto &obj){                           //修改活力星的权重
             uint64_t bDecay_prec = bDecay * 1000;
             uint64_t new_weight  = obj.weight * bDecay_prec / 1000;
             obj.weight      = new_weight;
@@ -785,15 +786,16 @@ void starplan::doReward(vector<reward> &rewardList)
 void starplan::createNewRound()
 {
     // 1 结束当前轮，修改round表和global表
-    tbrounds.modify(lastRound(), _self, [&](auto &obj){
+    auto sender = get_trx_sender();
+    tbrounds.modify(lastRound(), sender, [&](auto &obj){
         obj.end_time            = get_head_block_time();
     });
     // 2 创建新的一轮
     auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor,_self,[&](auto &obj){
+    tbglobals.modify(g_itor,sender,[&](auto &obj){
         obj.current_round      = obj.current_round + 1;
     });
-    tbrounds.emplace(_self,[&](auto &obj) {
+    tbrounds.emplace(sender,[&](auto &obj) {
         obj.round                   = tbrounds.available_primary_key();
         obj.current_round_invites   = 0;
         obj.pool_amount             = 0;
