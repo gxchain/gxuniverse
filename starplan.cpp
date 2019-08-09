@@ -510,7 +510,7 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
         obj.index                   = tbstakes.available_primary_key();
         obj.account                 = sender;
         obj.amount                  = amount;
-        obj.end_time                = get_head_block_time() + delayDay;
+        obj.end_time                = get_head_block_time() + stakingDelayTime;
         obj.staketo                 = to;
         obj.reason                  = reason;
         obj.is_unstake              = 0;
@@ -1080,7 +1080,7 @@ void starplan::deleteVote(uint64_t sender,uint64_t time)
     auto itor = vot_idx.find(sender);
     for(;itor != vot_idx.end();){
         if(itor->from == sender){
-            if(itor->vote_time == time + delayDay){
+            if(itor->vote_time == time + stakingDelayTime){
                 itor = vot_idx.erase(itor);
                 break;
             }else{ itor++ ;}
