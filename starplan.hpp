@@ -33,67 +33,77 @@ struct SuperStar {
 class starplan : public contract
 {
   public:
-    starplan(uint64_t id)
-        : contract(id),tbglobals(_self,_self),tbrounds(_self,_self),tbvotes(_self,_self),tbstakes(_self,_self),tbsmallplans(_self,_self),tbbigplanets(_self,_self)\
-            ,tbactiveplans(_self,_self),tbsuperstars(_self,_self),tbinvites(_self,_self){}
+    starplan(uint64_t id) :
+            contract(id),
+            tbglobals(_self, _self),
+            tbrounds(_self, _self),
+            tbvotes(_self, _self),
+            tbstakes(_self,_self),
+            tbsmallplans(_self, _self),
+            tbbigplanets(_self, _self),
+            tbactiveplans(_self, _self),
+            tbsuperstars(_self, _self),
+            tbinvites(_self, _self)
+    {
+    }
 
-    PAYABLE     init();
-    PAYABLE     vote(std::string inviter,std::string superstar);
-    PAYABLE     uptobig();
-    PAYABLE     uptosuper(std::string inviter);
-    ACTION      endround();
-    ACTION      unstake(std::string account);
-    ACTION      upgrade(uint64_t flag);
+    PAYABLE             init();
+    PAYABLE             vote(std::string inviter,std::string superstar);
+    PAYABLE             uptobig();
+    PAYABLE             uptosuper(std::string inviter);
+    ACTION              endround();
+    ACTION              unstake(std::string account);
+    ACTION              upgrade(uint64_t flag);
 
   private:
 
-    void        invite(uint64_t sender,std::string inviter);
-    void        actInvite(uint64_t sender);                           //激活邀请关系
-    void        createVote(uint64_t sender,std::string superstar);
-    bool        isSuperStar(uint64_t sender);
-    bool        addSuperStar(uint64_t sender);
-    bool        isSmallPlanet(uint64_t sender);
-    bool        addSmallPlanet(uint64_t sender);
-    bool        isBigPlanet(uint64_t sender);
-    bool        addBigPlanet(uint64_t sender);
-    uint64_t    currentRound();
-    inline bool isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
-    inline bool isRoundFull();//>=100 inviatees
-    bool        isRoundFinish();
+    void                invite(uint64_t sender,std::string inviter);
+    void                activeInvite(uint64_t sender);                           //激活邀请关系
+    void                createVote(uint64_t sender,std::string superstar);
+    bool                isSuperStar(uint64_t sender);
+    bool                addSuperStar(uint64_t sender);
+    bool                isSmallPlanet(uint64_t sender);
+    bool                addSmallPlanet(uint64_t sender);
+    bool                isBigPlanet(uint64_t sender);
+    bool                addBigPlanet(uint64_t sender);
+    uint64_t            currentRound();
+    inline bool         isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
+    inline bool         isRoundFull();//>=100 inviatees
+    bool                isRoundFinish();
 
-    bool        isInviter(std::string accname);
-    bool        isAccount(std::string accname);
-    bool        isInit();
-    bool        hasInvited(uint64_t sender);
-    void        addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason);
-    void        distriInvRewards(uint64_t sender);
-    void        updateActivePlanetsByBig(uint64_t sender);
-    void        updateActivePlanetsBySuper(uint64_t sender);
-    void        calcCurrentRoundPoolAmount();
-    void        updateActivePlanets();
+    bool                isInviter(std::string accname);
+    bool                isAccount(std::string accname);
+    bool                isInit();
+    bool                hasInvited(uint64_t sender);
+    void                addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason);
+    void                distriInvRewards(uint64_t sender);
+    void                updateActivePlanetsByBig(uint64_t sender);
+    void                updateActivePlanetsBySuper(uint64_t sender);
+    void                calcCurrentRoundPoolAmount();
+    void                updateActivePlanets();
 
-    void        getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
-    uint64_t    getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
-    uint64_t    getCurrentRoundSuperStars(vector<SuperStar> &superStars);
-    void        chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
+    void                getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
+    uint64_t            getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
+    uint64_t            getCurrentRoundSuperStars(vector<SuperStar> &superStars);
+    void                chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
 
-    void        getBudgets(uint64_t &randomRewardBudget, uint64_t &bigPlanetRewardBudget,
-                           uint64_t &activePlanetRewardBudget, uint64_t &superStarRewardBudget);
-    inline uint64_t    calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t    calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t    calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t    calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    void                getBudgets(uint64_t &randomRewardBudget, uint64_t &bigPlanetRewardBudget,
+                                   uint64_t &activePlanetRewardBudget, uint64_t &superStarRewardBudget);
+    inline uint64_t     calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    inline uint64_t     calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    inline uint64_t     calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
+    inline uint64_t     calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
 
-    bool        baseSecureCheck(vector<reward> &rewardList);
-    void        doReward(vector<reward> &rewardList);
+    bool                baseSecureCheck(vector<reward> &rewardList);
+    void                doReward(vector<reward> &rewardList);
 
-    void        createNewRound();
-    bool        canUpdateSmall(uint64_t sender);
-    void        deleteVote(uint64_t sender,uint64_t time);
-    void        checkWithdraw(uint64_t pool,uint64_t amount);
+    void                createNewRound();
+    bool                canUpdateSmall(uint64_t sender);
+    void                deleteVote(uint64_t sender,uint64_t time);
+    void                checkWithdraw(uint64_t pool,uint64_t amount);
 
-    bool        checkSender();                                                  //验证调用者和原始调用者是否相同
-    bool        isUpgrade();                                                    //验证合约状态升级
+    bool                checkSender();                                                  //验证调用者和原始调用者是否相同
+    bool                isUpgrade();                                                    //验证合约状态升级
 
   private:
     //@abi table tbglobal i64

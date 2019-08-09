@@ -49,6 +49,10 @@ void starplan::vote(std::string inviter,std::string superstar)
     // 0 防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
+    //3、验证合约是否初始化、合约是否在升级
+    graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
@@ -67,11 +71,6 @@ void starplan::vote(std::string inviter,std::string superstar)
 
     }
     graphene_assert(isAccount(superstar), CHECKACCOUNTMSG);
-
-    //3、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
-
 
     //4、验证当前轮是否结束
     graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
@@ -110,6 +109,10 @@ void starplan::uptobig()
     // 0 防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
+    //2、验证合约是否初始化、合约是否在升级
+    graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
@@ -118,10 +121,6 @@ void starplan::uptobig()
     std::string depomsg = DEPOMSG;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
     graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, depomsg.c_str());
-
-    //2、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     //3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -135,7 +134,7 @@ void starplan::uptobig()
     graphene_assert(addBigPlanet(sender_id), CHECKBIGMSG);
 
     //7、激活邀请关系
-    actInvite(sender_id);
+    activeInvite(sender_id);
 
     //8、将3个GXC转移到奖池，将其中一个GXC发送给邀请人
     distriInvRewards(sender_id);
@@ -157,6 +156,10 @@ void starplan::uptosuper(std::string inviter)
     // 0 防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
+    //4、验证合约是否初始化、合约是否在升级
+    graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
@@ -175,10 +178,6 @@ void starplan::uptosuper(std::string inviter)
         graphene_assert(inviter_id != sender_id, CHECKINVSENDMSG);
     }
 
-    //4、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
-
     //5、验证当前轮是否结束
     graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
@@ -192,7 +191,7 @@ void starplan::uptosuper(std::string inviter)
 
     //9、保存邀请关系，激活邀请关系
     invite(sender_id,inviter);
-    actInvite(sender_id);
+    activeInvite(sender_id);
 
     //10、插入更新一条活力星记录，权重为1
     updateActivePlanetsBySuper(sender_id);
@@ -201,15 +200,14 @@ void starplan::endround()
 {
     // 0 防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
+    graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     // 1 验证调用者账户是否为admin账户
     if(lastRound().current_round_invites < roundSize ){
         uint64_t sender_id = get_trx_origin();
         graphene_assert(sender_id == adminId, CHECKADMINMSG);
     }
-
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     // 2 验证当前轮是否可以结束
     graphene_assert(isRoundFinish(),ISENDROUNDMSG);
@@ -272,11 +270,13 @@ void starplan::upgrade(uint64_t flag)
     // 0 防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
+    // 2 验证合约是否已经初始化
+    graphene_assert(isInit(), ISINITMSG);
+
     // 1 验证调用者账户是否为admin账户
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == adminId, CHECKADMINMSG);
-    // 2 验证合约是否已经初始化
-    graphene_assert(isInit(), ISINITMSG);
+
     // 3 修改global表
     auto itor = tbglobals.find(0);
     tbglobals.modify(itor,sender_id,[&](auto &obj) {
@@ -440,7 +440,7 @@ void starplan::invite(uint64_t sender,std::string inviter)
         });
     }
 }
-void starplan::actInvite(uint64_t sender)
+void starplan::activeInvite(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byaccid)>();
     auto invite_itor = invite_idx.find(sender);
