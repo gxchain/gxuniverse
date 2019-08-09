@@ -92,7 +92,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     createVote(sender_id,superstar);
 
     //10、添加一个新的抵押金额
-    addStake(sender_id,amount,super_id,vote_reason);
+    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE);
 
     //11、修改超级星的得票数
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
@@ -186,7 +186,7 @@ void starplan::uptosuper(std::string inviter)
     addSuperStar(sender_id);
 
     //8、创建抵押项
-    addStake(sender_id, amount, sender_id, stake_reason);
+    addStake(sender_id, amount, sender_id, STAKE_TYPE_TOSUPER);
 
     //9、保存邀请关系，激活邀请关系
     invite(sender_id,inviter);
@@ -264,32 +264,7 @@ void starplan::unstake(std::string account)
     for(; itor != sta_idx.end() && itor->account == acc_id;){
         if(get_head_block_time() > itor->end_time){
             auto itor_bak = itor;
-            // 1 获取抵押原因
-            if(itor->reason == vote_reason){
-                // 1.1 判断超级星是否还存在，存在则修改超级星得票数
-                if(isSuperStar(itor->staketo)){
-                    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
-                    auto sup_itor = sup_idx.find(itor->staketo);
-                    sup_idx.modify(sup_itor,_self,[&](auto &obj) {
-                            graphene_assert(obj.vote_num >itor->amount, "StarPlan Contract Error: stake amount is error ! ");
-                            obj.vote_num  = obj.vote_num - itor->amount;
-                        });
-                }
-                // 1.2 从vote表中删除该次投票
-                deleteVote(itor->account,itor->end_time -delayDay );
-
-            }else if(itor->reason == stake_reason){
-                // 1.2 判断超级星是否还存在，存在则删除超级星
-                if(isSuperStar(itor->staketo)){
-                    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
-                    auto sup_itor = sup_idx.find(itor->staketo);
-                    sup_idx.erase(sup_itor);
-                }
-                else { graphene_assert(false, "StarPlan Contract Error: already stake ! ");}
-            }else{
-                graphene_assert(false, "StarPlan Contract Error: can't support other reason ! ");
-            }
-            // 2 解除抵押提现
+            // 解除抵押提现
             inline_transfer(_self , acc_id , coreAsset , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
             itor++;
             sta_idx.erase(itor_bak);
@@ -483,7 +458,7 @@ void starplan::createVote(uint64_t original_sender,std::string superstar)
         obj.vote_time               = get_head_block_time();
     });
 }
-void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,std::string reason)
+void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason)
 {
     tbstakes.emplace(_self,[&](auto &obj) {
         obj.index                   = tbstakes.available_primary_key();
