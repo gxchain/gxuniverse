@@ -142,6 +142,14 @@ void starplan::uptobig()
 
     //9、创建/更新活力星
     updateActivePlanetsByBig(sender_id);
+
+    //10、当邀请关系满100人，开启新的一轮
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
+    round_itor--;
+    if(round_itor->current_round_invites >= roundSize ){
+        endround();
+    }
 }
 
 // inviter为0，表示没有邀请账户
@@ -198,8 +206,13 @@ void starplan::endround()
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
     // 1 验证调用者账户是否为admin账户
-    uint64_t sender_id = get_trx_origin();
-    graphene_assert(sender_id == adminId, CHECKADMINMSG);
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
+    round_itor--;
+    if(round_itor->current_round_invites < roundSize ){
+        uint64_t sender_id = get_trx_origin();
+        graphene_assert(sender_id == adminId, CHECKADMINMSG);
+    }
 
     graphene_assert(isInit(), ISINITMSG);
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
