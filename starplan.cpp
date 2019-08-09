@@ -29,6 +29,7 @@ void starplan::init()
             obj.index           = 0;
             obj.pool_amount     = amount;
             obj.current_round   = 0;
+            obj.is_upgrade      = 0;
         });
     // 2、初始化第一轮资金池，并启动第一轮
     tbrounds.emplace(_self,[&](auto &obj) {
@@ -67,8 +68,10 @@ void starplan::vote(std::string inviter,std::string superstar)
     }
     graphene_assert(isAccount(superstar), CHECKACCOUNTMSG);
 
-    //3、验证程序是否初始化
+    //3、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+
 
     //4、验证当前轮是否结束
     graphene_assert(!bSmallRound(),CHECKROUENDMSG);
@@ -114,8 +117,9 @@ void starplan::uptobig()
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
     graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, depomsg.c_str());
 
-    //2、验证程序否初始化
+    //2、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     //3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -169,8 +173,9 @@ void starplan::uptosuper(std::string inviter)
         graphene_assert(inviter_id != sender_id, CHECKINVSENDMSG);
     }
 
-    //4、验证程序是否初始化
+    //4、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     //5、验证当前轮是否结束
     graphene_assert(!bSmallRound(),CHECKROUENDMSG);
@@ -199,7 +204,8 @@ void starplan::endround()
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == adminId, CHECKADMINMSG);
 
-    graphene_assert(isInit(), ISINITMSG);  
+    graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     // 2 验证当前轮是否可以结束
     graphene_assert(bSmallRound(),ISENDROUNDMSG);
@@ -248,7 +254,8 @@ void starplan::unstake(std::string account)
 {
     // 0 防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
-    graphene_assert(isInit(), ISINITMSG);  
+    graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     const std::string unstake_withdraw = UNSTAKELOG;                        //抵押提现
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
@@ -290,6 +297,22 @@ void starplan::unstake(std::string account)
             itor++;
         }
     }
+}
+void starplan::upgrade(uint64_t flag)
+{
+    // 0 防止跨合约调用
+    graphene_assert(checkSender(), CHECKSENDERMSG);
+
+    // 1 验证调用者账户是否为admin账户
+    uint64_t sender_id = get_trx_origin();
+    graphene_assert(sender_id == adminId, CHECKADMINMSG);
+    // 2 验证合约是否已经初始化
+    graphene_assert(isInit(), ISINITMSG);
+    // 3 修改global表
+    auto itor = tbglobals.find(0);
+    tbglobals.modify(itor,_self,[&](auto &obj) {                 
+        obj.is_upgrade          =   flag;
+    });
 }
 bool starplan::isAccount(std::string accname)
 {
@@ -1046,5 +1069,13 @@ bool starplan::checkSender()
     auto sender_id = get_trx_sender();
     auto origin_id = get_trx_origin();
     if(sender_id == origin_id){ retValue = true; }
+    return retValue;
+}
+bool starplan::isUpgrade()
+{
+    bool retValue   = false;
+    graphene_assert(isInit(), ISINITMSG);  
+    auto itor = tbglobals.find(0);
+    if(itor->is_upgrade > 0){retValue = true;}
     return retValue;
 }

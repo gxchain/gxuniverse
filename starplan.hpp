@@ -109,6 +109,7 @@ class starplan : public contract
     PAYABLE     uptosuper(std::string inviter);
     ACTION      endround();
     ACTION      unstake(std::string account);
+    ACTION      upgrade(uint64_t flag);
 
   private:
 
@@ -165,6 +166,7 @@ class starplan : public contract
     void        checkWithdraw(uint64_t pool,uint64_t amount);
 
     bool        checkSender();                                                  //验证调用者和原始调用者是否相同
+    bool        isUpgrade();                                                    //验证合约状态升级
 
   private:
     //@abi table tbglobal i64
@@ -172,10 +174,11 @@ class starplan : public contract
         uint64_t index;
         uint64_t pool_amount;               // 总资金池剩余资产
         uint64_t current_round;             // 当前轮数
+        uint64_t is_upgrade;                // 合约升级
 
         uint64_t primary_key() const { return index; }
 
-        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round))
+        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(is_upgrade))
     };
     typedef multi_index<N(tbglobal), tbglobal> tbglobal_index;
     tbglobal_index tbglobals;
@@ -340,4 +343,4 @@ class starplan : public contract
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
 };
-GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake))
+GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake)(upgrade))
