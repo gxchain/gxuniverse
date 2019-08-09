@@ -216,10 +216,11 @@ void starplan::endround()
     // 3 计算奖池
     calcCurrentRoundPoolAmount();
 
-    uint64_t randomBudget = getRandomRewardBudget();
-    uint64_t bigPlanetBudget = getBigPlanetRewardBudget();
-    uint64_t activePlanetBudget = getActivePlanetRewardBudget();
-    uint64_t superStarBudget = getSuperStarRewardBudget();
+    uint64_t randomBudget = 0;
+    uint64_t bigPlanetBudget = 0;
+    uint64_t activePlanetBudget = 0;
+    uint64_t superStarBudget = 0;
+    getBudgets(randomBudget, bigPlanetBudget, activePlanetBudget, superStarBudget);
 
     uint64_t actualReward = 0;
     vector<reward> rewardList;
@@ -656,24 +657,16 @@ const struct tbround& starplan::lastRound()
     return *round_itor;
 }
 
-uint64_t starplan::getRandomRewardBudget()
+void starplan::getBudgets(uint64_t &randomRewardBudget, uint64_t &bigPlanetRewardBudget,
+                       uint64_t &activePlanetRewardBudget, uint64_t &superStarRewardBudget)
 {
-    return lastRound().random_pool_amount;
-}
+    const tbround& round = lastRound();
 
-uint64_t starplan::getBigPlanetRewardBudget()
-{
-    return lastRound().pool_amount * payBackPercent / 100 ;
-}
+    randomRewardBudget = round.random_pool_amount;
 
-uint64_t starplan::getActivePlanetRewardBudget()
-{
-    return lastRound().pool_amount * activePercent / 100 ;
-}
-
-uint64_t starplan::getSuperStarRewardBudget()
-{
-    return lastRound().pool_amount * (100 - payBackPercent - activePercent) / 100;
+    bigPlanetRewardBudget = round.pool_amount * payBackPercent / 100;
+    activePlanetRewardBudget = round.pool_amount * activePercent / 100;
+    superStarRewardBudget = round.pool_amount - bigPlanetRewardBudget - activePlanetRewardBudget;
 }
 
 uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget)
