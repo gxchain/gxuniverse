@@ -528,14 +528,9 @@ void starplan::sendInviteReward(uint64_t sender)
     auto invite_itor = invite_idx.find(sender);
     tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额
             obj.random_pool_amount      = obj.random_pool_amount + z3 * precision;
-            if(invite_itor->inviter == 0)
-                obj.invite_pool_amount  = obj.invite_pool_amount + (z1 + z2) * precision;
-            else
-                obj.invite_pool_amount  = obj.invite_pool_amount + z1 * precision;
+            obj.invite_pool_amount      = obj.invite_pool_amount + z1 * precision;
     });
-    if(invite_itor->inviter != 0)
-        inline_transfer(_self , invite_itor->inviter , coreAsset , z2 * precision,inviter_withdraw.c_str(),inviter_withdraw.length());
-
+    inline_transfer(_self , invite_itor->inviter , coreAsset , z2 * precision,inviter_withdraw.c_str(),inviter_withdraw.length());
 }
 void starplan::updateActivePlanetsByBig(uint64_t sender)
 {
