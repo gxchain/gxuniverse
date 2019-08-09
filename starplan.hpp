@@ -123,7 +123,9 @@ class starplan : public contract
     bool        addBigPlanet(uint64_t sender);
     uint64_t    currentRound();
     bool        bSmallRound();
-    void        endSmallRound();
+    inline bool isInviteTimeout(uint64_t lastBigPlanetCreateTime);//>12 hours
+    inline bool isRoundFull();//>=100 inviatees
+    bool        isRoundFinish();
 
     bool        isInviter(std::string accname);
     bool        isAccount(std::string accname);
