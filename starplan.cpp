@@ -60,7 +60,6 @@ void starplan::vote(std::string inviter,std::string superstar)
     //2、验证账户
     if(inviter != ""){
         graphene_assert(isAccount(inviter), CHECKACCOUNTMSG);
-        //3、验证邀请账户
         uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
         graphene_assert(isInviter(inviter), CHECKINVITERMSG);
         graphene_assert(inviter_id != sender_id, CHECKINVSENDMSG);
@@ -68,15 +67,15 @@ void starplan::vote(std::string inviter,std::string superstar)
     }
     graphene_assert(isAccount(superstar), CHECKACCOUNTMSG);
 
+    //3、验证程序是否初始化
+    graphene_assert(isInit(), ISINITMSG);
+
     //4、验证当前轮是否结束
     graphene_assert(!bSmallRound(),CHECKROUENDMSG);
 
     //5、验证超级星账户
     auto super_id = get_account_id(superstar.c_str(), superstar.length());
     graphene_assert(isSuperStar(super_id), CHECKSUPERMSG);
-
-    //6、检查global表和round表的状态
-    graphene_assert(isInit(), ISINITMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个小行星 //////////////////////////////////////////
     //7、存到smallPlanet表(不允许重复创建)
@@ -115,18 +114,18 @@ void starplan::uptobig()
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
     graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, depomsg.c_str());
 
-    //2、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
+    //2、验证程序否初始化
+    graphene_assert(isInit(), ISINITMSG);
+
+    //3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isSmallPlanet(sender_id), CHECKSMALLMSG);
 
-    //3、判断是否已经是bigPlanet，如果已经是，则提示"You are already a big planet"
+    //4、判断是否已经是bigPlanet，如果已经是，则提示"You are already a big planet"
     graphene_assert(!isBigPlanet(sender_id), CHECKBIGMSG);
 
-    //4、验证当前轮是否结束
+    //5、验证当前轮是否结束
     graphene_assert(!bSmallRound(),CHECKROUENDMSG);
-
-    //5、验证当前轮状态和global状态
-    graphene_assert(isInit(), ISINITMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
     //6、存到bigPlanet表
@@ -165,16 +164,16 @@ void starplan::uptosuper(std::string inviter)
     //3、验证账户是否存在
     if(inviter != ""){
         graphene_assert(isAccount(inviter), CHECKACCOUNTMSG);
-        // 4、验证邀请账户
         graphene_assert(isInviter(inviter), CHECKINVITERMSG);
         uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
         graphene_assert(inviter_id != sender_id, CHECKINVSENDMSG);
     }
+
+    //4、验证程序是否初始化
+    graphene_assert(isInit(), ISINITMSG);
+
     //5、验证当前轮是否结束
     graphene_assert(!bSmallRound(),CHECKROUENDMSG);
-
-    //6、验证是否已经初始化
-    graphene_assert(isInit(), ISINITMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
@@ -199,6 +198,9 @@ void starplan::endround()
     // 1 验证调用者账户是否为admin账户
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == adminId, CHECKADMINMSG);
+
+    graphene_assert(isInit(), ISINITMSG);  
+
     // 2 验证当前轮是否可以结束
     graphene_assert(bSmallRound(),ISENDROUNDMSG);
     // 3 计算奖池
@@ -246,6 +248,7 @@ void starplan::unstake(std::string account)
 {
     // 0 防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
+    graphene_assert(isInit(), ISINITMSG);  
 
     const std::string unstake_withdraw = UNSTAKELOG;                        //抵押提现
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
