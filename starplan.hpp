@@ -58,7 +58,6 @@ const uint64_t      initPool             = 200;                      //初始化
 const uint64_t      coreAsset            = 1;                        //核心资产id
 const uint64_t      precision            = 100000;                   //核心资产精度
 const uint64_t      delayDay             = 1800;                     //抵押90天后解锁
-const uint64_t      depositToBig         = 3;                        //升级成大行星充值3GXC
 const uint64_t      weight               = 1000;                     //权重，带三位精度
 const uint64_t      delaytime            = 2 * 3600;                 //最后一个大行星的延迟时间（12小时）
 const uint64_t      defaultinviter       = 0;                        //默认邀请账户id
