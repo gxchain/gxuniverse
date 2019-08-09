@@ -341,7 +341,7 @@ bool starplan::isSuperStar(uint64_t sender)
 }
 bool starplan::addSuperStar(uint64_t sender)
 {
-    if(!isBigPlanet(sender)){ 
+    if(!isBigPlanet(sender)){
         tbsuperstars.emplace(_self,[&](auto &obj) {                 //创建超级星
             obj.index                   = tbsuperstars.available_primary_key();
             obj.id                      = sender;
@@ -384,7 +384,7 @@ bool starplan::isBigPlanet(uint64_t sender)
 }
 bool starplan::addBigPlanet(uint64_t sender)
 {
-    if(!isBigPlanet(sender)){  
+    if(!isBigPlanet(sender)){
         tbbigplanets.emplace(_self,[&](auto &obj){                            //创建一个大行星
                 obj.index                   = tbbigplanets.available_primary_key();
                 obj.id                      = sender;
@@ -700,8 +700,7 @@ void starplan::rewardBigPlanet()
     auto bigplanet_size = cround_big_list.size();
     graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
     round_itor--;
-    uint64_t upayBackPercent = payBackPercent * 100;
-    uint64_t total_amount = (round_itor->pool_amount) * upayBackPercent / 100 ;
+    uint64_t total_amount = (round_itor->pool_amount) * payBackPercent / 100 ;
     uint64_t price = total_amount / bigplanet_size;
     // 2.1 修改当前轮底池
     tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
@@ -736,8 +735,7 @@ void starplan::rewardActivePlanet()
     auto round_itor = tbrounds.end();
     graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
     round_itor--;
-    uint64_t uactivePercent = activePercent * 100;
-    uint64_t total_amount = (round_itor->pool_amount) * uactivePercent / 100 ;
+    uint64_t total_amount = (round_itor->pool_amount) * activePercent / 100 ;
     // 2.1 修改当前轮底池
     tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
         obj.pool_amount  = obj.pool_amount - total_amount;
@@ -880,38 +878,32 @@ void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64
     }
 }
 
-uint64_t starplan::getRandomRewardBudget()
+const struct tbround& starplan::lastRound()
 {
     auto round_itor = tbrounds.end();
     graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
     round_itor--;
-    return round_itor->random_pool_amount;
+    return *round_itor;
+}
+
+uint64_t starplan::getRandomRewardBudget()
+{
+    return lastRound().random_pool_amount;
 }
 
 uint64_t starplan::getBigPlanetRewardBudget()
 {
-    auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
-    round_itor--;
-    uint64_t upayBackPercent = payBackPercent * 100;
-    return (round_itor->pool_amount) * upayBackPercent / 100 ;
+    return lastRound().pool_amount * payBackPercent / 100 ;
 }
 
 uint64_t starplan::getActivePlanetRewardBudget()
 {
-    auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
-    round_itor--;
-    uint64_t uactivePercent = activePercent * 100;
-    return (round_itor->pool_amount) * uactivePercent / 100 ;
+    return lastRound().pool_amount * activePercent / 100 ;
 }
 
 uint64_t starplan::getSuperStarRewardBudget()
 {
-    auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
-    round_itor--;
-    return round_itor->pool_amount;
+    return lastRound().pool_amount * (100 - payBackPercent - activePercent) / 100;
 }
 
 uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget)

@@ -22,8 +22,8 @@ const uint64_t      z3                   = 1;                        //大行星
 const uint64_t      decayTime            = 4 * 3600;                 //衰减时间阈值，单位秒（4*3600s）
 const uint64_t      decayDur             = 1 * 3600;                 //衰减时间间隔，单位秒（1*3600s）
 const uint64_t      maxDecayCount        = 20;                       //最大衰减次数（20）
-const float         payBackPercent       = 0.1;                      //返现比例（0.1）
-const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例
+const uint64_t      payBackPercent       = 10;                       //返现比例（10%）
+const uint64_t      activePercent        = 50;                       //活力星瓜分比例（50%），剩余40%为超级星瓜分比例
 const float         a                    = 1;                        //超级星奖励的影响因子（1）
 const float         bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
 
@@ -48,8 +48,8 @@ const uint64_t      z3                   = 1;                        //大行星
 const uint64_t      decayTime            = 4 * 60;                   //衰减时间阈值，单位秒（4*3600s）
 const uint64_t      decayDur             = 1 * 60;                   //衰减时间间隔，单位秒（1*3600s）
 const uint64_t      maxDecayCount        = 20;                       //最大衰减次数（20）
-const float         payBackPercent       = 0.1;                      //返现比例（0.1）
-const float         activePercent        = 0.5;                      //活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例
+const uint64_t      payBackPercent       = 10;                       //返现比例（10%）
+const uint64_t      activePercent        = 50;                       //活力星瓜分比例（50%），剩余40%为超级星瓜分比例
 const float         a                    = 1;                        //超级星奖励的影响因子（1）
 const float         bDecay               = 0.85;                     //活力星奖励的影响因子（0.85）
 
@@ -149,6 +149,7 @@ class starplan : public contract
     uint64_t    getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
     uint64_t    getCurrentRoundSuperStars(vector<SuperStar> &superStars);
     void        chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
+
 
     inline uint64_t    getRandomRewardBudget();
     inline uint64_t    getBigPlanetRewardBudget();
@@ -347,5 +348,7 @@ class starplan : public contract
                         indexed_by<N(byenable), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_enable>>,
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
+
+    inline const struct tbround& lastRound();
 };
 GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake)(upgrade))
