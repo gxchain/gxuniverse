@@ -114,6 +114,7 @@ void starplan::uptobig()
     uint64_t amount = get_action_asset_amount();
 
     //1、判断是否存入足够GXC
+    uint64_t depositToBig = z1 + z2 + z3;
     std::string depomsg = DEPOMSG;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
     graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, depomsg.c_str());
