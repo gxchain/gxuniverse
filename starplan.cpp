@@ -74,7 +74,7 @@ void starplan::vote(std::string inviter,std::string superstar)
 
 
     //4、验证当前轮是否结束
-    graphene_assert(!bSmallRound(),CHECKROUENDMSG);
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     //5、验证超级星账户
     auto super_id = get_account_id(superstar.c_str(), superstar.length());
@@ -128,7 +128,7 @@ void starplan::uptobig()
     graphene_assert(isSmallPlanet(sender_id), CHECKSMALLMSG);
 
     //5、验证当前轮是否结束
-    graphene_assert(!bSmallRound(),CHECKROUENDMSG);
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
     //6、存到bigPlanet表
@@ -180,7 +180,7 @@ void starplan::uptosuper(std::string inviter)
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     //5、验证当前轮是否结束
-    graphene_assert(!bSmallRound(),CHECKROUENDMSG);
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
@@ -212,7 +212,7 @@ void starplan::endround()
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     // 2 验证当前轮是否可以结束
-    graphene_assert(bSmallRound(),ISENDROUNDMSG);
+    graphene_assert(isRoundFinish(),ISENDROUNDMSG);
     // 3 计算奖池
     calcCurrentRoundPoolAmount();
 
@@ -385,26 +385,6 @@ bool starplan::hasInvited(uint64_t sender)
     return retValue;
 }
 
-bool starplan::bSmallRound()
-{
-    bool retValue = false;
-    // 获取最后一个大行星
-    auto big_itor = tbbigplanets.end();
-    if(big_itor == tbbigplanets.begin()){
-        return retValue;
-    }
-    big_itor--;
-    if(big_itor->create_round !=currentRound()){ return false;}
-    graphene_assert(get_head_block_time() > (big_itor->create_time), CHECKBIGTIMEMSG);
-    bool isDelay = (get_head_block_time() - (big_itor->create_time)) > delaytime;
-    auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
-    round_itor--;
-    bool isFull = round_itor->current_round_invites >= roundSize;
-    if( isDelay || isFull) { retValue = true; }
-    return retValue;
-}
-
 bool starplan::isInviteTimeout(uint64_t &lastBigPlanet)
 {
     auto big_itor = tbbigplanets.end();
@@ -412,6 +392,8 @@ bool starplan::isInviteTimeout(uint64_t &lastBigPlanet)
         return false;
     }
     big_itor--;
+
+    if(big_itor->create_round !=currentRound()){ return false;}
 
     graphene_assert(get_head_block_time() > big_itor->create_time, CHECKBIGTIMEMSG);
     if((get_head_block_time() - big_itor->create_time) > delaytime) {

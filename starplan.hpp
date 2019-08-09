@@ -57,7 +57,6 @@ class starplan : public contract
     bool        isBigPlanet(uint64_t sender);
     bool        addBigPlanet(uint64_t sender);
     uint64_t    currentRound();
-    bool        bSmallRound();
     inline bool isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
     inline bool isRoundFull();//>=100 inviatees
     bool        isRoundFinish();
