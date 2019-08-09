@@ -439,10 +439,8 @@ bool starplan::isRoundFinish()
 
 uint64_t starplan::currentRound()
 {
-    auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
-    round_itor--;
-    return round_itor->round;
+    auto itor = tbglobals.find(0);
+    return itor->current_round;
 }
 void starplan::invite(uint64_t original_sender,std::string inviter)
 {
