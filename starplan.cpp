@@ -216,38 +216,24 @@ void starplan::endround()
     // 3 计算奖池
     calcCurrentRoundPoolAmount();
 
+    uint64_t randomBudget = getRandomRewardBudget();
+    uint64_t bigPlanetBudget = getBigPlanetRewardBudget();
+    uint64_t activePlanetBudget = getActivePlanetRewardBudget();
+    uint64_t superStarBudget = getSuperStarRewardBudget();
+
+    uint64_t actualReward = 0;
+    vector<reward> rewardList;
+
+    actualReward += calcRandomReward(rewardList, randomBudget);
+    actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
+    actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
+    actualReward += calcSuperStarReward(rewardList, superStarBudget);
+
+    if (baseSecureCheck(rewardList))
     {
-        // 5 发放随机奖池奖励
-        randomReward();
-        // 6 发放当轮晋升的大行星奖励
-        rewardBigPlanet();
-        // 7 发放活力星奖励
-        rewardActivePlanet();
-        // 8 发放超级星奖励
-        rewardSuperStar();
+        doReward(rewardList);
     }
 
-    {
-        uint64_t randomBudget = getRandomRewardBudget();
-        uint64_t bigPlanetBudget = getBigPlanetRewardBudget();
-        uint64_t activePlanetBudget = getActivePlanetRewardBudget();
-        uint64_t superStarBudget = getSuperStarRewardBudget();
-
-        uint64_t actualReward = 0;
-        vector<reward> rewardList;
-
-        actualReward += calcRandomReward(rewardList, randomBudget);
-        actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
-        actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
-        actualReward += calcSuperStarReward(rewardList, superStarBudget);
-
-        if(baseSecureCheck(rewardList)) {
-            doReward(rewardList);
-        }
-
-        //TODO modify tbrounds.random_pool_amount - actualReward
-        //TODO modify tbglobals.pool_amount - actualReward
-    }
 
     // 更新活力星权重
     updateActivePlanets();
@@ -607,186 +593,6 @@ void starplan::updateActivePlanets()
             uint64_t new_weight  = obj.weight * bDecay_prec / 1000;
             obj.weight      = new_weight;
         });
-    }
-}
-
-void starplan::randomReward()
-{
-    std::string   random_withdraw  = RANDOMLOG;        //随机提现资产
-    // 1 获取本轮所有大行星
-    std::vector<uint64_t> cround_big_list;
-    auto big_idx = tbbigplanets.get_index<N(byround)>();
-    auto round = currentRound();
-    auto itor = big_idx.find(round);
-    while(itor != big_idx.end() && itor->create_round == round){
-        cround_big_list.push_back(itor->id);
-        itor++;
-    }
-    // 2 从列表中随机选取10个大行星
-    auto bigplanet_size = cround_big_list.size() > 10 ? 10 : cround_big_list.size();
-    std::vector<uint64_t> random_list;
-    int64_t block_num = get_head_block_num();
-    uint64_t block_time = get_head_block_time();
-    std::string random_str = std::to_string(block_num) + std::to_string(block_time);
-    checksum160 sum160;
-    ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
-    for(uint64_t i = 0; i<bigplanet_size; i++){
-        auto j = i;
-        while(true){
-            uint8_t share = (uint8_t)(sum160.hash[j % 20] * (j + 1));
-            uint8_t number = share % bigplanet_size;
-            auto it = std::find(random_list.begin(),random_list.end(),number);
-            if(it != random_list.end()){
-                j++;
-                continue;
-            }else{
-                random_list.push_back(number);
-                break;
-            }
-        }
-    }
-    auto round_itor = getLastRounditor();
-    auto total_amount = round_itor->random_pool_amount;
-    auto price = total_amount / bigplanet_size;
-
-    // 3 给10个大行星平均分发奖励
-    for(auto i =0 ; i< bigplanet_size;i++){
-        auto index = random_list[i];
-        auto to = cround_big_list[index];
-        if(i == bigplanet_size -1){
-            checkWithdraw(round_itor->pool_amount , total_amount);
-            inline_transfer(_self , to , coreAsset , total_amount, random_withdraw.c_str(),random_withdraw.length());
-        }else{
-            checkWithdraw(round_itor->pool_amount , price);
-            inline_transfer(_self , to , coreAsset , price, random_withdraw.c_str(),random_withdraw.length());
-            total_amount -= price;
-        }
-    }
-    // 4 修改当前轮底池
-    tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
-        obj.random_pool_amount      = 0;
-    });
-}
-void starplan::rewardBigPlanet()
-{
-    std::string   bigplanet_withdraw   = BIGPLANETLOG;     //大行星奖励刮分
-    // 1 获取本轮所有大行星
-    std::vector<uint64_t> cround_big_list;
-    auto big_idx = tbbigplanets.get_index<N(byround)>();
-    auto round = currentRound();
-    auto itor = big_idx.find(round);
-    while(itor != big_idx.end() && itor->create_round == round){
-        cround_big_list.push_back(itor->id);
-        itor++;
-    }
-    // 2 平均分配百分之10的奖励
-    auto round_itor = getLastRounditor();
-    auto bigplanet_size = cround_big_list.size();
-    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
-    round_itor--;
-    uint64_t total_amount = (round_itor->pool_amount) * payBackPercent / 100 ;
-    uint64_t price = total_amount / bigplanet_size;
-    // 2.1 修改当前轮底池
-    tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
-        obj.pool_amount         = obj.pool_amount - total_amount;
-    });
-    for(auto i = 0; i< bigplanet_size ; i++){
-        auto to = cround_big_list[i];
-        if(i == bigplanet_size-1){
-            checkWithdraw(round_itor->pool_amount , total_amount);
-            inline_transfer(_self , to , coreAsset , total_amount, bigplanet_withdraw.c_str(),bigplanet_withdraw.length());
-        }
-        else{
-            checkWithdraw(round_itor->pool_amount , price);
-            inline_transfer(_self , to , coreAsset , price, bigplanet_withdraw.c_str(),bigplanet_withdraw.length());
-            total_amount -= price;
-        }
-    }
-}
-void starplan::rewardActivePlanet()
-{
-    std::string   actplanet_withdraw = ACTPLANETLOG;    //活力星奖励刮分
-    // 1 获取所有活力星
-    auto act_idx = tbactiveplans.get_index<N(byweight)>();
-    uint64_t total_weight = 0;
-    auto itor = act_idx.upper_bound(0);                     //weight = 0, 权重大于0的活力星
-    auto itor_bak = itor;                                   //备份迭代器
-    while(itor != act_idx.end() && itor->weight > 0){
-        total_weight += itor->weight;
-        itor++;
-    }
-    // 2 提现资产
-    auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
-    round_itor--;
-    uint64_t total_amount = (round_itor->pool_amount) * activePercent / 100 ;
-    // 2.1 修改当前轮底池
-    tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
-        obj.pool_amount  = obj.pool_amount - total_amount;
-    });
-    while(itor_bak != act_idx.end() && itor_bak->weight > 0){
-        auto to = itor_bak->id;
-        uint64_t amount = total_amount * itor_bak->weight / total_weight;
-        checkWithdraw(round_itor->pool_amount , amount);
-        inline_transfer(_self , to , coreAsset , amount, actplanet_withdraw.c_str(),actplanet_withdraw.length());
-        total_amount -= amount;
-        itor_bak++;
-        auto itor_check =itor_bak;
-        itor_check++;
-        if(itor_check == act_idx.end())
-            break;
-    }
-    // 3 最后一个活力星提现
-    auto ritor = act_idx.end();
-    ritor--;
-    auto to = ritor->id;
-    if(total_amount > 0){
-        checkWithdraw(round_itor->pool_amount , total_amount);
-        inline_transfer(_self , to , coreAsset , total_amount, actplanet_withdraw.c_str(), actplanet_withdraw.length());
-    }
-}
-void starplan::rewardSuperStar()
-{
-    const std::string supstar_withdraw = SUPSTARLOG;     //超级星奖励刮分
-    // 1 获取所有超级星
-    uint64_t total_vote = 0;
-    uint64_t end_super = 0;
-    for(auto itor = tbsuperstars.begin(); itor != tbsuperstars.end();itor++ ){
-        total_vote += itor->vote_num;
-        if(itor->vote_num != 0){ end_super = itor->id;}  //记录最后一个超级星账户id
-    }
-    // 2 提现资产
-    auto round_itor = getLastRounditor();
-    uint64_t total_amount = round_itor->pool_amount;
-    // 2.1 修改当前轮底池
-    tbrounds.modify(*round_itor, _self, [&](auto &obj){                               //修改奖池金额pool_amount
-        obj.pool_amount         = 0;
-        obj.invite_pool_amount  = 0;
-    });
-    auto itor_increase = [&](auto& itor){
-        itor++;
-        if(itor == tbsuperstars.end())
-            return false;
-        return true;
-    };
-    for(auto itor = tbsuperstars.begin(); itor != tbsuperstars.end();itor++ ){
-        auto itor_bak = itor;
-        auto to = itor->id;
-        if( itor->vote_num == 0 ){continue;}
-        uint64_t amount = total_amount * itor->vote_num / total_vote;
-        checkWithdraw(round_itor->pool_amount , amount);
-        inline_transfer(_self , to , coreAsset , amount, supstar_withdraw.c_str(),supstar_withdraw.length());
-        total_amount -= amount;
-        if(!itor_increase(itor_bak)) break;
-        if(!itor_increase(itor_bak)) break;
-    }
-    // 3 最后一个超级星提现
-    auto ritor = tbsuperstars.end();
-    ritor--;
-    auto to = ritor->id;
-    if(total_amount > 0){
-        checkWithdraw(round_itor->pool_amount , total_amount);
-        inline_transfer(_self , to , coreAsset , total_amount, supstar_withdraw.c_str(), supstar_withdraw.length());
     }
 }
 
