@@ -605,7 +605,6 @@ void starplan::calcCurrentRoundPoolAmount()
         obj.pool_amount      = pool_amount;
     });
     // 6、修改总的资金池
-    auto sub_amount = pool_amount - round_itor->invite_pool_amount;
     auto g_itor = tbglobals.find(0);
     tbglobals.modify(g_itor,_self,[&](auto &obj){
         obj.pool_amount      = obj.pool_amount - pool_amount;
