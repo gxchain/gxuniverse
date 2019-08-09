@@ -465,8 +465,6 @@ void starplan::actInvite(uint64_t original_sender)
     auto invite_itor = invite_idx.find(original_sender);
     invite_idx.modify(invite_itor,_self,[&](auto &obj){
         obj.enabled                 = true;
-        obj.create_round            = currentRound();
-        obj.create_time             = get_head_block_time();
     });
     // 当前轮邀请数自增1
     auto round_itor = tbrounds.end();
