@@ -70,7 +70,7 @@ const char*         stake_reason         = "super star stake";       //超级星
 #define RWD_TYPE_POOL       1
 #define RWD_TYPE_ACTIVE     2
 #define RWD_TYPE_SUPER      3
-const char* reward_reasons[4] = {
+const char* const reward_reasons[4] = {
         "RWD_TYPE_RANDOM",
         "RWD_TYPE_POOL",
         "RWD_TYPE_ACTIVE",

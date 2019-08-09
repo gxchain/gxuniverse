@@ -906,10 +906,11 @@ uint64_t starplan::calcActivePlanetReward(vector<reward> &rewardList, uint64_t r
 {
     vector<ActivePlanet> activePlanets;
     uint64_t totalWeight = getCurrentRoundActivePlanets(activePlanets);
+	if(totalWeight == 0) return 0;
 
     uint64_t amount = 0;
     uint64_t totalAmount = 0;
-    for(auto &activePlanet : activePlanets) {
+    for(const auto &activePlanet : activePlanets) {
         amount = rewardBudget * activePlanet.weight / totalWeight;
         totalAmount += amount;
         rewardList.push_back(reward{activePlanet.id, amount, RWD_TYPE_ACTIVE});
@@ -927,7 +928,7 @@ uint64_t starplan::calcSuperStarReward(vector<reward> &rewardList, uint64_t rewa
 
     uint64_t amount = 0;
     uint64_t totalAmount = 0;
-    for(auto &superStar : superStars) {
+    for(const auto &superStar : superStars) {
         if(superStar.vote <= 0) continue;
         amount = rewardBudget * superStar.vote / totalVote;
         totalAmount += amount;
@@ -940,7 +941,7 @@ uint64_t starplan::calcSuperStarReward(vector<reward> &rewardList, uint64_t rewa
 bool starplan::baseSecureCheck(vector<reward> &rewardList)
 {
     uint64_t totalReward = 0;
-    for(auto &reward : rewardList) {
+    for(const auto &reward : rewardList) {
         totalReward + reward.amount;
         graphene_assert(reward.amount > 0 && reward.amount < MAX_USER_REWARD, "");
 
@@ -954,7 +955,7 @@ bool starplan::baseSecureCheck(vector<reward> &rewardList)
 
 void starplan::doReward(vector<reward> &rewardList)
 {
-    for (auto &reward : rewardList)
+    for (const auto &reward : rewardList)
     {
         if(reward.amount == 0) continue;
 
