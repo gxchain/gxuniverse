@@ -408,6 +408,33 @@ bool starplan::bSmallRound()
     if( isDelay || isFull) { retValue = true; }
     return retValue;
 }
+
+bool starplan::isInviteTimeout(uint64_t lastBigPlanetCreateTime)
+{
+    graphene_assert(get_head_block_time() > lastBigPlanetCreateTime, CHECKBIGTIMEMSG);
+    return (get_head_block_time() - lastBigPlanetCreateTime) > delaytime;
+}
+
+bool starplan::isRoundFull()
+{
+    auto round_itor = tbrounds.end();
+    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
+    round_itor--;
+    return round_itor->current_round_invites >= roundSize;
+}
+
+bool starplan::isRoundFinish()
+{
+    auto big_itor = tbbigplanets.end();
+    if(big_itor == tbbigplanets.begin()){
+        return false;
+    }
+
+    big_itor--;
+
+    return isInviteTimeout(big_itor->create_time) || isRoundFinish();
+}
+
 uint64_t starplan::currentRound()
 {
     auto round_itor = tbrounds.end();
@@ -918,7 +945,7 @@ uint64_t starplan::calcActivePlanetReward(vector<reward> &rewardList, uint64_t r
 {
     vector<ActivePlanet> activePlanets;
     uint64_t totalWeight = getCurrentRoundActivePlanets(activePlanets);
-	if(totalWeight == 0) return 0;
+    if(totalWeight == 0) return 0;
 
     uint64_t amount = 0;
     uint64_t totalAmount = 0;
