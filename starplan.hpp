@@ -170,6 +170,7 @@ class starplan : public contract
 
     bool        checkSender();                                                  //验证调用者和原始调用者是否相同
     bool        isUpgrade();                                                    //验证合约状态升级
+    auto&       getLastRounditor();                                             //获取roundtable最后一个元素的迭代器      
 
   private:
     //@abi table tbglobal i64
