@@ -221,8 +221,6 @@ void starplan::endround()
     graphene_assert(bSmallRound(),ISENDROUNDMSG);
     // 3 计算奖池
     calcCurrentRoundPoolAmount();
-    // 4 更新活力星权重
-    updateActivePlanets();
 
     {
         // 5 发放随机奖池奖励
@@ -256,6 +254,9 @@ void starplan::endround()
         //TODO modify tbrounds.random_pool_amount - actualReward
         //TODO modify tbglobals.pool_amount - actualReward
     }
+
+    // 更新活力星权重
+    updateActivePlanets();
 
     // 9 开启新的一轮
     createNewRound();
