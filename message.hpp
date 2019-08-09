@@ -18,6 +18,7 @@ const char* FINDROUNDMSG    =   "GXUniverse Contract Error: Found round table wr
 const char* CHECKATTENMSG   =   "GXUniverse Contract Error: Pool Amount is error";
 const char* CHECKAMOUNTMSG  =   "GXUniverse Contract Error: Withdraw asset over";
 const char* ISENDROUNDMSG   =   "GXUniverse Contract Error: Current round is not end";
+const char* ISUPGRADEMSG    =   "GXUniverse Contract Error: Contract upgrade";
 const char* UNSTAKELOG      =   "Log: unstake withdraw";
 const char* INVITERLOG      =   "Log: inviter withdraw 1 GXC";
 const char* RANDOMLOG       =   "Log: random withdraw";

@@ -66,6 +66,9 @@ const uint64_t      defaultinviter       = 0;                        //默认邀
 const char*         vote_reason          = "vote to super star";     //给超级星投票
 const char*         stake_reason         = "super star stake";       //超级星晋升
 
+#define STAKE_TYPE_TOSUPER  0
+#define STAKE_TYPE_VOTE     1
+
 #define RWD_TYPE_RANDOM     0
 #define RWD_TYPE_POOL       1
 #define RWD_TYPE_ACTIVE     2
@@ -109,6 +112,7 @@ class starplan : public contract
     PAYABLE     uptosuper(std::string inviter);
     ACTION      endround();
     ACTION      unstake(std::string account);
+    ACTION      upgrade(uint64_t flag);
 
   private:
 
@@ -131,7 +135,7 @@ class starplan : public contract
     bool        isAccount(std::string accname);
     bool        isInit();
     bool        hasInvited(uint64_t original_sender,std::string inviter);
-    void        addStake(uint64_t sender,uint64_t amount,uint64_t to,std::string reason);
+    void        addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason);
     void        sendInviteReward(uint64_t sender);
     void        updateActivePlanetsByBig(uint64_t sender);
     void        updateActivePlanetsBySuper(uint64_t sender);
@@ -167,6 +171,7 @@ class starplan : public contract
     void        checkWithdraw(uint64_t pool,uint64_t amount);
 
     bool        checkSender();                                                  //验证调用者和原始调用者是否相同
+    bool        isUpgrade();                                                    //验证合约状态升级
 
   private:
     //@abi table tbglobal i64
@@ -174,10 +179,11 @@ class starplan : public contract
         uint64_t index;
         uint64_t pool_amount;               // 总资金池剩余资产
         uint64_t current_round;             // 当前轮数
+        uint64_t is_upgrade;                // 合约升级
 
         uint64_t primary_key() const { return index; }
 
-        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round))
+        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(is_upgrade))
     };
     typedef multi_index<N(tbglobal), tbglobal> tbglobal_index;
     tbglobal_index tbglobals;
@@ -228,7 +234,7 @@ class starplan : public contract
         uint64_t amount;                    // 抵押数量
         uint64_t end_time;                  // 抵押时间
         uint64_t staketo;                   // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
-        std::string reason;                 // 抵押原因
+        uint64_t reason;                    // 抵押原因
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
@@ -342,4 +348,4 @@ class starplan : public contract
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
 };
-GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake))
+GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake)(upgrade))
