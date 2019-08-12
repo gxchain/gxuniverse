@@ -164,7 +164,7 @@ class starplan : public contract
         uint64_t end_time;                  // 抵押时间
         uint64_t staking_to;                // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
         uint64_t reason;                    // 抵押原因
-        uint64_t claimed;                   // 是否解除抵押
+        bool claimed;                       // 是否解除抵押
         uint64_t claim_time;                // 解除抵押的时间
 
         uint64_t primary_key() const { return index; }
