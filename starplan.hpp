@@ -49,7 +49,7 @@ class starplan : public contract
     PAYABLE             uptobig();
     PAYABLE             uptosuper(std::string inviter);
     ACTION              endround();
-    ACTION              unstake(std::string account);
+    ACTION              claim(std::string account);
     ACTION              upgrade(uint64_t flag);
 
   private:

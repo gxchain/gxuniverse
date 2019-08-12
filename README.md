@@ -38,7 +38,7 @@ const uint64_t delaytime = 12 * 3600; // 最后一个大行星的延迟时间（
 const uint64_t defaultinviter = 0;  // 默认邀请账户id  
 
 const char* vote_reason  = "vote to super star";  // 给超级星投票
-const char* stake_reason = "super star stake";    // 超级星晋升
+const char* staking_reason = "staking to super star";    // 超级星晋升
 ```
 
 
@@ -54,7 +54,7 @@ struct tbglobal {
   uint64_t index;					// 自增索引
   uint64_t pool_amount;		// 总资金池剩余资产
   uint64_t current_round;	// 当前轮数
-  bool is_upgrade;        // 升级维护中
+  bool upgrading;         // 升级维护中
 };
 ```
 
@@ -186,6 +186,7 @@ struct tbinvite {
 PAYABLE init(){
   // globals[0].index = 0;
   // globals[0].poll_amount = 2000000;
+  // globals[0].current_round=0;
   // globals[0].current_round=0;
 }
 ```
