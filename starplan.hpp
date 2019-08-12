@@ -282,6 +282,6 @@ class starplan : public contract
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
 
-    inline const struct tbround& lastRound();
+    inline const struct starplan::tbround& lastRound();
 };
 GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake)(upgrade))

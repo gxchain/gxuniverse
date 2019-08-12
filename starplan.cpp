@@ -97,7 +97,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     //11、修改超级星的得票数
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(super_id);
-    sup_idx.modify(sender_id,_self,[&](auto &obj) {
+    sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {
             obj.vote_num  = obj.vote_num + amount;
         });
 }
@@ -429,7 +429,7 @@ void starplan::invite(uint64_t sender,std::string inviter)
     uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
     if(inviter_id == -1)
         inviter_id = defaultinviter;
-    if(!hasInvited(sender,inviter)){                                 //不存在邀请关系则创建，
+    if(!hasInvited(sender)){                                 //不存在邀请关系则创建，
         tbinvites.emplace(sender,[&](auto &obj) {
             obj.index                   = tbinvites.available_primary_key();
             obj.invitee                 = sender;
@@ -650,10 +650,10 @@ void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64
     }
 }
 
-const struct tbround& starplan::lastRound()
+const struct starplan::tbround& starplan::lastRound()
 {
     auto round_itor = tbrounds.end();
-    graphene_assert(round_itor != tbrounds.begin(), findRoundMsg);
+    graphene_assert(round_itor != tbrounds.begin(), FINDROUNDMSG);
     round_itor--;
     return *round_itor;
 }
@@ -672,8 +672,8 @@ void starplan::getBudgets(uint64_t &randomRewardBudget, uint64_t &bigPlanetRewar
 
 uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget)
 {
-    vector<uint64_t> &bigPlanets;
-    vector<uint64_t> &bigPlanetsToReward;
+    vector<uint64_t> bigPlanets;
+    vector<uint64_t> bigPlanetsToReward;
 
     getCurrentRoundBigPlanets(bigPlanets);
     chooseBigPlanet(bigPlanets, bigPlanetsToReward);
@@ -693,7 +693,7 @@ uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardB
 
 uint64_t starplan::calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget)
 {
-    vector<uint64_t> &bigPlanets;
+    vector<uint64_t> bigPlanets;
     getCurrentRoundBigPlanets(bigPlanets);
 
     if(bigPlanets.size() == 0) return 0;
@@ -756,7 +756,7 @@ bool starplan::baseSecureCheck(vector<reward> &rewardList)
     uint64_t totalReward = 0;
     for(const auto &reward : rewardList) {
         graphene_assert(reward.to > 0, "");
-        totalReward + reward.amount;
+        totalReward += reward.amount;
         graphene_assert(reward.amount > 0 && reward.amount < MAX_USER_REWARD, "");
     }
 
