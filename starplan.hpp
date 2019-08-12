@@ -139,22 +139,19 @@ class starplan : public contract
     struct tbvote {
         uint64_t index;                     // 自增索引
         uint64_t round;                     // 当前轮数
-        uint64_t staking_amount;              // 抵押GXC数量
+        uint64_t staking_amount;            // 抵押GXC数量
         uint64_t from;                      // 投票者id
         uint64_t to;                        // 被投票者id
         uint64_t vote_time;                 // 投票时间
-        uint64_t is_unstake;                // 是否撤销投票
+        uint64_t disabled;                  // 是否撤销投票
 
         uint64_t primary_key() const { return index; }
         uint64_t by_vote_from() const { return from; }
         uint64_t by_vote_to() const { return to; }
         uint64_t by_round() const { return round;}
 
-<<<<<<< HEAD
-        GRAPHENE_SERIALIZE(tbvote, (index)(round)(stake_amount)(from)(to)(vote_time)(is_unstake))
-=======
-        GRAPHENE_SERIALIZE(tbvote, (index)(round)(staking_amount)(from)(to)(vote_time))
->>>>>>> 0f7a11d78de3e1b61f28194c6ba0c6d7a1ac2162
+        GRAPHENE_SERIALIZE(tbvote, (index)(round)(staking_amount)(from)(to)(vote_time)(disabled))
+
     };
     typedef multi_index<N(tbvote), tbvote,
                         indexed_by<N(byfrom), const_mem_fun<tbvote, uint64_t, &tbvote::by_vote_from>>,
@@ -170,23 +167,16 @@ class starplan : public contract
         uint64_t end_time;                  // 抵押时间
         uint64_t staking_to;                // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
         uint64_t reason;                    // 抵押原因
-<<<<<<< HEAD
-        uint64_t is_unstake;                // 是否解除抵押
-        uint64_t unstake_time;              // 解除抵押的时间
-        uint64_t vote_index;                // 记录对应投票表项id
-=======
-        bool claimed;                       // 是否解除抵押
+
+        uint64_t claimed;                   // 是否解除抵押
         uint64_t claim_time;                // 解除抵押的时间
->>>>>>> 0f7a11d78de3e1b61f28194c6ba0c6d7a1ac2162
+        uint64_t vote_index;                // 记录对应投票表项id
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
 
-<<<<<<< HEAD
-        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staketo)(reason)(is_unstake)(unstake_time)(vote_index))
-=======
-        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(reason) claimed)(claim_time))
->>>>>>> 0f7a11d78de3e1b61f28194c6ba0c6d7a1ac2162
+        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(reason)(claimed)(claim_time)(vote_index))
+
     };
     typedef multi_index<N(tbstaking), tbstaking,
                         indexed_by<N(byaccid), const_mem_fun<tbstaking, uint64_t, &tbstaking::by_acc_id>>> tbstaking_index;
@@ -257,14 +247,14 @@ class starplan : public contract
         uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t vote_num;                  // 得票数
-        uint64_t is_unstake;                // 是否已经撤销抵押
+        uint64_t disabled;                  // 是否已经撤销抵押
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_vote_num() const { return vote_num; }
 
-        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num)(is_unstake))
+        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num)(disabled))
     };
     typedef multi_index<N(tbsuperstar), tbsuperstar,
                         indexed_by<N(byaccid), const_mem_fun<tbsuperstar, uint64_t, &tbsuperstar::by_acc_id>>,
@@ -295,6 +285,26 @@ class starplan : public contract
                         indexed_by<N(byenable), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_enable>>,
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;
+
+    //@abi table tbreward i64
+    struct tbreward {
+        uint64_t index;                     // 自增索引
+        uint64_t round;                     // 小轮数
+        uint64_t from;                      // 奖励来源账户
+        uint64_t to;                        // 奖励去向账户
+        uint64_t amount;                    // 奖励金额
+        uint64_t type;                      // 奖励类型
+
+        uint64_t primary_key() const { return index; }
+        uint64_t by_round() const { return round; }
+        uint64_t by_acc_id() const { return to; }
+
+        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type))
+    };
+    typedef multi_index<N(tbreward), tbreward,
+                        indexed_by<N(byaccid), const_mem_fun<tbreward, uint64_t, &tbreward::by_round>>,
+                        indexed_by<N(byinviteid), const_mem_fun<tbreward, uint64_t, &tbreward::by_acc_id>>> tbreward_index;
+    tbreward_index tbrewards;
 
     inline const struct starplan::tbround& lastRound();
 };

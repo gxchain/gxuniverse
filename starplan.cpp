@@ -504,6 +504,14 @@ void starplan::distriInvRewards(uint64_t sender)
             obj.invite_pool_amount      = obj.invite_pool_amount + z1 * precision;
     });
     inline_transfer(_self , invite_itor->inviter , coreAsset , z2 * precision,inviter_withdraw.c_str(),inviter_withdraw.length());
+    tbrewards.emplace(get_trx_sender(), [&](auto &obj){
+            obj.index           = tbrewards.available_primary_key();
+            obj.round           = currentRound();
+            obj.from            = sender;
+            obj.to              = invite_itor->inviter;
+            obj.amount          = z2 * precision;
+            obj.type            = RWD_TYPE_INVITE;
+        });
 }
 void starplan::updateActivePlanetsByBig(uint64_t sender)
 {
@@ -796,6 +804,14 @@ void starplan::doReward(vector<reward> &rewardList)
                 reward_reasons[reward.type],
                 strlen(reward_reasons[reward.type])
         );
+        tbrewards.emplace(get_trx_sender(), [&](auto &obj){
+            obj.index           = tbrewards.available_primary_key();
+            obj.round           = currentRound();
+            obj.from            = _self;
+            obj.to              = reward.to;
+            obj.amount          = reward.amount;
+            obj.type            = reward.type;
+        });
     }
 }
 
