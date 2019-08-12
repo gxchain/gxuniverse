@@ -19,11 +19,11 @@ const char* CHECKATTENMSG   =   "GXUniverse Contract Error: Pool Amount is error
 const char* CHECKAMOUNTMSG  =   "GXUniverse Contract Error: Withdraw asset over";
 const char* ISENDROUNDMSG   =   "GXUniverse Contract Error: Current round is not end";
 const char* ISUPGRADEMSG    =   "GXUniverse Contract Error: Contract upgrade";
+const char* UNSTAKEMSG      =   "GXUniverse Contract Error: Unknown reason for unstaking";
+const char* UNFOUNDITORMSG  =   "GXUniverse Contract Error: Unfound itor";
 const char* UNSTAKELOG      =   "Log: unstake withdraw";
 const char* INVITERLOG      =   "Log: inviter withdraw 1 GXC";
 const char* RANDOMLOG       =   "Log: random withdraw";
 const char* BIGPLANETLOG    =   "Log: big planet withdraw";
 const char* ACTPLANETLOG    =   "Log: active planet withdraw";
 const char* SUPSTARLOG      =   "Log: super star withdraw";
-
-
