@@ -10,9 +10,6 @@
 
 using namespace graphene;
 
-#define MAX_ROUND_REWARD    1000000 //TODO calc the max reward per round
-#define MAX_USER_REWARD     100000  //TODO calc the max reward per user in one round
-
 struct reward {
     uint64_t to;
     uint64_t amount;
