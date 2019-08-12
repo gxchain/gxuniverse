@@ -56,7 +56,7 @@ class starplan : public contract
 
     void                invite(uint64_t sender,std::string inviter);
     void                activeInvite(uint64_t sender);                           //激活邀请关系
-    void                createVote(uint64_t sender,std::string superstar);
+    void                createVote(uint64_t sender,std::string superstar,uint64_t &index);
     bool                isSuperStar(uint64_t sender);
     bool                addSuperStar(uint64_t sender);
     bool                isSmallPlanet(uint64_t sender);
@@ -72,7 +72,7 @@ class starplan : public contract
     bool                isAccount(std::string accname);
     bool                isInit();
     bool                hasInvited(uint64_t sender);
-    void                addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason);
+    void                addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     void                distriInvRewards(uint64_t sender);
     void                updateActivePlanetsByBig(uint64_t sender);
     void                updateActivePlanetsBySuper(uint64_t sender);
@@ -96,11 +96,12 @@ class starplan : public contract
 
     void                createNewRound();
     bool                canUpdateSmall(uint64_t sender);
-    void                deleteVote(uint64_t sender,uint64_t time);
     void                checkWithdraw(uint64_t pool,uint64_t amount);
 
     bool                checkSender();                                                  //验证调用者和原始调用者是否相同
     bool                isUpgrade();                                                    //验证合约状态升级
+    void                cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount);
+    void                cancelSuperStake(uint64_t superAccId);
 
   private:
     //@abi table tbglobal i64
@@ -142,13 +143,18 @@ class starplan : public contract
         uint64_t from;                      // 投票者id
         uint64_t to;                        // 被投票者id
         uint64_t vote_time;                 // 投票时间
+        uint64_t is_unstake;                // 是否撤销投票
 
         uint64_t primary_key() const { return index; }
         uint64_t by_vote_from() const { return from; }
         uint64_t by_vote_to() const { return to; }
         uint64_t by_round() const { return round;}
 
+<<<<<<< HEAD
+        GRAPHENE_SERIALIZE(tbvote, (index)(round)(stake_amount)(from)(to)(vote_time)(is_unstake))
+=======
         GRAPHENE_SERIALIZE(tbvote, (index)(round)(staking_amount)(from)(to)(vote_time))
+>>>>>>> 0f7a11d78de3e1b61f28194c6ba0c6d7a1ac2162
     };
     typedef multi_index<N(tbvote), tbvote,
                         indexed_by<N(byfrom), const_mem_fun<tbvote, uint64_t, &tbvote::by_vote_from>>,
@@ -164,13 +170,23 @@ class starplan : public contract
         uint64_t end_time;                  // 抵押时间
         uint64_t staking_to;                // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
         uint64_t reason;                    // 抵押原因
+<<<<<<< HEAD
+        uint64_t is_unstake;                // 是否解除抵押
+        uint64_t unstake_time;              // 解除抵押的时间
+        uint64_t vote_index;                // 记录对应投票表项id
+=======
         bool claimed;                       // 是否解除抵押
         uint64_t claim_time;                // 解除抵押的时间
+>>>>>>> 0f7a11d78de3e1b61f28194c6ba0c6d7a1ac2162
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
 
+<<<<<<< HEAD
+        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staketo)(reason)(is_unstake)(unstake_time)(vote_index))
+=======
         GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(reason) claimed)(claim_time))
+>>>>>>> 0f7a11d78de3e1b61f28194c6ba0c6d7a1ac2162
     };
     typedef multi_index<N(tbstaking), tbstaking,
                         indexed_by<N(byaccid), const_mem_fun<tbstaking, uint64_t, &tbstaking::by_acc_id>>> tbstaking_index;
@@ -241,13 +257,14 @@ class starplan : public contract
         uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t vote_num;                  // 得票数
+        uint64_t is_unstake;                // 是否已经撤销抵押
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_vote_num() const { return vote_num; }
 
-        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num))
+        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num)(is_unstake))
     };
     typedef multi_index<N(tbsuperstar), tbsuperstar,
                         indexed_by<N(byaccid), const_mem_fun<tbsuperstar, uint64_t, &tbsuperstar::by_acc_id>>,
