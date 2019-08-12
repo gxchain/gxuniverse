@@ -46,12 +46,8 @@ void starplan::vote(std::string inviter,std::string superstar)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
-    // 0、防止跨合约调用
-    graphene_assert(checkSender(), CHECKSENDERMSG);
-
-    // 1、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
+    baseCheck();
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -71,9 +67,6 @@ void starplan::vote(std::string inviter,std::string superstar)
 
     }
     graphene_assert(isAccount(superstar), CHECKACCOUNTMSG);
-
-    // 4、验证当前轮是否结束
-    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     // 5、验证超级星账户
     auto super_id = get_account_id(superstar.c_str(), superstar.length());
@@ -105,13 +98,8 @@ void starplan::vote(std::string inviter,std::string superstar)
 
 void starplan::selfinvite(std::string superstar)
 {
-    // 检查
-    // 0、防止跨合约调用
-    graphene_assert(checkSender(), CHECKSENDERMSG);
-
-    // 1、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    baseCheck();
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -122,9 +110,6 @@ void starplan::selfinvite(std::string superstar)
     // 3、判断是否有邀请资格，即为大行星或者超级星
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), "");
-
-    // 4、验证当前轮是否结束
-    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     // 5、验证超级星账户
     auto super_id = get_account_id(superstar.c_str(), superstar.length());
@@ -153,12 +138,8 @@ void starplan::uptobig()
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
-    // 0、防止跨合约调用
-    graphene_assert(checkSender(), CHECKSENDERMSG);
-
-    // 1、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
+    baseCheck();
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -172,9 +153,6 @@ void starplan::uptobig()
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isSmallPlanet(sender_id), CHECKSMALLMSG);
-
-    // 4、验证当前轮是否结束
-    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
     // 5、存到bigPlanet表
@@ -200,12 +178,8 @@ void starplan::uptosuper(std::string inviter)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
-    // 0、防止跨合约调用
-    graphene_assert(checkSender(), CHECKSENDERMSG);
-
-    // 1、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
+    baseCheck();
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -225,9 +199,6 @@ void starplan::uptosuper(std::string inviter)
         graphene_assert(inviter_id != sender_id, CHECKINVSENDMSG);
     }
 
-    // 4、验证当前轮是否结束
-    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
-
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
     // 5、创建超级星
@@ -245,12 +216,7 @@ void starplan::uptosuper(std::string inviter)
 }
 void starplan::endround()
 {
-    // 0、防止跨合约调用
-    graphene_assert(checkSender(), CHECKSENDERMSG);
-
-    // 1、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
+    baseCheck();
 
     // 2、验证调用者账户是否为admin账户
     if(lastRound().current_round_invites < roundSize ){
@@ -291,12 +257,7 @@ void starplan::endround()
 }
 void starplan::claim(std::string account)
 {
-    // 0、防止跨合约调用
-    graphene_assert(checkSender(), CHECKSENDERMSG);
-
-    // 1、验证合约是否初始化、合约是否在升级
-    graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
+    baseCheck();
 
     const std::string unstake_withdraw = LOG_CLAIM;                        //抵押提现
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
@@ -949,4 +910,14 @@ void starplan::cancelSuperStake(uint64_t superAccId)
     sup_idx.modify(sup_itor,get_trx_sender(),[&](auto &obj){
         obj.disabled            =   true;
     });
+}
+
+void starplan::baseCheck()
+{
+    // 0、防止跨合约调用
+    graphene_assert(checkSender(), CHECKSENDERMSG);
+    // 1、验证合约是否初始化
+    graphene_assert(isInit(), ISINITMSG);
+    // 1、验证合约是否在升级
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 }

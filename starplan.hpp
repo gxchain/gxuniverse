@@ -104,6 +104,8 @@ class starplan : public contract
     void                cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount);
     void                cancelSuperStake(uint64_t superAccId);
 
+    inline void         baseCheck();
+
   private:
     //@abi table tbglobal i64
     struct tbglobal {                       // 全局状态表
