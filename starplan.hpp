@@ -46,6 +46,7 @@ class starplan : public contract
 
     PAYABLE             init();
     PAYABLE             vote(std::string inviter,std::string superstar);
+    PAYABLE             selfinvite(std::string superstar);
     PAYABLE             uptobig();
     PAYABLE             uptosuper(std::string inviter);
     ACTION              endround();
@@ -281,4 +282,4 @@ class starplan : public contract
 
     inline const struct starplan::tbround& lastRound();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(uptobig)(uptosuper)(endround)(unstake)(upgrade))
+GRAPHENE_ABI(starplan, (init)(vote)(selfinvite)(uptobig)(uptosuper)(endround)(unstake)(upgrade))

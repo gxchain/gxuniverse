@@ -102,6 +102,52 @@ void starplan::vote(std::string inviter,std::string superstar)
         });
 }
 
+void starplan::selfinvite(std::string superstar)
+{
+    // 检查
+    // 0、防止跨合约调用
+    graphene_assert(checkSender(), CHECKSENDERMSG);
+
+    // 1、验证合约是否初始化、合约是否在升级
+    graphene_assert(isInit(), ISINITMSG);
+    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+
+    uint64_t ast_id = get_action_asset_id();
+    uint64_t amount = get_action_asset_amount();
+
+    // 2、判断是否存入足够GXC 110 + 3GXC
+    uint64_t depositToBig = z + z1 + z2 + z3;
+    graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, "");
+    // 3、判断是否有邀请资格，即为大行星或者超级星
+    uint64_t sender_id = get_trx_origin();
+    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), "");
+
+    // 4、验证当前轮是否结束
+    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
+
+    // 5、验证超级星账户
+    auto super_id = get_account_id(superstar.c_str(), superstar.length());
+    graphene_assert(isSuperStar(super_id), CHECKSUPERMSG);
+
+    // 执行
+    // 6、创建/更新活力星
+    updateActivePlanetsByBig(sender_id);//FIXME, to update function:updateActivePlanetsByBig
+
+    // 7、修改stake表，增加110GXC的stake
+    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE);//TODO, check STAKE_TYPE_VOTE
+
+    // 8、vote表
+    createVote(sender_id,superstar);
+
+    // 9、将3个GXC转移到奖池，将其发送给邀请人GXC发送给自己（因为这里没有邀请人）
+    distriInvRewards(sender_id);//FIXME, to update function:distriInvRewards
+
+    // 10、当邀请关系满100人，开启新的一轮
+    if(lastRound().current_round_invites >= roundSize ){
+        endround();
+    }
+}
+
 void starplan::uptobig()
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
