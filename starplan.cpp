@@ -3,10 +3,10 @@
 void starplan::init()
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
-    // 0 防止跨合约调用
+    // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
-    // 1 校验调用者，只有调用者可以初始化底池，只许调用一次
+    // 1、校验调用者，只有调用者可以初始化底池，只许调用一次
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == adminId, CHECKADMINMSG);
 
@@ -24,14 +24,14 @@ void starplan::init()
     graphene_assert(rou_itor == tbrounds.end(),INITROUUNDMSG);
 
     //////////////////////////////////////// 校验通过后，初始化资金池 //////////////////////////////////////////
-    // 1、初始化总资金池
+    // 5、初始化总资金池
     tbglobals.emplace(sender_id,[&](auto &obj) {
             obj.index           = 0;
             obj.pool_amount     = amount;
             obj.current_round   = 0;
             obj.is_upgrade      = 0;
         });
-    // 2、初始化第一轮资金池，并启动第一轮
+    // 6、初始化第一轮资金池，并启动第一轮
     tbrounds.emplace(sender_id,[&](auto &obj) {
             obj.round                   = tbrounds.available_primary_key();
             obj.current_round_invites   = 0;
@@ -46,23 +46,23 @@ void starplan::vote(std::string inviter,std::string superstar)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
-    // 0 防止跨合约调用
+    // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
-    //3、验证合约是否初始化、合约是否在升级
+    // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
-    //1、判断是否充值0.1GXC
+    // 2、判断是否充值0.1GXC
     std::string depomsg = DEPOMSG;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(0.1));
     graphene_assert(ast_id == coreAsset && amount >= precision / 10, depomsg.c_str());
 
     uint64_t sender_id = get_trx_origin();
-    //2、验证账户
+    // 3、验证账户
     if(inviter != ""){
         graphene_assert(isAccount(inviter), CHECKACCOUNTMSG);
         uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
@@ -72,29 +72,29 @@ void starplan::vote(std::string inviter,std::string superstar)
     }
     graphene_assert(isAccount(superstar), CHECKACCOUNTMSG);
 
-    //4、验证当前轮是否结束
+    // 4、验证当前轮是否结束
     graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
-    //5、验证超级星账户
+    // 5、验证超级星账户
     auto super_id = get_account_id(superstar.c_str(), superstar.length());
     graphene_assert(isSuperStar(super_id), CHECKSUPERMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个小行星 //////////////////////////////////////////
 
-    //6、保存邀请关系(不允许重复邀请)
+    // 6、保存邀请关系(不允许重复邀请)
     invite(sender_id,inviter);
 
-    //7、vote(允许重复投票)
+    // 7、vote(允许重复投票)
     createVote(sender_id,superstar);
 
-    //8、添加一个新的抵押金额
+    // 8、添加一个新的抵押金额
     addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE);
 
-    //9、存到smallPlanet表(不允许重复创建)
+    // 9、存到smallPlanet表(不允许重复创建)
     if(canUpdateSmall(sender_id))
         addSmallPlanet(sender_id);
 
-    //11、修改超级星的得票数
+    // 10、修改超级星的得票数
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(super_id);
     sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {
@@ -106,43 +106,43 @@ void starplan::uptobig()
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
-    // 0 防止跨合约调用
+    // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
-    //2、验证合约是否初始化、合约是否在升级
+    // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
-    //1、判断是否存入足够GXC
+    // 2、判断是否存入足够GXC
     uint64_t depositToBig = z1 + z2 + z3;
     std::string depomsg = DEPOMSG;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
     graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, depomsg.c_str());
 
-    //3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
+    // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isSmallPlanet(sender_id), CHECKSMALLMSG);
 
-    //5、验证当前轮是否结束
+    // 4、验证当前轮是否结束
     graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
-    //6、存到bigPlanet表
+    // 5、存到bigPlanet表
     graphene_assert(addBigPlanet(sender_id), CHECKBIGMSG);
 
-    //7、激活邀请关系
+    // 6、激活邀请关系
     activeInvite(sender_id);
 
-    //8、将3个GXC转移到奖池，将其中一个GXC发送给邀请人
+    // 7、将3个GXC转移到奖池，将其中一个GXC发送给邀请人
     distriInvRewards(sender_id);
 
-    //9、创建/更新活力星
+    // 8、创建/更新活力星
     updateActivePlanetsByBig(sender_id);
 
-    //10、当邀请关系满100人，开启新的一轮
+    // 9、当邀请关系满100人，开启新的一轮
     if(lastRound().current_round_invites >= roundSize ){
         endround();
     }
@@ -153,24 +153,24 @@ void starplan::uptosuper(std::string inviter)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
-    // 0 防止跨合约调用
+    // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
-    //4、验证合约是否初始化、合约是否在升级
+    // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
-    //1、判断是否存入足够GXC
+    // 2、判断是否存入足够GXC
     std::string depomsg = DEPOMSG;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(x));
     graphene_assert(ast_id == coreAsset && amount == x * precision, depomsg.c_str());
 
     uint64_t sender_id = get_trx_origin();
 
-    //3、验证账户是否存在
+    // 3、验证账户是否存在
     if(inviter != ""){
         graphene_assert(isAccount(inviter), CHECKACCOUNTMSG);
         graphene_assert(isInviter(inviter), CHECKINVITERMSG);
@@ -178,40 +178,42 @@ void starplan::uptosuper(std::string inviter)
         graphene_assert(inviter_id != sender_id, CHECKINVSENDMSG);
     }
 
-    //5、验证当前轮是否结束
+    // 4、验证当前轮是否结束
     graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
 
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
-    //7、创建超级星
+    // 5、创建超级星
     graphene_assert(addSuperStar(sender_id), ISSUPERMSG);
 
-    //8、创建抵押项
+    // 6、创建抵押项
     addStake(sender_id, amount, sender_id, STAKE_TYPE_TOSUPER);
 
-    //9、保存邀请关系，激活邀请关系
+    // 7、保存邀请关系，激活邀请关系
     invite(sender_id,inviter);
     activeInvite(sender_id);
 
-    //10、插入更新一条活力星记录，权重为1
+    // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetsBySuper(sender_id);
 }
 void starplan::endround()
 {
-    // 0 防止跨合约调用
+    // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
+
+    // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
-    // 1 验证调用者账户是否为admin账户
+    // 2、验证调用者账户是否为admin账户
     if(lastRound().current_round_invites < roundSize ){
         uint64_t sender_id = get_trx_origin();
         graphene_assert(sender_id == adminId, CHECKADMINMSG);
     }
 
-    // 2 验证当前轮是否可以结束
+    // 3、验证当前轮是否可以结束
     graphene_assert(isRoundFinish(),ISENDROUNDMSG);
-    // 3 计算奖池
+    // 4、计算奖池
     calcCurrentRoundPoolAmount();
 
     uint64_t randomBudget = 0;
@@ -234,16 +236,18 @@ void starplan::endround()
     }
 
 
-    // 更新活力星权重
+    // 5、更新活力星权重
     updateActivePlanets();
 
-    // 9 开启新的一轮
+    // 6、开启新的一轮
     createNewRound();
 }
 void starplan::unstake(std::string account)
 {
-    // 0 防止跨合约调用
+    // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
+
+    // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
 
@@ -267,17 +271,17 @@ void starplan::unstake(std::string account)
 }
 void starplan::upgrade(uint64_t flag)
 {
-    // 0 防止跨合约调用
+    // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
-    // 2 验证合约是否已经初始化
+    // 1、验证合约是否已经初始化
     graphene_assert(isInit(), ISINITMSG);
 
-    // 1 验证调用者账户是否为admin账户
+    // 2、验证调用者账户是否为admin账户
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == adminId, CHECKADMINMSG);
 
-    // 3 修改global表
+    // 3、修改global表
     auto itor = tbglobals.find(0);
     tbglobals.modify(itor,sender_id,[&](auto &obj) {
         obj.is_upgrade          =   flag;
