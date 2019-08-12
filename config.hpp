@@ -64,6 +64,7 @@ const uint64_t      MAX_USER_REWARD     = MAX_ROUND_REWARD * activePercent / 100
 #define RWD_TYPE_ACTIVE     2
 #define RWD_TYPE_SUPER      3
 #define RWD_TYPE_TIMEOUT    4
+#define RWD_TYPE_INVITE     5
 const char* const reward_reasons[5] = {
         "RWD_TYPE_RANDOM",
         "RWD_TYPE_POOL",

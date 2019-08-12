@@ -51,7 +51,7 @@ void starplan::vote(std::string inviter,std::string superstar)
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -85,10 +85,11 @@ void starplan::vote(std::string inviter,std::string superstar)
     invite(sender_id,inviter);
 
     // 7、vote(允许重复投票)
-    createVote(sender_id,superstar);
+    uint64_t vote_index = 0;
+    createVote(sender_id,superstar,vote_index);
 
     // 8、添加一个新的抵押金额
-    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE);
+    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE,vote_index);
 
     // 9、存到smallPlanet表(不允许重复创建)
     if(canUpdateSmall(sender_id))
@@ -157,7 +158,7 @@ void starplan::uptobig()
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -204,7 +205,7 @@ void starplan::uptosuper(std::string inviter)
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -249,7 +250,7 @@ void starplan::endround()
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     // 2、验证调用者账户是否为admin账户
     if(lastRound().current_round_invites < roundSize ){
@@ -288,27 +289,36 @@ void starplan::endround()
     // 6、开启新的一轮
     createNewRound();
 }
-void starplan::unstake(std::string account)
+void starplan::claim(std::string account)
 {
     // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
-    const std::string unstake_withdraw = UNSTAKELOG;                        //抵押提现
+    const std::string unstake_withdraw = LOG_CLAIM;                        //抵押提现
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
     auto sta_idx = tbstakes.get_index<N(byaccid)>();
     auto itor = sta_idx.find(acc_id);
     for(; itor != sta_idx.end() && itor->account == acc_id;){
-        if(get_head_block_time() > itor->end_time){
-            // 解除抵押提现
+        if(get_head_block_time() > itor->end_time && itor->claimed == false){
+            // 1.1、解除抵押提现
             inline_transfer(_self , acc_id , coreAsset , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
+            // 1.2、修改该项抵押失效 
             sta_idx.modify(itor,get_trx_sender(),[&](auto &obj){
                 obj.claimed          =   true;
                 obj.claim_time       =   get_head_block_time();
             });
+            // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
+            if(itor->reason == STAKE_TYPE_VOTE){
+                cancelVote(itor->vote_index,itor->staking_to,itor->amount);
+            }else if(itor->reason == STAKE_TYPE_TOSUPER){
+                cancelSuperStake(itor->staking_to);
+            }else{
+                graphene_assert(false,UNSTAKEMSG);
+            }
             itor++;
         }else{
             itor++;
@@ -355,11 +365,7 @@ bool starplan::isInviter(std::string accname)
     // 验证邀请账户是否为大行星或者超级星
     bool retValue = false;
     uint64_t inviter_id = get_account_id(accname.c_str(), accname.length());
-    auto big_idx = tbbigplanets.get_index<N(byaccid)>();
-    auto big_itor = big_idx.find(inviter_id);
-    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
-    auto sup_itor = sup_idx.find(inviter_id);
-    if(big_itor != big_idx.end() || sup_itor != sup_idx.end())
+    if(isSuperStar(inviter_id) || isBigPlanet(inviter_id))
         retValue = true;
     return retValue;
 }
@@ -368,7 +374,7 @@ bool starplan::isSuperStar(uint64_t sender)
     bool retValue = false;
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(sender);
-    if(sup_itor != sup_idx.end()) { retValue = true; }
+    if(sup_itor != sup_idx.end() && sup_itor->disabled == false) { retValue = true; }
     return retValue;
 }
 bool starplan::addSuperStar(uint64_t sender)
@@ -380,6 +386,7 @@ bool starplan::addSuperStar(uint64_t sender)
             obj.create_time             = get_head_block_time();
             obj.create_round            = currentRound();
             obj.vote_num                = 0;
+            obj.disabled              = false;
         });
         return true;
     }
@@ -503,20 +510,22 @@ void starplan::activeInvite(uint64_t sender)
     });
 }
 
-void starplan::createVote(uint64_t sender,std::string superstar)
+void starplan::createVote(uint64_t sender,std::string superstar,uint64_t &index)
 {
     uint64_t amount = get_action_asset_amount();
     uint64_t super_id = get_account_id(superstar.c_str(), superstar.length());
     tbvotes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbvotes.available_primary_key();
+        index                       = obj.index;
         obj.round                   = currentRound();
         obj.staking_amount          = amount;
         obj.from                    = sender;
         obj.to                      = super_id;
         obj.vote_time               = get_head_block_time();
+        obj.disabled                = false;
     });
 }
-void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason)
+void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index)
 {
     tbstakes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbstakes.available_primary_key();
@@ -527,6 +536,7 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
         obj.reason                  = reason;
         obj.claimed                 = false;
         obj.claim_time              = 0;
+        obj.vote_index              = index;
     });
 }
 
@@ -540,6 +550,14 @@ void starplan::distriInvRewards(uint64_t sender)
             obj.invite_pool_amount      = obj.invite_pool_amount + z1 * precision;
     });
     inline_transfer(_self , invite_itor->inviter , coreAsset , z2 * precision,inviter_withdraw.c_str(),inviter_withdraw.length());
+    tbrewards.emplace(get_trx_sender(), [&](auto &obj){
+            obj.index           = tbrewards.available_primary_key();
+            obj.round           = currentRound();
+            obj.from            = sender;
+            obj.to              = invite_itor->inviter;
+            obj.amount          = z2 * precision;
+            obj.type            = RWD_TYPE_INVITE;
+        });
 }
 void starplan::updateActivePlanetsByBig(uint64_t sender)
 {
@@ -663,8 +681,10 @@ uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
 
     for (auto itor = tbsuperstars.begin(); itor != tbsuperstars.end(); itor++)
     {
-        total_vote += itor->vote_num;
-        superStars.push_back(SuperStar{itor->id, itor->vote_num, itor->vote_num != 0});
+        if(itor->disabled == false){
+            total_vote += itor->vote_num;
+            superStars.push_back(SuperStar{itor->id, itor->vote_num, itor->vote_num != 0});
+        }
     }
 
     return total_vote;
@@ -830,6 +850,14 @@ void starplan::doReward(vector<reward> &rewardList)
                 reward_reasons[reward.type],
                 strlen(reward_reasons[reward.type])
         );
+        tbrewards.emplace(get_trx_sender(), [&](auto &obj){
+            obj.index           = tbrewards.available_primary_key();
+            obj.round           = currentRound();
+            obj.from            = _self;
+            obj.to              = reward.to;
+            obj.amount          = reward.amount;
+            obj.type            = reward.type;
+        });
     }
 }
 
@@ -874,21 +902,6 @@ bool starplan::canUpdateSmall(uint64_t sender)
     }
     return retValue;
 }
-void starplan::deleteVote(uint64_t sender,uint64_t time)
-{
-    auto vot_idx = tbvotes.get_index<N(byfrom)>();
-    auto itor = vot_idx.find(sender);
-    for(;itor != vot_idx.end();){
-        if(itor->from == sender){
-            if(itor->vote_time == time + stakingDelayTime){
-                itor = vot_idx.erase(itor);
-                break;
-            }else{ itor++ ;}
-        }else{
-            break;
-        }
-    }
-}
 void starplan::checkWithdraw(uint64_t pool,uint64_t amount)
 {
     if(pool<amount){
@@ -903,11 +916,37 @@ bool starplan::checkSender()
     if(sender_id == origin_id){ retValue = true; }//TODO here to assert
     return retValue;
 }
-bool starplan::isUpgrade()
+bool starplan::isUpgrading()
 {
     bool retValue   = false;
     graphene_assert(isInit(), ISINITMSG);
     auto itor = tbglobals.find(0);
     if(itor->is_upgrade > 0){retValue = true;}
     return retValue;
+}
+void starplan::cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount)
+{
+    // 修改投票表
+    auto vote_itor = tbvotes.find(voteIndex);
+    graphene_assert(vote_itor!=tbvotes.end(),UNFOUNDITORMSG);
+    tbvotes.modify(vote_itor,get_trx_sender(),[&](auto &obj){
+        obj.disabled            =   true;
+    });
+    // 修改超级星得票数
+    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
+    auto sup_itor = sup_idx.find(superAccId);
+    graphene_assert(sup_itor!=sup_idx.end(),UNFOUNDITORMSG);
+    sup_idx.modify(sup_itor,get_trx_sender(),[&](auto &obj){
+        obj.vote_num            =   obj.vote_num - amount;
+    });
+}
+void starplan::cancelSuperStake(uint64_t superAccId)
+{
+    // 修改超级星表失效
+    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
+    auto sup_itor = sup_idx.find(superAccId);
+    graphene_assert(sup_itor!=sup_idx.end(),UNFOUNDITORMSG);
+    sup_idx.modify(sup_itor,get_trx_sender(),[&](auto &obj){
+        obj.disabled            =   true;
+    });
 }
