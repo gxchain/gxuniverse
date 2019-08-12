@@ -51,7 +51,7 @@ void starplan::vote(std::string inviter,std::string superstar)
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -111,7 +111,7 @@ void starplan::uptobig()
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -158,7 +158,7 @@ void starplan::uptosuper(std::string inviter)
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
@@ -203,7 +203,7 @@ void starplan::endround()
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
     // 2、验证调用者账户是否为admin账户
     if(lastRound().current_round_invites < roundSize ){
@@ -242,16 +242,16 @@ void starplan::endround()
     // 6、开启新的一轮
     createNewRound();
 }
-void starplan::unstake(std::string account)
+void starplan::claim(std::string account)
 {
     // 0、防止跨合约调用
     graphene_assert(checkSender(), CHECKSENDERMSG);
 
     // 1、验证合约是否初始化、合约是否在升级
     graphene_assert(isInit(), ISINITMSG);
-    graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+    graphene_assert(!isUpgrading(), ISUPGRADINGMSG);
 
-    const std::string unstake_withdraw = UNSTAKELOG;                        //抵押提现
+    const std::string unstake_withdraw = LOG_CLAIM;                        //抵押提现
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
     auto sta_idx = tbstakes.get_index<N(byaccid)>();
     auto itor = sta_idx.find(acc_id);
@@ -857,7 +857,7 @@ bool starplan::checkSender()
     if(sender_id == origin_id){ retValue = true; }//TODO here to assert
     return retValue;
 }
-bool starplan::isUpgrade()
+bool starplan::isUpgrading()
 {
     bool retValue   = false;
     graphene_assert(isInit(), ISINITMSG);
