@@ -67,7 +67,7 @@ class starplan : public contract
     uint64_t            currentRound();
     inline bool         isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
     inline bool         isRoundFull();//>=100 inviatees
-    bool                isRoundFinish();
+    inline bool         isRoundFinish();
 
     bool                isInviter(std::string accname);
     bool                isAccount(std::string accname);
@@ -105,6 +105,8 @@ class starplan : public contract
     void                cancelSuperStake(uint64_t superAccId);
 
     inline void         baseCheck();
+    inline void         roundFinishCheck();
+    inline uint64_t     amountEqualCheck(uint64_t expectedAmount, const char* errMsg);
 
   private:
     //@abi table tbglobal i64

@@ -56,6 +56,12 @@ const uint64_t      defaultinviter       = 0;                        //默认邀
 const uint64_t      MAX_ROUND_REWARD    = (roundAmount + roundSize * z1) * precision;
 const uint64_t      MAX_USER_REWARD     = MAX_ROUND_REWARD * activePercent / 100 * 1;//只有一个活力星的时候
 
+enum PLANET_AUTH {
+    SMALL_PLANET_AUTH   = 1,
+    BIG_PLANET_AUTH     = 1 << 1,
+    SUPER_STAR_AUTH     = 1 << 2
+};
+
 #define STAKE_TYPE_TOSUPER  0
 #define STAKE_TYPE_VOTE     1
 

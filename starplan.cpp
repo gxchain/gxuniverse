@@ -99,14 +99,10 @@ void starplan::vote(std::string inviter,std::string superstar)
 void starplan::selfinvite(std::string superstar)
 {
     baseCheck();
-    graphene_assert(!isRoundFinish(),CHECKROUENDMSG);
+    roundFinishCheck();
 
-    uint64_t ast_id = get_action_asset_id();
-    uint64_t amount = get_action_asset_amount();
+    uint64_t amount = amountEqualCheck(z + z1 + z2 + z3, "");
 
-    // 2、判断是否存入足够GXC 110 + 3GXC
-    uint64_t depositToBig = z + z1 + z2 + z3;
-    graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, "");
     // 3、判断是否有邀请资格，即为大行星或者超级星
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), "");
@@ -920,4 +916,17 @@ void starplan::baseCheck()
     graphene_assert(isInit(), ISINITMSG);
     // 1、验证合约是否在升级
     graphene_assert(!isUpgrade(), ISUPGRADEMSG);
+}
+
+void starplan::roundFinishCheck()
+{
+    graphene_assert(!isRoundFinish(), CHECKROUENDMSG);
+}
+
+uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
+{
+    graphene_assert(get_action_asset_id() == coreAsset, "");
+    graphene_assert(get_action_asset_amount() == expectedAmount, errMsg);
+
+    return expectedAmount;
 }
