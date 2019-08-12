@@ -257,19 +257,19 @@ void starplan::unstake(std::string account)
     auto sta_idx = tbstakes.get_index<N(byaccid)>();
     auto itor = sta_idx.find(acc_id);
     for(; itor != sta_idx.end() && itor->account == acc_id;){
-        if(get_head_block_time() > itor->end_time && itor->is_unstake == false){
+        if(get_head_block_time() > itor->end_time && itor->claimed == false){
             // 1.1、解除抵押提现
             inline_transfer(_self , acc_id , coreAsset , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
             // 1.2、修改该项抵押失效 
             sta_idx.modify(itor,get_trx_sender(),[&](auto &obj){
-                obj.is_unstake          =   true;
-                obj.unstake_time        =   get_head_block_time();
+                obj.claimed          =   true;
+                obj.claim_time       =   get_head_block_time();
             });
             // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
             if(itor->reason == STAKE_TYPE_VOTE){
-                cancelVote(itor->vote_index,itor->staketo,itor->amount);
+                cancelVote(itor->vote_index,itor->staking_to,itor->amount);
             }else if(itor->reason == STAKE_TYPE_TOSUPER){
-                cancelSuperStake(itor->staketo);
+                cancelSuperStake(itor->staking_to);
             }else{
                 graphene_assert(false,UNSTAKEMSG);
             }
@@ -328,7 +328,7 @@ bool starplan::isSuperStar(uint64_t sender)
     bool retValue = false;
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(sender);
-    if(sup_itor != sup_idx.end() && sup_itor->is_unstake == false) { retValue = true; }
+    if(sup_itor != sup_idx.end() && sup_itor->disabled == false) { retValue = true; }
     return retValue;
 }
 bool starplan::addSuperStar(uint64_t sender)
@@ -340,7 +340,7 @@ bool starplan::addSuperStar(uint64_t sender)
             obj.create_time             = get_head_block_time();
             obj.create_round            = currentRound();
             obj.vote_num                = 0;
-            obj.is_unstake              = false;
+            obj.disabled              = false;
         });
         return true;
     }
@@ -472,11 +472,11 @@ void starplan::createVote(uint64_t sender,std::string superstar,uint64_t &index)
         obj.index                   = tbvotes.available_primary_key();
         index                       = obj.index;
         obj.round                   = currentRound();
-        obj.stake_amount            = amount;
+        obj.staking_amount          = amount;
         obj.from                    = sender;
         obj.to                      = super_id;
         obj.vote_time               = get_head_block_time();
-        obj.is_unstake              = false;
+        obj.disabled                = false;
     });
 }
 void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index)
@@ -486,10 +486,10 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
         obj.account                 = sender;
         obj.amount                  = amount;
         obj.end_time                = get_head_block_time() + stakingDelayTime;
-        obj.staketo                 = to;
+        obj.staking_to              = to;
         obj.reason                  = reason;
-        obj.is_unstake              = false;
-        obj.unstake_time            = 0;
+        obj.claimed                 = false;
+        obj.claim_time              = 0;
         obj.vote_index              = index;
     });
 }
@@ -627,7 +627,7 @@ uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
 
     for (auto itor = tbsuperstars.begin(); itor != tbsuperstars.end(); itor++)
     {
-        if(itor->is_unstake == false){
+        if(itor->disabled == false){
             total_vote += itor->vote_num;
             superStars.push_back(SuperStar{itor->id, itor->vote_num, itor->vote_num != 0});
         }
@@ -828,7 +828,7 @@ bool starplan::canUpdateSmall(uint64_t sender)
     uint64_t total_vote = 0;
     auto itor = stk_idx.find(sender);
     for(;itor != stk_idx.end();itor++){
-        if(itor->account == sender && itor->is_unstake == false){
+        if(itor->account == sender && itor->claimed == false){
             total_vote += itor->amount;
             if(total_vote>=y*precision){
                 retValue = true;
@@ -868,7 +868,7 @@ void starplan::cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount
     auto vote_itor = tbvotes.find(voteIndex);
     graphene_assert(vote_itor!=tbvotes.end(),UNFOUNDITORMSG);
     tbvotes.modify(vote_itor,get_trx_sender(),[&](auto &obj){
-        obj.is_unstake          =   true;
+        obj.disabled            =   true;
     });
     // 修改超级星得票数
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
@@ -885,6 +885,6 @@ void starplan::cancelSuperStake(uint64_t superAccId)
     auto sup_itor = sup_idx.find(superAccId);
     graphene_assert(sup_itor!=sup_idx.end(),UNFOUNDITORMSG);
     sup_idx.modify(sup_itor,get_trx_sender(),[&](auto &obj){
-        obj.is_unstake          =   true;
+        obj.disabled            =   true;
     });
 }

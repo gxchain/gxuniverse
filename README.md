@@ -54,6 +54,7 @@ struct tbglobal {
   uint64_t index;					// 自增索引
   uint64_t pool_amount;		// 总资金池剩余资产
   uint64_t current_round;	// 当前轮数
+  bool is_upgrade;        // 升级维护中
 };
 ```
 
@@ -93,13 +94,15 @@ struct tbvote {
 锁仓表，每一次升级小行星（投票）和升级超级星，都会产生一条staking记录
 
 ```c++
-struct tbstake {
+struct tbstaking {
   uint64_t index;				// 自增索引
   uint64_t account;			// 账号id
   uint64_t amount;			// 锁仓金额
   uint64_t end_time;		// 锁仓结束时间
-  uint64_t staketo;     // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
-  std::string reason;   // 抵押原因 
+  uint64_t staking_to;  // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
+  uint64_t reason;      // 抵押原因 
+  bool claimed;         // 是否取回
+  uint64_t claim_time;  // 取回时间
 }
 ```
 
