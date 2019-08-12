@@ -260,8 +260,8 @@ void starplan::unstake(std::string account)
             // 解除抵押提现
             inline_transfer(_self , acc_id , coreAsset , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
             sta_idx.modify(itor,get_trx_sender(),[&](auto &obj){
-                obj.is_unstake          =   true;
-                obj.unstake_time        =   get_head_block_time();
+                obj.claimed          =   true;
+                obj.claim_time       =   get_head_block_time();
             });
             itor++;
         }else{
@@ -464,7 +464,7 @@ void starplan::createVote(uint64_t sender,std::string superstar)
     tbvotes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbvotes.available_primary_key();
         obj.round                   = currentRound();
-        obj.stake_amount            = amount;
+        obj.staking_amount          = amount;
         obj.from                    = sender;
         obj.to                      = super_id;
         obj.vote_time               = get_head_block_time();
@@ -477,10 +477,10 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
         obj.account                 = sender;
         obj.amount                  = amount;
         obj.end_time                = get_head_block_time() + stakingDelayTime;
-        obj.staketo                 = to;
+        obj.staking_to              = to;
         obj.reason                  = reason;
-        obj.is_unstake              = 0;
-        obj.unstake_time            = 0;
+        obj.claimed                 = false;
+        obj.claim_time              = 0;
     });
 }
 
@@ -816,7 +816,7 @@ bool starplan::canUpdateSmall(uint64_t sender)
     uint64_t total_vote = 0;
     auto itor = stk_idx.find(sender);
     for(;itor != stk_idx.end();itor++){
-        if(itor->account == sender && itor->is_unstake == 0){
+        if(itor->account == sender && itor->claimed == false){
             total_vote += itor->amount;
             if(total_vote>=y*precision){
                 retValue = true;

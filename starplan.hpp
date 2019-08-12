@@ -138,7 +138,7 @@ class starplan : public contract
     struct tbvote {
         uint64_t index;                     // 自增索引
         uint64_t round;                     // 当前轮数
-        uint64_t stake_amount;              // 抵押GXC数量
+        uint64_t staking_amount;              // 抵押GXC数量
         uint64_t from;                      // 投票者id
         uint64_t to;                        // 被投票者id
         uint64_t vote_time;                 // 投票时间
@@ -148,7 +148,7 @@ class starplan : public contract
         uint64_t by_vote_to() const { return to; }
         uint64_t by_round() const { return round;}
 
-        GRAPHENE_SERIALIZE(tbvote, (index)(round)(stake_amount)(from)(to)(vote_time))
+        GRAPHENE_SERIALIZE(tbvote, (index)(round)(staking_amount)(from)(to)(vote_time))
     };
     typedef multi_index<N(tbvote), tbvote,
                         indexed_by<N(byfrom), const_mem_fun<tbvote, uint64_t, &tbvote::by_vote_from>>,
@@ -162,15 +162,15 @@ class starplan : public contract
         uint64_t account;                   // account id
         uint64_t amount;                    // 抵押数量
         uint64_t end_time;                  // 抵押时间
-        uint64_t staketo;                   // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
+        uint64_t staking_to;                // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
         uint64_t reason;                    // 抵押原因
-        uint64_t is_unstake;                // 是否解除抵押
-        uint64_t unstake_time;              // 解除抵押的时间
+        uint64_t claimed;                   // 是否解除抵押
+        uint64_t claim_time;                // 解除抵押的时间
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
 
-        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staketo)(reason)(is_unstake)(unstake_time))
+        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(reason) claimed)(claim_time))
     };
     typedef multi_index<N(tbstaking), tbstaking,
                         indexed_by<N(byaccid), const_mem_fun<tbstaking, uint64_t, &tbstaking::by_acc_id>>> tbstaking_index;
