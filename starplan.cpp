@@ -80,15 +80,15 @@ void starplan::vote(std::string inviter,std::string superstar)
     });
 }
 
-void starplan::selfinvite(std::string superstar)
+void starplan::selfactivate(std::string superstar)
 {
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = amountEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_INVITE_AMOUNT);
+    uint64_t amount = amountEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVE_AMOUNT);
 
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_INVITE_AUTH_ERR);
+    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_ACTIVE_AUTH_ERR);
 
     auto super_id = superStarCheck(superstar);
 
@@ -116,7 +116,7 @@ void starplan::uptobig()
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_SELF_INVITE_AMOUNT);//TODO update errMsg
+    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVE_AMOUNT);//FIXME wrong errMsg
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
