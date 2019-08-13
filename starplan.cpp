@@ -933,10 +933,11 @@ uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
 
 uint64_t starplan::amountBiggerCheck(uint64_t expectedAmount, const char* errMsg)
 {
+    uint64_t actualAmount = get_action_asset_amount();
     graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
-    graphene_assert(get_action_asset_amount() >= expectedAmount, errMsg);
+    graphene_assert(actualAmount >= expectedAmount, errMsg);
 
-    return expectedAmount;
+    return actualAmount;
 }
 
 uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)

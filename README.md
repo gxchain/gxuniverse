@@ -492,3 +492,4 @@ void deleteVote();
 ```c++
 void checkWithdraw();
 ```
+
