@@ -576,7 +576,7 @@ void starplan::calcCurrentRoundPoolAmount()
     auto x = currentRound()%bigRoundSize + 1;
     // 4、计算当前小轮的运行时间
     if(get_head_block_time() - round.start_time > decayTime){
-        auto dursize = ((get_head_block_time() - round.start_time - decayTime) / decayDur) + 1;
+        uint64_t dursize = ((get_head_block_time() - round.start_time - decayTime) / decayDur) + 1;
         dursize = dursize > maxDecayCount ? maxDecayCount:dursize;
         graphene_assert(pool_amount > (dursize * x * precision), CHECKATTENMSG);
         pool_amount = pool_amount - dursize * x * precision;
