@@ -57,7 +57,7 @@ enum PLANET_AUTH {
     SUPER_STAR_AUTH     = 1 << 2
 };
 
-#define STAKE_TYPE_TOSUPER          0
+#define STAKE_TYPE_TO_SUPER          0
 #define STAKE_TYPE_VOTE             1
 #define STAKE_TYPE_SELF_INVITE      2
 

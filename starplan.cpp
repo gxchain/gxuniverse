@@ -176,7 +176,7 @@ void starplan::uptosuper(std::string inviter)
     graphene_assert(addSuperStar(sender_id), MSG_ALREADY_SUPER_STAR);
 
     // 6、创建抵押项
-    addStake(sender_id, amount, sender_id, STAKE_TYPE_TOSUPER);
+    addStake(sender_id, amount, sender_id, STAKE_TYPE_TO_SUPER);
 
     // 7、保存邀请关系，激活邀请关系
     invite(sender_id, inviter_id);
@@ -249,7 +249,7 @@ void starplan::claim(std::string account)
             // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
             if(itor->reason == STAKE_TYPE_VOTE){
                 cancelVote(itor->vote_index,itor->staking_to,itor->amount);
-            }else if(itor->reason == STAKE_TYPE_TOSUPER){
+            }else if(itor->reason == STAKE_TYPE_TO_SUPER){
                 cancelSuperStake(itor->staking_to);
             }else{
                 graphene_assert(false,MSG_UNKNOWN_CLAIM_REASON);
