@@ -101,10 +101,10 @@ void starplan::selfinvite(std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = amountEqualCheck(z + z1 + z2 + z3, "");
+    uint64_t amount = amountEqualCheck(z + z1 + z2 + z3, SELF_INVITE_AMOUNT_ERR_MSG);
 
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), "");
+    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), SELF_INVITE_AUTH_ERR_MSG);
 
     auto super_id = get_account_id(superstar.c_str(), superstar.length());
     graphene_assert(isSuperStar(super_id), CHECKSUPERMSG);
@@ -822,14 +822,19 @@ uint64_t starplan::calcSuperStarReward(vector<reward> &rewardList, uint64_t rewa
 
 bool starplan::baseSecureCheck(vector<reward> &rewardList)
 {
-    uint64_t totalReward = 0;
-    for(const auto &reward : rewardList) {
-        graphene_assert(reward.to > 0, "");
-        totalReward += reward.amount;
-        graphene_assert(reward.amount > 0 && reward.amount < MAX_USER_REWARD, "");
+    if (rewardList.size() == 0) {
+        return false;
     }
 
-    graphene_assert(totalReward > 0 && totalReward < MAX_ROUND_REWARD, "");
+    uint64_t totalReward = 0;
+    for(const auto &reward : rewardList) {
+        graphene_assert(reward.to > 0, REWARD_ZERO_ERR_MSG);
+        totalReward += reward.amount;
+        graphene_assert(reward.amount > 0, REWARD_ZERO_ERR_MSG);
+        graphene_assert(reward.amount < MAX_USER_REWARD, USER_REWARD_TOO_HIGH_ERR_MSG);
+    }
+
+    graphene_assert(totalReward < MAX_ROUND_REWARD, ROUND_REWARD_TOO_HIGH_ERR_MSG);
 
     //TODO add other secure check
     return true;
@@ -839,8 +844,6 @@ void starplan::doReward(vector<reward> &rewardList)
 {
     for (const auto &reward : rewardList)
     {
-        if(reward.amount == 0) continue;
-
         inline_transfer(
                 _self,
                 reward.to,
@@ -961,7 +964,7 @@ void starplan::roundFinishCheck()
 
 uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
 {
-    graphene_assert(get_action_asset_id() == coreAsset, "");
+    graphene_assert(get_action_asset_id() == coreAsset, ASSETERRMSG);
     graphene_assert(get_action_asset_amount() == expectedAmount, errMsg);
 
     return expectedAmount;
