@@ -489,14 +489,13 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
 
 void starplan::distriInvRewards(uint64_t sender)
 {
-    std::string   inviter_withdraw     = LOG_INVITE_REWARD;  //提现一个1GXC到邀请人账户
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
     tbrounds.modify(lastRound(), sender, [&](auto &obj){                               //修改奖池金额
             obj.random_pool_amount      = obj.random_pool_amount + Z3;
             obj.invite_pool_amount      = obj.invite_pool_amount + Z1;
     });
-    inline_transfer(_self , invite_itor->inviter , CORE_ASSET_ID , Z2,inviter_withdraw.c_str(),inviter_withdraw.length());
+    inline_transfer(_self , invite_itor->inviter , CORE_ASSET_ID , Z2,reward_reasons[RWD_TYPE_INVITE],strlen(reward_reasons[RWD_TYPE_INVITE]));
     tbrewards.emplace(get_trx_sender(), [&](auto &obj){
             obj.index           = tbrewards.available_primary_key();
             obj.round           = currentRound();
@@ -509,7 +508,7 @@ void starplan::distriInvRewards(uint64_t sender)
 
 void starplan::distriInvRewardsSelf(uint64_t self)
 {
-    inline_transfer(_self, self, CORE_ASSET_ID, Z2, LOG_SELF_INVITE_REWARD, strlen(LOG_SELF_INVITE_REWARD));
+    inline_transfer(_self, self, CORE_ASSET_ID, Z2, reward_reasons[RWD_TYPE_SELF_UPGRADE],strlen(reward_reasons[RWD_TYPE_SELF_UPGRADE]));
 
     tbrounds.modify(lastRound(), self, [&](auto &obj)
     {

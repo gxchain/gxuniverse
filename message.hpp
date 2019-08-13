@@ -33,5 +33,3 @@ const char* USER_REWARD_TOO_HIGH_ERR_MSG = "Error: User reward is too high ";
 const char* ROUND_REWARD_TOO_HIGH_ERR_MSG = "Error: Round reward is too hith ";
 
 const char* LOG_CLAIM = "Log: Claim staking balances";
-const char* LOG_INVITE_REWARD = "Log: Invite reward received";
-const char* LOG_SELF_INVITE_REWARD = "Log: Self upgrade pay back received";
