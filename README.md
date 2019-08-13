@@ -184,10 +184,12 @@ struct tbinvite {
 
 ``` c++
 PAYABLE init(){
+
   // globals[0].index = 0;
   // globals[0].poll_amount = 2000000;
   // globals[0].current_round=0;
   // globals[0].current_round=0;
+
 }
 ```
 
@@ -195,27 +197,33 @@ PAYABLE init(){
 
 ``` c++
 PAYABLE uptosuper(std:string inviter){
+
     // 1. 判断是否存入足够GXC
     // 2. 判断是否已经是superstar，如果已经是，则提示"You are already a super star"
     // 3. 存到superstart表
     // 4. 保存邀请关系
     // 5. 插入/更新一条新的活力星记录，权重为1
+
 }
 ```
 
-### 3. 升级成为小行星
+### 3. 给超级星投票
 ``` c++
-PAYABLE uptosmall(std:string inviter,std:string superStar){
-    // 1. 判断是否存入足够GXC
-    // 2. 存到smallPlanet表（不允许重复创建）
-    // 4. 保存邀请关系（不允许重复邀请）
-    // 5. vote(允许重复投票)
+PAYABLE vote(std:string inviter,std:string superStar){
+
+    // 1. 判断是否满足最小投票数额
+    // 2. 保存邀请关系（不允许重复邀请）
+    // 3. 判断是否足够升级成小行星，如果满足要求，则存到smallPlanet表（不允许重复创建）
+    // 4. vote(允许重复投票)
+    // 5. 修改超级星得票数
+
 }
 ```
 ### 4. 升级成为大行星
 
 ``` c++
 PAYABLE uptobig(){
+
     // 1. 判断是否存入足够GXC
     // 2. 判断是否是small planet，如果还不是，则提示“You have to become a small planet first”
     // 3. 判断是否已经是bigPlanet，如果已经是，则提示"You are already a big planet"
@@ -223,8 +231,44 @@ PAYABLE uptobig(){
     // 5. 保存邀请关系
     // 6. 发放邀请奖励
     // 7. 判断是否完成一小轮
+
 }
 ```
+
+### 5. 结束当前轮
+admin账户发起心跳接口，判断是否需要手动结束当前轮
+
+```c++
+ACTION endround(){
+
+    // 1. 判断sender是否合法
+    // 2. 判断当前轮是否可以结束
+    // 3. 计算奖池，发放奖励
+    // 4. 重新计算活力星权重
+    // 5. 开始新的一轮
+}
+```
+
+
+### 6. 开启维护模式
+admin账户发起维护模式，更新global表中的upgrading值
+
+```c++
+ACTION upgrade(bool flag){
+    // 1. 判断sender是否合法
+    // 2. globals[0].upgrading = flag;
+}
+```
+
+### 7. 到期取回抵押资产
+任何账户可以主动发起取回操作
+
+```c++
+ACTION claim(){
+    // 遍历staking表，对到期的staking记录进行处理，转给对应的资产owner
+}
+```
+
 
 ## 内部方法（Private methods）
 
@@ -233,11 +277,9 @@ PAYABLE uptobig(){
 ``` c++
 void invite(uint64_t original_sender,std:string inviter){
     if(inviter!=null){
-        int64_t acc_id = get_account_id(inviter.c_str(), inviter.length());
-        graphene_assert(acc_id!=null,"inviter account: "+inviter+" does not exist");
-        graphene_assert(!isBigPlanet(acc_id),inviter+' is not a big planet');
-        // 1. 查找inviteTable，如果未被邀请，则插入新邀请记录（original_sender, acc_id）
-        addInvites(original_sender, acc_id);
+      // 1. 判断inviter是否是一个合法账号
+      // 2. 判断inviter是否是一个大行星
+      // 3. 查找invite表，如果未被邀请，则插入新邀请记录（original_sender, acc_id）
     }
 }
 ```
