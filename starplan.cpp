@@ -122,8 +122,6 @@ void starplan::uptobig()
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = get_action_asset_amount();
-
     // 2、判断是否存入足够GXC
     uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_SELF_INVITE_AMOUNT);//TODO update errMsg
 
