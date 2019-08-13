@@ -52,12 +52,11 @@ void starplan::vote(std::string inviter,std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t sender_id = get_trx_origin();
-
     // 2、判断充值是否 >= 0.1GXC
     uint64_t amount = amountBiggerCheck(PRECISION / 10, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
 
     // 3、验证inviter
+    uint64_t sender_id = get_trx_origin();
     auto inviter_id = inviterCheck(inviter, sender_id);
 
     // 5、验证超级星账户
@@ -82,7 +81,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(super_id);
     sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {
-            obj.vote_num = obj.vote_num + amount;
+        obj.vote_num = obj.vote_num + amount;
     });
 }
 
@@ -96,8 +95,7 @@ void starplan::selfinvite(std::string superstar)
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_INVITE_AUTH_ERR);
 
-    auto super_id = get_account_id(superstar.c_str(), superstar.length());
-    graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);
+    auto super_id = superStarCheck(superstar);
 
     updateActivePlanet(sender_id);
 
@@ -229,6 +227,7 @@ void starplan::endround()
     // 6、开启新的一轮
     createNewRound();
 }
+
 void starplan::claim(std::string account)
 {
     baseCheck();
@@ -260,6 +259,7 @@ void starplan::claim(std::string account)
         }
     }
 }
+
 void starplan::upgrade(uint64_t flag)
 {
     // 0、防止跨合约调用
@@ -278,6 +278,7 @@ void starplan::upgrade(uint64_t flag)
         obj.is_upgrade          =   flag;
     });
 }
+
 bool starplan::isAccount(std::string accname)
 {
     bool retValue = false;
@@ -285,6 +286,7 @@ bool starplan::isAccount(std::string accname)
     if(acc_id != -1){ retValue = true; }
     return retValue;
 }
+
 bool starplan::isInit()
 {
     bool retValue = false;
@@ -295,6 +297,7 @@ bool starplan::isInit()
     if(itor != tbglobals.end() && itor2 != tbrounds.end()){ retValue = true;}
     return retValue;
 }
+
 bool starplan::isInviter(std::string accname)
 {
     // 验证邀请账户是否为大行星或者超级星
@@ -304,6 +307,7 @@ bool starplan::isInviter(std::string accname)
         retValue = true;
     return retValue;
 }
+
 bool starplan::isSuperStar(uint64_t sender)
 {
     bool retValue = false;
@@ -312,6 +316,7 @@ bool starplan::isSuperStar(uint64_t sender)
     if(sup_itor != sup_idx.end() && sup_itor->disabled == false) { retValue = true; }
     return retValue;
 }
+
 bool starplan::addSuperStar(uint64_t sender)
 {
     if(!isBigPlanet(sender)){
@@ -327,6 +332,7 @@ bool starplan::addSuperStar(uint64_t sender)
     }
     return false;
 }
+
 bool starplan::isSmallPlanet(uint64_t sender)
 {
     bool retValue = false;
@@ -335,6 +341,7 @@ bool starplan::isSmallPlanet(uint64_t sender)
     if(small_itor != small_idx.end()) { retValue = true; }
     return retValue;
 }
+
 bool starplan::addSmallPlanet(uint64_t sender)
 {
     if(!isSmallPlanet(sender)){                                                  //创建小行星
@@ -348,6 +355,7 @@ bool starplan::addSmallPlanet(uint64_t sender)
     }
     return false;
 }
+
 bool starplan::isBigPlanet(uint64_t sender)
 {
     bool retValue = false;
@@ -356,6 +364,7 @@ bool starplan::isBigPlanet(uint64_t sender)
     if(big_itor != big_idx.end()) { retValue = true; }
     return retValue;
 }
+
 bool starplan::addBigPlanet(uint64_t sender)
 {
     if(!isBigPlanet(sender)){
@@ -369,6 +378,7 @@ bool starplan::addBigPlanet(uint64_t sender)
     }
     return false;
 }
+
 bool starplan::hasInvited(uint64_t sender)
 {
     bool retValue = false;
