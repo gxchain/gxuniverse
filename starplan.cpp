@@ -99,11 +99,11 @@ void starplan::selfactivate(std::string superstar)
 
     addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_index);
 
-    distriInvRewardsSelf(sender_id);
+    distributeInviteRewards(sender_id);
 
     progress(sender_id);
 
-    if(lastRound().current_round_invites >= ROUND_SIZE ){
+    if (lastRound().current_round_invites >= ROUND_SIZE) {
         endround();
     }
 }
@@ -132,8 +132,8 @@ void starplan::uptobig()
     // 7、当前轮进度+1
     progress(sender_id);
 
-    // 7、将3个GXC转移到奖池，将其中一个GXC发送给邀请人
-    distriInvRewards(sender_id);
+    // 7、将2个GXC转移到奖池，1个GXC发送给邀请人
+    distributeInviteRewards(getInviter(sender_id));
 
     // 8、创建/更新活力星
     auto invitee_idx = tbinvites.get_index<N(byinvitee)>();
@@ -481,30 +481,19 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t sta
     });
 }
 
-void starplan::distriInvRewards(uint64_t sender)
+uint64_t starplan::getInviter(uint64_t invitee)
 {
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
-    auto invite_itor = invite_idx.find(sender);
-    tbrounds.modify(lastRound(), sender, [&](auto &obj){                               //修改奖池金额
-            obj.random_pool_amount      = obj.random_pool_amount + Z3;
-            obj.invite_pool_amount      = obj.invite_pool_amount + Z1;
-    });
-    inline_transfer(_self , invite_itor->inviter , CORE_ASSET_ID , Z2,reward_reasons[RWD_TYPE_INVITE],strlen(reward_reasons[RWD_TYPE_INVITE]));
-    tbrewards.emplace(get_trx_sender(), [&](auto &obj){
-            obj.index           = tbrewards.available_primary_key();
-            obj.round           = currentRound();
-            obj.from            = sender;
-            obj.to              = invite_itor->inviter;
-            obj.amount          = Z2;
-            obj.type            = RWD_TYPE_INVITE;
-        });
+    auto invite_itor = invite_idx.find(invitee);
+    graphene_assert(invite_itor != invite_idx.end(), "");//TODO udpate errMsg, FIXME: invite_itor != invite_idx.end()
+    return invite_itor->inviter;
 }
 
-void starplan::distriInvRewardsSelf(uint64_t self)
+void starplan::distributeInviteRewards(uint64_t accountId)
 {
-    inline_transfer(_self, self, CORE_ASSET_ID, Z2, reward_reasons[RWD_TYPE_SELF_UPGRADE],strlen(reward_reasons[RWD_TYPE_SELF_UPGRADE]));
+    inline_transfer(_self, accountId, CORE_ASSET_ID, Z2, reward_reasons[RWD_TYPE_SELF_ACTIVE],strlen(reward_reasons[RWD_TYPE_SELF_ACTIVE ]));
 
-    tbrounds.modify(lastRound(), self, [&](auto &obj)
+    tbrounds.modify(lastRound(), accountId, [&](auto &obj)
     {
         obj.random_pool_amount = obj.random_pool_amount + Z3;
         obj.invite_pool_amount = obj.invite_pool_amount + Z1;
@@ -514,10 +503,10 @@ void starplan::distriInvRewardsSelf(uint64_t self)
     {
         obj.index = tbrewards.available_primary_key();
         obj.round = currentRound();
-        obj.from = self;
-        obj.to = self;
+        obj.from = accountId;
+        obj.to = accountId;
         obj.amount = Z2;
-        obj.type = RWD_TYPE_SELF_UPGRADE;
+        obj.type = RWD_TYPE_SELF_ACTIVE;
     });
 }
 
