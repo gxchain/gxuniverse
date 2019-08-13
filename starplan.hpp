@@ -77,7 +77,7 @@ class starplan : public contract
     void                addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     inline uint64_t     getInviter(uint64_t invitee);
     void                distributeInviteRewards(uint64_t accountId);
-    void                updateActivePlanet(uint64_t activePlanetAccountId);
+    void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
     void                calcCurrentRoundPoolAmount();
     void                updateActivePlanets();
@@ -231,7 +231,7 @@ class starplan : public contract
     struct tbactiveplan {
         uint64_t index;                     // 索引
         uint64_t id;                        // 账户id
-        uint64_t invite_count;              // 邀请人数，每达到5个大行星，置为0，记录create_round=当前轮，weight=1
+        std::vector<uint64_t> invite_list;  // 邀请人数，每达到5个大行星，置为0，记录create_round=当前轮，weight=1
         uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t weight;                    // 权重，每小轮0.85的幅度衰减，衰减为0，重新计算
@@ -241,7 +241,7 @@ class starplan : public contract
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_weight() const { return weight; }
 
-        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invite_count)(create_time)(create_round)(weight))
+        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invite_list)(create_time)(create_round)(weight))
     };
     typedef multi_index<N(tbactiveplan), tbactiveplan,
                         indexed_by<N(byaccid), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_acc_id>>,

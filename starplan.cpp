@@ -92,7 +92,7 @@ void starplan::selfactivate(std::string superstar)
 
     auto super_id = superStarCheck(superstar);
 
-    updateActivePlanet(sender_id);
+    updateActivePlanet(sender_id,sender_id);
 
     uint64_t vote_index = 0;
     createVote(sender_id, superstar, vote_index);
@@ -139,7 +139,7 @@ void starplan::uptobig()
     auto invitee_idx = tbinvites.get_index<N(byinvitee)>();
     auto invitee_itor = invitee_idx.find(sender_id);
     if(invitee_itor != invitee_idx.end())//TODO check
-        updateActivePlanet(invitee_itor->inviter);
+        updateActivePlanet(invitee_itor->inviter,invitee_itor->invitee);
 
     // 9、当邀请关系满100人，开启新的一轮
     if(lastRound().current_round_invites >= ROUND_SIZE ){
@@ -241,9 +241,9 @@ void starplan::claim(std::string account)
                 obj.claim_time       =   get_head_block_time();
             });
             // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
-            if(itor->reason == STAKE_TYPE_VOTE){
+            if(itor->stake_type == STAKE_TYPE_VOTE){
                 cancelVote(itor->vote_index,itor->staking_to,itor->amount);
-            }else if(itor->reason == STAKE_TYPE_TO_SUPER){
+            }else if(itor->stake_type == STAKE_TYPE_TO_SUPER){
                 cancelSuperStake(itor->staking_to);
             }else{
                 graphene_assert(false,MSG_UNKNOWN_CLAIM_REASON);
@@ -510,23 +510,23 @@ void starplan::distributeInviteRewards(uint64_t accountId)
     });
 }
 
-void starplan::updateActivePlanet(uint64_t activePlanetAccountId)
+void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId)
 {
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(activePlanetAccountId);
     if (act_itor != act_idx.end()) {
         act_idx.modify(act_itor, activePlanetAccountId, [&](auto &obj) {
-            obj.invite_count++;
-            if(obj.invite_count == 5) {
+            obj.invite_list.push_back(subAccountId);
+            if(obj.invite_list.size() == 5) {
                 obj.weight += WEIGHT;
-                obj.invite_count = 0;
+                obj.invite_list.clear();
             }
         });
     } else {
         tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
             obj.index = tbactiveplans.available_primary_key();
             obj.id = activePlanetAccountId;
-            obj.invite_count = 1;
+            obj.invite_list.push_back(subAccountId);
             obj.create_time = get_head_block_time();
             obj.create_round = currentRound();
             obj.weight = 0;
@@ -546,7 +546,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
         tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
             obj.index = tbactiveplans.available_primary_key();
             obj.id = activePlanetAccountId;
-            obj.invite_count = 0;
+            obj.invite_list = {};
             obj.create_time = get_head_block_time();
             obj.create_round = currentRound();
             obj.weight = WEIGHT;
