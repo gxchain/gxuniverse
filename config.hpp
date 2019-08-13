@@ -10,7 +10,7 @@ const uint64_t      MAX_DECAY_COUNT      = 20;                       //最大衰
 const uint64_t      PAYBACK_PERCENT      = 10;                       //返现比例（10%）
 const uint64_t      ACTIVE_PERCENT       = 50;                       //活力星瓜分比例（50%），剩余40%为超级星瓜分比例
 const uint64_t      WEIGHT               = 1000;                     //权重，带三位精度
-const float         B_DECAY_PERCENT      = 85;                       //活力星奖励的影响因子（85%）
+const uint64_t      B_DECAY_PERCENT      = 85;                       //活力星奖励的影响因子（85%）
 
 
 //////////////////////// for test ////////////////////////
