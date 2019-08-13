@@ -148,7 +148,7 @@ void starplan::uptobig()
 }
 
 // inviter为0，表示没有邀请账户
-void starplan::uptosuper(std::string inviter)
+void starplan::uptosuper(std::string inviter,std::string memo)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
@@ -166,7 +166,7 @@ void starplan::uptosuper(std::string inviter)
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
     // 5、创建超级星
-    graphene_assert(addSuperStar(sender_id), MSG_ALREADY_SUPER_STAR);
+    graphene_assert(addSuperStar(sender_id,memo), MSG_ALREADY_SUPER_STAR);
 
     // 6、创建抵押项
     addStake(sender_id, amount, sender_id, STAKE_TYPE_TO_SUPER);
@@ -272,7 +272,20 @@ void starplan::upgrade(uint64_t flag)
         obj.is_upgrade          =   flag;
     });
 }
-
+void starplan::updatememo(std::string memo)
+{
+    baseCheck();
+    roundFinishCheck();
+    // 1、判断账户是否为超级星
+    uint64_t sender_id = get_trx_origin();
+    graphene_assert(isSuperStar(sender_id), MSG_CHECK_SUPER_STAR_EXIST);
+    // 2、更新账户memo
+    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
+    auto sup_itor = sup_idx.find(sender_id);
+    sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {                 //创建超级星
+        obj.memo                    = memo;
+    });
+}
 bool starplan::isAccount(std::string accname)
 {
     bool retValue = false;
@@ -311,7 +324,7 @@ bool starplan::isSuperStar(uint64_t sender)
     return retValue;
 }
 
-bool starplan::addSuperStar(uint64_t sender)
+bool starplan::addSuperStar(uint64_t sender,std::string memo)
 {
     if(!isBigPlanet(sender)){
         tbsuperstars.emplace(sender,[&](auto &obj) {                 //创建超级星
@@ -320,7 +333,8 @@ bool starplan::addSuperStar(uint64_t sender)
             obj.create_time             = get_head_block_time();
             obj.create_round            = currentRound();
             obj.vote_num                = 0;
-            obj.disabled              = false;
+            obj.disabled                = false;
+            obj.memo                    = memo;
         });
         return true;
     }

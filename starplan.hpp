@@ -49,10 +49,11 @@ class starplan : public contract
     PAYABLE             vote(std::string inviter,std::string superstar);
     PAYABLE             selfactivate(std::string superstar);
     PAYABLE             uptobig();
-    PAYABLE             uptosuper(std::string inviter);
+    PAYABLE             uptosuper(std::string inviter,std::string memo);
     ACTION              endround();
     ACTION              claim(std::string account);
     ACTION              upgrade(uint64_t flag);
+    ACTION              updatememo(std::string memo);
 
   private:
 
@@ -60,7 +61,7 @@ class starplan : public contract
     inline void         activeInvite(uint64_t sender);                           //激活邀请关系
     void                createVote(uint64_t sender,std::string superstar,uint64_t &index);
     bool                isSuperStar(uint64_t sender);
-    bool                addSuperStar(uint64_t sender);
+    bool                addSuperStar(uint64_t sender,std::string memo);
     bool                isSmallPlanet(uint64_t sender);
     bool                addSmallPlanet(uint64_t sender);
     bool                isBigPlanet(uint64_t sender);
@@ -257,13 +258,14 @@ class starplan : public contract
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t vote_num;                  // 得票数
         uint64_t disabled;                  // 是否已经撤销抵押
+        std::string memo;                   // 超级星memo
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_vote_num() const { return vote_num; }
 
-        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num)(disabled))
+        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num)(disabled)(memo))
     };
     typedef multi_index<N(tbsuperstar), tbsuperstar,
                         indexed_by<N(byaccid), const_mem_fun<tbsuperstar, uint64_t, &tbsuperstar::by_acc_id>>,
@@ -317,4 +319,4 @@ class starplan : public contract
 
     inline const struct starplan::tbround& lastRound();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade))
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo))
