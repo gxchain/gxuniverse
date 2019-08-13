@@ -10,12 +10,8 @@ void starplan::init()
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
-    // 2、校验充值的资产是否为initPool的大小
-    std::string deposit_check_msg = MSG_MINIMAL_AMOUNT_REQUIRED;
-    deposit_check_msg = deposit_check_msg.replace(deposit_check_msg.find("%d"),1,std::to_string(INIT_POOL));
-    uint64_t ast_id = get_action_asset_id();
-    uint64_t amount = get_action_asset_amount();
-    graphene_assert(ast_id == CORE_ASSET_ID && amount == INIT_POOL, deposit_check_msg.c_str());
+    // 2、校验充值的资产是否为INIT_POOL的大小
+    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
