@@ -941,7 +941,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
         return inviter_id;
     }
 
-    return 0;
+    return defaultinviter;
 }
 
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
