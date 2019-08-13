@@ -39,9 +39,6 @@ const uint64_t      INIT_POOL            = 2000000 * PRECISION;      //初始化
 const uint64_t      STAKING_DELAY_TIME   = 90 * 24 * 3600;           //抵押90天后解锁
 const uint64_t      DELAY_TIME           = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
 
-
-const char* vote_reason  = "vote to super star";  // 给超级星投票
-const char* staking_reason = "staking to super star";    // 超级星晋升
 ```
 
 

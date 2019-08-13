@@ -68,7 +68,7 @@ enum PLANET_AUTH {
 #define RWD_TYPE_TIMEOUT        4
 #define RWD_TYPE_INVITE         5
 #define RWD_TYPE_SELF_UPGRADE   6
-const char* const reward_reasons[5] = {
+const char* const reward_reasons[7] = {
         "RWD_TYPE_RANDOM",
         "RWD_TYPE_POOL",
         "RWD_TYPE_ACTIVE",
