@@ -466,7 +466,7 @@ void starplan::createVote(uint64_t sender,std::string superstar,uint64_t &index)
         obj.disabled                = false;
     });
 }
-void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index)
+void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t stakeType,uint64_t index)
 {
     tbstakes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbstakes.available_primary_key();
@@ -474,7 +474,7 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
         obj.amount                  = amount;
         obj.end_time                = get_head_block_time() + STAKING_DELAY_TIME;
         obj.staking_to              = to;
-        obj.reason                  = reason;
+        obj.stake_type              = stakeType;
         obj.claimed                 = false;
         obj.claim_time              = 0;
         obj.vote_index              = index;
