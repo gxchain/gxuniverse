@@ -136,7 +136,7 @@ void starplan::uptobig()
 
     // 2、判断是否存入足够GXC
     uint64_t depositToBig = z1 + z2 + z3;
-    std::string depomsg = DEPOMSG;
+    std::string depomsg = MSG_MINIMAL_AMOUNT_REQUIRED;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
     graphene_assert(ast_id == coreAsset && amount == depositToBig, depomsg.c_str());
 
@@ -577,7 +577,7 @@ void starplan::updateActivePlanetsBySelf(uint64_t self)
     }else{
         tbactiveplans.emplace(self,[&](auto &obj){                                      //创建活力星
             obj.index           = tbactiveplans.available_primary_key();
-            obj.id              = invite_itor->inviter;
+            obj.id              = self;
             obj.invite_count    = 1;
             obj.create_time     = get_head_block_time();
             obj.create_round    = 0;
