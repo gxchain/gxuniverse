@@ -595,11 +595,10 @@ void starplan::updateActivePlanets()
 {
     // 更新活力星的权重
     auto act_itor = tbactiveplans.begin();
-    for( ; act_itor != tbactiveplans.end(); act_itor++){
-        tbactiveplans.modify(act_itor,get_trx_sender(),[&](auto &obj){                           //修改活力星的权重
-            uint64_t bDecay_prec = B_DECAY * 1000;
-            uint64_t new_weight  = obj.weight * bDecay_prec / 1000;
-            obj.weight      = new_weight;
+    for(; act_itor != tbactiveplans.end(); act_itor++){
+        tbactiveplans.modify(act_itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
+            uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
+            obj.weight = new_weight;
         });
     }
 }

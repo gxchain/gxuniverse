@@ -10,7 +10,7 @@ const uint64_t      MAX_DECAY_COUNT      = 20;                       //最大衰
 const uint64_t      PAYBACK_PERCENT      = 10;                       //返现比例（10%）
 const uint64_t      ACTIVE_PERCENT       = 50;                       //活力星瓜分比例（50%），剩余40%为超级星瓜分比例
 const uint64_t      WEIGHT               = 1000;                     //权重，带三位精度
-const float         B_DECAY              = 0.85;                     //活力星奖励的影响因子（0.85）
+const float         B_DECAY_PERCENT      = 85;                       //活力星奖励的影响因子（85%）
 
 
 //////////////////////// for test ////////////////////////
@@ -33,18 +33,18 @@ const uint64_t      DELAY_TIME           = 2 * 3600;                 //最后一
 /*
 const uint64_t      ADMIN_ID             = 426;                      //admin账户id
 const uint64_t      DEFAULT_INVITER      = 0;                        //默认邀请账户id//TODO blockcity account id
-const uint64_t      SUPER_STAR_LIMIT     = 50;                        //超级星最大数量（50）
-const uint64_t      BIG_ROUND_SIZE       = 50;                        //一个大轮包含小轮数（50）
-const uint64_t      ROUND_AMOUNT         = 2000 * PRECISION;           //每一小轮的底池资产数（20GXC）
-const uint64_t      ROUND_SIZE           = 100;                       //每一轮的参与人数（10）
-const uint64_t      X                    = 200 * PRECISION;           //成为超级星需要抵押的资产数（20GXC）
-const uint64_t      Y                    = 100 * PRECISION;           //成为小行星需要抵押的资产数（10GXC）
-const uint64_t      Z                    = 110 * PRECISION;           //自激活需要抵押的资产数（11GXC）
-const uint64_t      DECAY_TIME           = 4 * 3600;                   //衰减时间阈值，单位秒（4*3600s）
-const uint64_t      DECAY_DURATION       = 1 * 3600;                   //衰减时间间隔，单位秒（1*3600s）
-const uint64_t      INIT_POOL            = 2000000 * PRECISION;          //初始化充值200万GXC
-const uint64_t      STAKING_DELAY_TIME   = 90 * 24 * 3600;                     //抵押90天后解锁
-const uint64_t      DELAY_TIME           = 12 * 3600;                 //最后一个大行星的延迟时间（12小时）
+const uint64_t      SUPER_STAR_LIMIT     = 50;                       //超级星最大数量（50）
+const uint64_t      BIG_ROUND_SIZE       = 50;                       //一个大轮包含小轮数（50）
+const uint64_t      ROUND_AMOUNT         = 2000 * PRECISION;         //每一小轮的底池资产数（20GXC）
+const uint64_t      ROUND_SIZE           = 100;                      //每一轮的参与人数（10）
+const uint64_t      X                    = 200 * PRECISION;          //成为超级星需要抵押的资产数（20GXC）
+const uint64_t      Y                    = 100 * PRECISION;          //成为小行星需要抵押的资产数（10GXC）
+const uint64_t      Z                    = 110 * PRECISION;          //自激活需要抵押的资产数（11GXC）
+const uint64_t      DECAY_TIME           = 4 * 3600;                 //衰减时间阈值，单位秒（4*3600s）
+const uint64_t      DECAY_DURATION       = 1 * 3600;                 //衰减时间间隔，单位秒（1*3600s）
+const uint64_t      INIT_POOL            = 2000000 * PRECISION;      //初始化充值200万GXC
+const uint64_t      STAKING_DELAY_TIME   = 90 * 24 * 3600;           //抵押90天后解锁
+const uint64_t      DELAY_TIME           = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
 */
 
 //////////////////////// common ////////////////////////
