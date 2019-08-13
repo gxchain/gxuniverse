@@ -64,7 +64,7 @@ enum PLANET_AUTH {
 
 #define STAKE_TYPE_TOSUPER          0
 #define STAKE_TYPE_VOTE             1
-#define STAKE_TYPE_SELF_INVITE      1
+#define STAKE_TYPE_SELF_INVITE      2
 
 #define RWD_TYPE_RANDOM     0
 #define RWD_TYPE_POOL       1
