@@ -12,30 +12,33 @@
 静态变量在合约初始化时定义，会在合约中参与计算
 
 ```c++
-const uint64_t superStarLimit = 50;	// 超级星最大数量（50）
-const uint64_t bigRoundSize = 50;		// 一个大轮包含小轮数（50）
-const uint64_t roundAmount = 2000;	// 每一小轮的底池资产数（2000GXC）
-const uint64_t roundSize = 100; 		// 每一轮的参与人数（100）
-const uint64_t x = 20000; 					// 成为超级星需要抵押的资产数（20000GXC）
-const uint64_t y = 100;							// 成为小行星需要抵押的资产数（100GXC）
-const uint64_t z1 = 1; 							// 大行星投入每轮平均激励池资产数（1GXC）
-const uint64_t z2 = 1; 							// 大行星奖励给邀请人的资产数（1GXC）
-const uint64_t z3 = 1; 							// 大行星投入每轮随机奖励池资产数（1GXC）
-const uint64_t decayTime = 4*3600; 	// 衰减时间阈值，单位秒（4*3600s）
-const uint64_t decayDur = 1*3600;  	// 衰减时间间隔，单位秒（1*3600s）
-const uint64_t maxDecayCount = 20; 	// 最大衰减次数（20）
-const float payBackPercent = 0.1; 	// 返现比例（0.1）
-const float activePercent = 0.5; 		// 活力星瓜分比例（0.5），剩余0.4为超级星瓜分比例
-const float a=1;										// 超级星奖励的影响因子
-const float bDecay=0.85; 						// 活力星奖励的影响因子衰减系数（0.85）
-const uint64_t initPool = 2000000;  // 初始化充值200万GXC
-const uint64_t coreAsset = 1;       // 核心资产id
-const uint64_t precision = 100000;  // 核心资产精度
-const uint64_t delayDay = 90 * 24 * 3600; // 抵押90天后解锁
-const uint64_t depositToBig = 3;    // 升级成大行星充值3GXC
-const uint64_t weight = 1000;       // 权重，带三位精度
-const uint64_t delaytime = 12 * 3600; // 最后一个大行星的延迟时间（12小时）
-const uint64_t defaultinviter = 0;  // 默认邀请账户id  
+const uint64_t      CORE_ASSET_ID        = 1;                        //核心资产id
+const uint64_t      PRECISION            = 100000;                   //核心资产精度
+
+const uint64_t      Z1                   = 1 * PRECISION;            //大行星投入每轮平均激励池资产数（1GXC）
+const uint64_t      Z2                   = 1 * PRECISION;            //大行星奖励给邀请人的资产数（1GXC）
+const uint64_t      Z3                   = 1 * PRECISION;            //大行星投入每轮随机奖励池资产数（1GXC）
+
+const uint64_t      MAX_DECAY_COUNT      = 20;                       //最大衰减次数（20）
+const uint64_t      PAYBACK_PERCENT      = 10;                       //返现比例（10%）
+const uint64_t      ACTIVE_PERCENT       = 50;                       //活力星瓜分比例（50%），剩余40%为超级星瓜分比例
+const uint64_t      WEIGHT               = 1000;                     //权重，带三位精度
+const uint64_t      B_DECAY_PERCENT      = 85;                       //活力星奖励的影响因子（85%）
+const uint64_t      ADMIN_ID             = 426;                      //admin账户id
+const uint64_t      DEFAULT_INVITER      = 0;                        //默认邀请账户id//TODO blockcity account id
+const uint64_t      SUPER_STAR_LIMIT     = 50;                       //超级星最大数量（50）
+const uint64_t      BIG_ROUND_SIZE       = 50;                       //一个大轮包含小轮数（50）
+const uint64_t      ROUND_AMOUNT         = 2000 * PRECISION;         //每一小轮的底池资产数（20GXC）
+const uint64_t      ROUND_SIZE           = 100;                      //每一轮的参与人数（10）
+const uint64_t      X                    = 200 * PRECISION;          //成为超级星需要抵押的资产数（20GXC）
+const uint64_t      Y                    = 100 * PRECISION;          //成为小行星需要抵押的资产数（10GXC）
+const uint64_t      Z                    = 110 * PRECISION;          //自激活需要抵押的资产数（11GXC）
+const uint64_t      DECAY_TIME           = 4 * 3600;                 //衰减时间阈值，单位秒（4*3600s）
+const uint64_t      DECAY_DURATION       = 1 * 3600;                 //衰减时间间隔，单位秒（1*3600s）
+const uint64_t      INIT_POOL            = 2000000 * PRECISION;      //初始化充值200万GXC
+const uint64_t      STAKING_DELAY_TIME   = 90 * 24 * 3600;           //抵押90天后解锁
+const uint64_t      DELAY_TIME           = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
+
 
 const char* vote_reason  = "vote to super star";  // 给超级星投票
 const char* staking_reason = "staking to super star";    // 超级星晋升
@@ -51,10 +54,10 @@ const char* staking_reason = "staking to super star";    // 超级星晋升
 
 ```c++
 struct tbglobal {
-  uint64_t index;					// 自增索引
-  uint64_t pool_amount;		// 总资金池剩余资产
-  uint64_t current_round;	// 当前轮数
-  bool upgrading;         // 升级维护中
+  uint64_t index;           // 自增索引
+  uint64_t pool_amount;     // 总资金池剩余资产
+  uint64_t current_round;   // 当前轮数
+  bool upgrading;           // 升级维护中
 };
 ```
 
@@ -64,13 +67,13 @@ struct tbglobal {
 
 ```c++
 struct tbround{                      
-  uint64_t round;                     // 当前轮数&索引
-  uint64_t current_round_invites;     // 当前轮完成邀请数
-  uint64_t pool_amount;								// 当前轮奖池资产数，在当前轮结束后计算
-  uint64_t random_pool_amount;				// 当前随机池资产数
-  uint64_t invite_pool_amount;				// 当前邀请奖励池资产数
-  uint64_t start_time;               	// 当前轮的启动时间
-  uint64_t end_time;               		// 当前轮的结束时间
+  uint64_t round;                   // 当前轮数&索引
+  uint64_t current_round_invites;   // 当前轮完成邀请数
+  uint64_t pool_amount;             // 当前轮奖池资产数，在当前轮结束后计算
+  uint64_t random_pool_amount;      // 当前随机池资产数
+  uint64_t invite_pool_amount;      // 当前邀请奖励池资产数
+  uint64_t start_time;              // 当前轮的启动时间
+  uint64_t end_time;                // 当前轮的结束时间
 };
 ```
 
@@ -80,12 +83,12 @@ struct tbround{
 
 ```c++
 struct tbvote {
-  uint64_t index;						// 自增索引
-  uint64_t round;						// 当前轮数
-  uint64_t staking_amount;	// 抵押GXC数量
-  uint64_t from;						// 投票者id
-  uint64_t to;							// 被投票者id
-  uint64_t vote_time;				// 投票时间
+  uint64_t index;           // 自增索引
+  uint64_t round;           // 当前轮数
+  uint64_t staking_amount;  // 抵押GXC数量
+  uint64_t from;            // 投票者id
+  uint64_t to;              // 被投票者id
+  uint64_t vote_time;       // 投票时间
 }
 ```
 
@@ -95,10 +98,10 @@ struct tbvote {
 
 ```c++
 struct tbstaking {
-  uint64_t index;				// 自增索引
-  uint64_t account;			// 账号id
-  uint64_t amount;			// 锁仓金额
-  uint64_t end_time;		// 锁仓结束时间
+  uint64_t index;       // 自增索引
+  uint64_t account;     // 账号id
+  uint64_t amount;      // 锁仓金额
+  uint64_t end_time;    // 锁仓结束时间
   uint64_t staking_to;  // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
   uint64_t reason;      // 抵押原因 
   bool claimed;         // 是否取回
@@ -112,10 +115,10 @@ struct tbstaking {
 
 ```c++
 struct tbsmallplan{
-  uint64_t index;							// 自增索引 
-  uint64_t id;                // 账户id
-  uint64_t create_time;       // 创建时间
-  uint64_t create_round;  		// 晋升轮数（第几轮晋升）
+  uint64_t index;           // 自增索引 
+  uint64_t id;              // 账户id
+  uint64_t create_time;     // 创建时间
+  uint64_t create_round;    // 晋升轮数（第几轮晋升）
 }
 ```
 
@@ -125,10 +128,10 @@ struct tbsmallplan{
 
 ```c++
 struct tbbigplanet{
-  uint64_t index;							// 自增索引 
-  uint64_t id;                // 账户id
-  uint64_t create_time;       // 创建时间
-  uint64_t create_round;  		// 晋升轮数（第几轮晋升）
+  uint64_t index;           // 自增索引 
+  uint64_t id;              // 账户id
+  uint64_t create_time;     // 创建时间
+  uint64_t create_round;    // 晋升轮数（第几轮晋升）
 }
 ```
 
@@ -138,7 +141,7 @@ struct tbbigplanet{
 
 ```c++
 struct tbactiveplan {
-  uint64_t index;								// 自增索引
+  uint64_t index;               // 自增索引
   uint64_t id;                  // 账户id
   uint64_t invite_count;        // 邀请人数，每达到5个大行星，置为0，记录create_round=当前轮，weight=1
   uint64_t create_time;         // 创建时间
@@ -153,11 +156,11 @@ struct tbactiveplan {
 
 ```c++
 struct tbsuperstar {
-  uint64_t index;											// 自增索引
-  uint64_t id;                        // 账户id
-  uint64_t create_time;               // 创建时间
-  uint64_t create_round;          		// 晋升轮数（第几轮晋升）
-  uint64_t vote_num;                 	// 得票数
+  uint64_t index;           // 自增索引
+  uint64_t id;              // 账户id
+  uint64_t create_time;     // 创建时间
+  uint64_t create_round;    // 晋升轮数（第几轮晋升）
+  uint64_t vote_num;        // 得票数
 }
 ```
 
@@ -167,12 +170,12 @@ struct tbsuperstar {
 
 ```c++
 struct tbinvite {
-  uint64_t index;											// 自增索引
-  uint64_t invitee;										// 被邀请账户
-  uint64_t inviter;										// 邀请账户
-  bool enabled;												// 邀请关系是否生效（invitee是否升级为大行星）
-  uint64_t create_round;							// 当前轮数
-  uint64_t create_time;								// 邀请时间
+  uint64_t index;           // 自增索引
+  uint64_t invitee;         // 被邀请账户
+  uint64_t inviter;         // 邀请账户
+  bool enabled;             // 邀请关系是否生效（invitee是否升级为大行星）
+  uint64_t create_round;    // 当前轮数
+  uint64_t create_time;     // 邀请时间
 }
 ```
 
@@ -195,63 +198,34 @@ PAYABLE init(){
 
 ``` c++
 PAYABLE uptosuper(std:string inviter){
-    uint64_t orig_sender = get_trx_origin();
-    uint64_t ast_id = get_action_asset_id();
-    int64_t amount = get_action_asset_amount();
     // 1. 判断是否存入足够GXC
-    graphene_assert(ast_id==1&&amount==x*100000,x+"GXC required");
     // 2. 判断是否已经是superstar，如果已经是，则提示"You are already a super star"
-    graphene_assert(isSuperStar(orig_sender),“You are already a super star”);
     // 3. 存到superstart表
-    addSuperStar(orig_sender);
     // 4. 保存邀请关系
-    invite(orig_sender,inviter);
-  	// 5. 插入/更新一条新的活力星记录，权重为1
-  	addActiveStar(orig_sender);
+    // 5. 插入/更新一条新的活力星记录，权重为1
 }
 ```
 
 ### 3. 升级成为小行星
 ``` c++
 PAYABLE uptosmall(std:string inviter,std:string superStar){
-    uint64_t orig_sender = get_trx_origin();
-    uint64_t ast_id = get_action_asset_id();
-    int64_t amount = get_action_asset_amount();
     // 1. 判断是否存入足够GXC
-    graphene_assert(ast_id==1&&amount==y*100000,y+"GXC required");
     // 2. 存到smallPlanet表（不允许重复创建）
-    if(!isSmallPlanet(orig_sender)){
-    	addSmallPlanet(orig_sender);
-    }
     // 4. 保存邀请关系（不允许重复邀请）
-  	if(!hasInvited(orig_sender,inviter)){
-      invite(orig_sender,inviter);
-    }
     // 5. vote(允许重复投票)
-    vote(orig_sender, superStar);
 }
 ```
 ### 4. 升级成为大行星
 
 ``` c++
 PAYABLE uptobig(){
-    uint64_t orig_sender = get_trx_origin();
-    uint64_t ast_id = get_action_asset_id();
-    int64_t amount = get_action_asset_amount();
     // 1. 判断是否存入足够GXC
-    graphene_assert(ast_id==1&&amount==(z1+z2+z3)*100000,(z1+z2+z3)+"GXC required");
     // 2. 判断是否是small planet，如果还不是，则提示“You have to become a small planet first”
-    graphene_assert(!isSmallPlanet(orig_sender),“You have to become a small planet first”);
     // 3. 判断是否已经是bigPlanet，如果已经是，则提示"You are already a big planet"
-    graphene_assert(isBigPlanet(orig_sender),“You are already a big planet”);
     // 4. 存到bigPlanet表
-    addBigPlanet(orig_sender);
     // 5. 保存邀请关系
-    invite(orig_sender,inviter);
     // 6. 发放邀请奖励
-    sendInviteReward(inviter, z1);
     // 7. 判断是否完成一小轮
-    endSmallRound();
 }
 ```
 
@@ -264,7 +238,7 @@ void invite(uint64_t original_sender,std:string inviter){
     if(inviter!=null){
         int64_t acc_id = get_account_id(inviter.c_str(), inviter.length());
         graphene_assert(acc_id!=null,"inviter account: "+inviter+" does not exist");
-      	graphene_assert(!isBigPlanet(acc_id),inviter+' is not a big planet');
+        graphene_assert(!isBigPlanet(acc_id),inviter+' is not a big planet');
         // 1. 查找inviteTable，如果未被邀请，则插入新邀请记录（original_sender, acc_id）
         addInvites(original_sender, acc_id);
     }
@@ -272,14 +246,7 @@ void invite(uint64_t original_sender,std:string inviter){
 ```
 ### 2. 小行星给超级星投票
 ``` c++
-void vote(uint64_t orig_sender,std:string superstar){
-  uint64_t star_acc_id = get_account_id(superstar);
-  graphene_assert(!isSuperStar(star_acc_id),“The account you voted is not a superstar”);
-  graphene_assert(!isSmallPlanet(orig_sender),“You have to become a small planet first”);
-  if(vote.find(orig_sender)!=null){
-    vote.emplace({orig_sender,star_acc_id,time,round});
-  }
-}
+void vote(uint64_t orig_sender,std:string superstar)；
 ```
 ### 3. 是否已经是超级星
 
@@ -342,13 +309,13 @@ bool bSmallRound(){
 ``` c++
 void endSmallRound(){
     if(bSmallRound()){
-      calcCurrentRoundPoolAmount();	// 计算当前轮奖励数额，保存到round表中
-      updateActivePlanets();				// 统计当前轮活力星数据，保存到round表中
-      randomReward();								// 发放随机奖励池
-      rewardBigPlanet(); 						// 发放当前轮晋升的大行星奖励 = 当前轮总奖池的10%
-      rewardActivePlanet(); 				// 发放活力星奖励 = 当前轮总奖池的50%
-      rewardSuperStar(); 						// 发放超级星奖励 = 当前轮总奖池的40%
-      startNewRound();								// 开始新的一轮
+      calcCurrentRoundPoolAmount(); // 计算当前轮奖励数额，保存到round表中
+      updateActivePlanets();                // 统计当前轮活力星数据，保存到round表中
+      randomReward();                               // 发放随机奖励池
+      rewardBigPlanet();                        // 发放当前轮晋升的大行星奖励 = 当前轮总奖池的10%
+      rewardActivePlanet();                 // 发放活力星奖励 = 当前轮总奖池的50%
+      rewardSuperStar();                        // 发放超级星奖励 = 当前轮总奖池的40%
+      startNewRound();                              // 开始新的一轮
     }
 }
 ```
@@ -409,7 +376,7 @@ void rewardSuperStar();
 ### 19. 开始新的一轮
 
 ```c++
-void startNewRound();	
+void startNewRound();   
 ```
 
 ### 20. 激活邀请关系
