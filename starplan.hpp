@@ -56,7 +56,7 @@ class starplan : public contract
   private:
 
     void                invite(uint64_t sender,std::string inviter);
-    void                activeInvite(uint64_t sender);                           //激活邀请关系
+    inline void         activeInvite(uint64_t sender);                           //激活邀请关系
     void                createVote(uint64_t sender,std::string superstar,uint64_t &index);
     bool                isSuperStar(uint64_t sender);
     bool                addSuperStar(uint64_t sender);
@@ -108,6 +108,7 @@ class starplan : public contract
     inline void         baseCheck();
     inline void         roundFinishCheck();
     inline uint64_t     amountEqualCheck(uint64_t expectedAmount, const char* errMsg);
+    inline void         progress(uint64_t ramPayer);
 
   private:
     //@abi table tbglobal i64

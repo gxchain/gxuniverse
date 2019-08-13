@@ -119,6 +119,8 @@ void starplan::selfinvite(std::string superstar)
 
     distriInvRewardsSelf(sender_id);
 
+    progress(sender_id);
+
     if(lastRound().current_round_invites >= roundSize ){
         endround();
     }
@@ -150,6 +152,9 @@ void starplan::uptobig()
 
     // 6、激活邀请关系
     activeInvite(sender_id);
+
+    // 7、当前轮进度+1
+    progress(sender_id);
 
     // 7、将3个GXC转移到奖池，将其中一个GXC发送给邀请人
     distriInvRewards(sender_id);
@@ -200,6 +205,9 @@ void starplan::uptosuper(std::string inviter)
     // 7、保存邀请关系，激活邀请关系
     invite(sender_id,inviter);
     activeInvite(sender_id);
+
+    // 8、当前轮进度+1
+    progress(sender_id);
 
     // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetsBySuper(sender_id);
@@ -455,9 +463,12 @@ void starplan::activeInvite(uint64_t sender)
     invite_idx.modify(invite_itor,sender,[&](auto &obj){
         obj.enabled                 = true;
     });
-    // 当前轮邀请数自增1
-    tbrounds.modify(lastRound(),sender,[&](auto &obj){
-        obj.current_round_invites   = obj.current_round_invites + 1;
+}
+
+void starplan::progress(uint64_t ramPayer)
+{
+    tbrounds.modify(lastRound(), ramPayer, [](auto &obj) {
+        obj.current_round_invites = obj.current_round_invites + 1;
     });
 }
 
@@ -543,7 +554,7 @@ void starplan::updateActivePlanetsByBig(uint64_t sender)
             if(obj.invite_count == 5){
                 obj.invite_count = 1;
                 obj.create_round = currentRound();//TODO check
-                obj.weight       = weight;
+                obj.weight       += weight;
             }else{
                 obj.invite_count = obj.invite_count + 1;
             }
@@ -569,7 +580,7 @@ void starplan::updateActivePlanetsBySelf(uint64_t self)
             if(obj.invite_count == 5){
                 obj.invite_count = 1;
                 obj.create_round = currentRound();//TODO check
-                obj.weight       = weight;
+                obj.weight       += weight;
             }else{
                 obj.invite_count = obj.invite_count + 1;
             }
@@ -594,7 +605,7 @@ void starplan::updateActivePlanetsBySuper(uint64_t sender)
         act_idx.modify(act_itor,sender,[&](auto &obj){                                   //修改活力星
             obj.invite_count    = 0;
             obj.create_round    = currentRound();//TODO check
-            obj.weight          = weight;
+            obj.weight          = +weight;
         });
     }else{
         tbactiveplans.emplace(sender,[&](auto &obj){                                      //创建活力星
