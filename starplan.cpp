@@ -52,14 +52,10 @@ void starplan::vote(std::string inviter,std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t ast_id = get_action_asset_id();
-    uint64_t amount = get_action_asset_amount();
     uint64_t sender_id = get_trx_origin();
 
-    // 2、判断是否充值0.1GXC
-    std::string deposit_check_msg = MSG_MINIMAL_AMOUNT_REQUIRED;
-    deposit_check_msg = deposit_check_msg.replace(deposit_check_msg.find("%d"),1,std::to_string(0.1));
-    graphene_assert(ast_id == coreAsset && amount >= precision / 10, deposit_check_msg.c_str());
+    // 2、判断充值是否 >= 0.1GXC
+    uint64_t amount = amountBiggerCheck(precision / 10, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
 
     // 3、验证inviter
     auto inviter_id = inviterCheck(inviter, sender_id);
@@ -927,6 +923,14 @@ uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
 {
     graphene_assert(get_action_asset_id() == coreAsset, MSG_CORE_ASSET_REQUIRED);
     graphene_assert(get_action_asset_amount() == expectedAmount, errMsg);
+
+    return expectedAmount;
+}
+
+uint64_t starplan::amountBiggerCheck(uint64_t expectedAmount, const char* errMsg)
+{
+    graphene_assert(get_action_asset_id() == coreAsset, MSG_CORE_ASSET_REQUIRED);
+    graphene_assert(get_action_asset_amount() >= expectedAmount, errMsg);
 
     return expectedAmount;
 }

@@ -107,6 +107,7 @@ class starplan : public contract
     inline void         baseCheck();
     inline void         roundFinishCheck();
     inline uint64_t     amountEqualCheck(uint64_t expectedAmount, const char* errMsg);
+    inline uint64_t     amountBiggerCheck(uint64_t expectedAmount, const char* errMsg);
     inline uint64_t     inviterCheck(const std::string &inviter, uint64_t inviteeId);
     inline uint64_t     superStarCheck(const std::string &superStarAccount);
     inline void         progress(uint64_t ramPayer);
