@@ -859,12 +859,6 @@ bool starplan::canUpdateSmall(uint64_t sender)
     }
     return retValue;
 }
-void starplan::checkWithdraw(uint64_t pool,uint64_t amount)
-{
-    if(pool<amount){
-        graphene_assert(false, CHECKAMOUNTMSG);
-    }
-}
 bool starplan::checkSender()
 {
     bool retValue = false;
