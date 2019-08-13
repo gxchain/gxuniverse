@@ -51,7 +51,7 @@ const uint64_t      initPool             = 200 * precision;          //初始化
 const uint64_t      stakingDelayTime     = 1800;                     //抵押90天后解锁
 const uint64_t      weight               = 1000;                     //权重，带三位精度
 const uint64_t      delaytime            = 2 * 3600;                 //最后一个大行星的延迟时间（12小时）
-const uint64_t      defaultinviter       = 0;                        //默认邀请账户id
+const uint64_t      defaultinviter       = 0;                        //默认邀请账户id//TODO blockcity account id
 
 const uint64_t      MAX_ROUND_REWARD    = (roundAmount + roundSize * z1) * precision;
 const uint64_t      MAX_USER_REWARD     = MAX_ROUND_REWARD * activePercent / 100 * 1;//只有一个活力星的时候

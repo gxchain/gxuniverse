@@ -16,6 +16,7 @@ const char* MSG_ILLIGAL_BIG_PLANET_CREATE_TIME =   "Error: Illigal big planet cr
 const char* MSG_ROUND_NOT_FOUND    =   "Error: Available round not found";
 const char* MSG_INSUFFICIENT_POOL_AMOUNT   =   "Error: Insufficient pool amount";
 const char* MSG_ROUND_NOT_END   =   "Error: Current round is not end";
+const char* MSG_ROUND_END   =   "Error: Current round is ended";
 const char* MSG_UPGRADING  =   "Error: Smart contract is upgrading";
 const char* MSG_UNKNOWN_CLAIM_REASON      =   "Error: Unknown reason for unstaking";
 const char* MSG_INVALID_ITOR  =   "Error: Unfound itor";

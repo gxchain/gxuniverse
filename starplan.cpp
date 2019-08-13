@@ -44,39 +44,32 @@ void starplan::init()
             obj.end_time                = 0;
         });
 }
+
 void starplan::vote(std::string inviter,std::string superstar)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
     baseCheck();
-    graphene_assert(!isRoundFinish(),MSG_ROUND_NOT_END);
+    roundFinishCheck();
 
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
+    uint64_t sender_id = get_trx_origin();
 
     // 2、判断是否充值0.1GXC
     std::string deposit_check_msg = MSG_MINIMAL_AMOUNT_REQUIRED;
     deposit_check_msg = deposit_check_msg.replace(deposit_check_msg.find("%d"),1,std::to_string(0.1));
     graphene_assert(ast_id == coreAsset && amount >= precision / 10, deposit_check_msg.c_str());
 
-    uint64_t sender_id = get_trx_origin();
-    // 3、验证账户
-    if(inviter != ""){
-        graphene_assert(isAccount(inviter), MSG_CHECK_ACCOUNT_EXIST);
-        uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
-        graphene_assert(isInviter(inviter), MSG_CHECK_INVITER_VALID);
-        graphene_assert(inviter_id != sender_id, MSG_CHECK_INVITE_SELF);
-    }
-    graphene_assert(isAccount(superstar), MSG_CHECK_ACCOUNT_EXIST);
+    // 3、验证inviter
+    auto inviter_id = inviterCheck(inviter, sender_id);
 
     // 5、验证超级星账户
-    auto super_id = get_account_id(superstar.c_str(), superstar.length());
-    graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);
-
+    auto super_id = superStarCheck(superstar);
     //////////////////////////////////////// 校验通过后，创建一个小行星 //////////////////////////////////////////
 
     // 6、保存邀请关系(不允许重复邀请)
-    invite(sender_id,inviter);
+    invite(sender_id, inviter_id);
 
     // 7、vote(允许重复投票)
     uint64_t vote_index = 0;
@@ -93,8 +86,8 @@ void starplan::vote(std::string inviter,std::string superstar)
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(super_id);
     sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {
-            obj.vote_num  = obj.vote_num + amount;
-        });
+            obj.vote_num = obj.vote_num + amount;
+    });
 }
 
 void starplan::selfinvite(std::string superstar)
@@ -131,16 +124,12 @@ void starplan::uptobig()
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
     baseCheck();
-    graphene_assert(!isRoundFinish(),MSG_CHECK_ROUND_ENDED);
+    roundFinishCheck();
 
-    uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
 
     // 2、判断是否存入足够GXC
-    uint64_t depositToBig = z1 + z2 + z3;
-    std::string depomsg = MSG_MINIMAL_AMOUNT_REQUIRED;
-    depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
-    graphene_assert(ast_id == coreAsset && amount == depositToBig, depomsg.c_str());
+    uint64_t amount = amountEqualCheck(z1 + z2 + z3, MSG_INVALID_SELF_INVITE_AMOUNT);//TODO update errMsg
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -177,25 +166,15 @@ void starplan::uptosuper(std::string inviter)
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
 
     baseCheck();
-    graphene_assert(!isRoundFinish(),MSG_CHECK_ROUND_ENDED);
-
-    uint64_t ast_id = get_action_asset_id();
-    uint64_t amount = get_action_asset_amount();
+    roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    std::string depomsg = MSG_MINIMAL_AMOUNT_REQUIRED;
-    depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(x));
-    graphene_assert(ast_id == coreAsset && amount == x, depomsg.c_str());
+    uint64_t amount = amountEqualCheck(x, MSG_MINIMAL_AMOUNT_REQUIRED);
 
     uint64_t sender_id = get_trx_origin();
 
     // 3、验证账户是否存在
-    if(inviter != ""){
-        graphene_assert(isAccount(inviter), MSG_CHECK_ACCOUNT_EXIST);
-        graphene_assert(isInviter(inviter), MSG_CHECK_INVITER_VALID);
-        uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
-        graphene_assert(inviter_id != sender_id, MSG_CHECK_INVITE_SELF);
-    }
+    uint64_t inviter_id = inviterCheck(inviter, sender_id);
 
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
@@ -206,7 +185,7 @@ void starplan::uptosuper(std::string inviter)
     addStake(sender_id, amount, sender_id, STAKE_TYPE_TOSUPER);
 
     // 7、保存邀请关系，激活邀请关系
-    invite(sender_id,inviter);
+    invite(sender_id, inviter_id);
     activeInvite(sender_id);
 
     // 8、当前轮进度+1
@@ -443,22 +422,21 @@ uint64_t starplan::currentRound()
     auto itor = tbglobals.find(0);
     return itor->current_round;
 }
-void starplan::invite(uint64_t sender,std::string inviter)
+
+void starplan::invite(uint64_t sender, uint64_t inviter)
 {
-    uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
-    if(inviter_id == -1)
-        inviter_id = defaultinviter;
     if(!hasInvited(sender)){                                 //不存在邀请关系则创建，
         tbinvites.emplace(sender,[&](auto &obj) {
             obj.index                   = tbinvites.available_primary_key();
             obj.invitee                 = sender;
-            obj.inviter                 = inviter_id;
+            obj.inviter                 = inviter;
             obj.enabled                 = false;
             obj.create_round            = currentRound();                      //升级为大行星或者超级星时，重新设置
             obj.create_time             = get_head_block_time();
         });
     }
 }
+
 void starplan::activeInvite(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
@@ -951,4 +929,25 @@ uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
     graphene_assert(get_action_asset_amount() == expectedAmount, errMsg);
 
     return expectedAmount;
+}
+
+uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
+{
+    if ("" != inviter) {
+        graphene_assert(isAccount(inviter), MSG_CHECK_ACCOUNT_EXIST);
+        uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
+        graphene_assert(isInviter(inviter), MSG_CHECK_INVITER_VALID);
+        graphene_assert(inviter_id != inviteeId, MSG_CHECK_INVITE_SELF);
+        return inviter_id;
+    }
+
+    return 0;
+}
+
+uint64_t starplan::superStarCheck(const std::string &superStarAccount)
+{
+    graphene_assert(isAccount(superStarAccount), MSG_CHECK_ACCOUNT_EXIST);
+    auto super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
+    graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);
+    return super_id;
 }
