@@ -221,7 +221,7 @@ void starplan::endround()
     }
 
     // 3、验证当前轮是否可以结束
-    graphene_assert(isRoundFinish(),ISENDROUNDMSG);
+    graphene_assert(!isRoundFinish(),ISENDROUNDMSG);
     // 4、计算奖池
     calcCurrentRoundPoolAmount();
 
