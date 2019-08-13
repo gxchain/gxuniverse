@@ -314,4 +314,4 @@ class starplan : public contract
 
     inline const struct starplan::tbround& lastRound();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(selfinvite)(uptobig)(uptosuper)(endround)(unstake)(upgrade))
+GRAPHENE_ABI(starplan, (init)(vote)(selfinvite)(uptobig)(uptosuper)(endround)(claim)(upgrade))
