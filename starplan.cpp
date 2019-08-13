@@ -517,7 +517,7 @@ void starplan::distriInvRewardsSelf(uint64_t self)
         obj.from = self;
         obj.to = self;
         obj.amount = Z2;
-        obj.type = RWD_TYPE_INVITE;
+        obj.type = RWD_TYPE_SELF_UPGRADE;
     });
 }
 
