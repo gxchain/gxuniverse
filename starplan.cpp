@@ -13,7 +13,7 @@ void starplan::init()
     // 2、校验充值的资产是否为2000000GXC
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
-    graphene_assert(ast_id == coreAsset && amount == initPool * precision, INITDEPOMSG);
+    graphene_assert(ast_id == coreAsset && amount == initPool, INITDEPOMSG);
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -103,28 +103,21 @@ void starplan::selfinvite(std::string superstar)
 
     uint64_t amount = amountEqualCheck(z + z1 + z2 + z3, "");
 
-    // 3、判断是否有邀请资格，即为大行星或者超级星
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), "");
 
-    // 5、验证超级星账户
     auto super_id = get_account_id(superstar.c_str(), superstar.length());
     graphene_assert(isSuperStar(super_id), CHECKSUPERMSG);
 
-    // 执行
-    // 6、创建/更新活力星
-    updateActivePlanetsByBig(sender_id);//FIXME, to update function:updateActivePlanetsByBig
+    updateActivePlanetsBySelf(sender_id);
 
-    // 7、修改stake表，增加110GXC的stake
-    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE);//TODO, check STAKE_TYPE_VOTE
+    uint64_t vote_index = 0;
+    createVote(sender_id, superstar, vote_index);
 
-    // 8、vote表
-    createVote(sender_id,superstar);
+    addStake(sender_id, z, super_id, STAKE_TYPE_SELF_INVITE, vote_index);
 
-    // 9、将3个GXC转移到奖池，将其发送给邀请人GXC发送给自己（因为这里没有邀请人）
-    distriInvRewards(sender_id);//FIXME, to update function:distriInvRewards
+    distriInvRewardsSelf(sender_id);
 
-    // 10、当邀请关系满100人，开启新的一轮
     if(lastRound().current_round_invites >= roundSize ){
         endround();
     }
@@ -144,7 +137,7 @@ void starplan::uptobig()
     uint64_t depositToBig = z1 + z2 + z3;
     std::string depomsg = DEPOMSG;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(depositToBig));
-    graphene_assert(ast_id == coreAsset && amount == depositToBig * precision, depomsg.c_str());
+    graphene_assert(ast_id == coreAsset && amount == depositToBig, depomsg.c_str());
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -183,7 +176,7 @@ void starplan::uptosuper(std::string inviter)
     // 2、判断是否存入足够GXC
     std::string depomsg = DEPOMSG;
     depomsg = depomsg.replace(depomsg.find("%d"),1,std::to_string(x));
-    graphene_assert(ast_id == coreAsset && amount == x * precision, depomsg.c_str());
+    graphene_assert(ast_id == coreAsset && amount == x, depomsg.c_str());
 
     uint64_t sender_id = get_trx_origin();
 
@@ -394,7 +387,7 @@ bool starplan::addBigPlanet(uint64_t sender)
 bool starplan::hasInvited(uint64_t sender)
 {
     bool retValue = false;
-    auto invite_idx = tbinvites.get_index<N(byaccid)>();
+    auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
     if(invite_itor != invite_idx.end()) { retValue = true; }
     return retValue;
@@ -456,7 +449,7 @@ void starplan::invite(uint64_t sender,std::string inviter)
 }
 void starplan::activeInvite(uint64_t sender)
 {
-    auto invite_idx = tbinvites.get_index<N(byaccid)>();
+    auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
     invite_idx.modify(invite_itor,sender,[&](auto &obj){
         obj.enabled                 = true;
@@ -500,25 +493,47 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
 void starplan::distriInvRewards(uint64_t sender)
 {
     std::string   inviter_withdraw     = INVITERLOG;  //提现一个1GXC到邀请人账户
-    auto invite_idx = tbinvites.get_index<N(byaccid)>();
+    auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
     tbrounds.modify(lastRound(), sender, [&](auto &obj){                               //修改奖池金额
-            obj.random_pool_amount      = obj.random_pool_amount + z3 * precision;
-            obj.invite_pool_amount      = obj.invite_pool_amount + z1 * precision;
+            obj.random_pool_amount      = obj.random_pool_amount + z3;
+            obj.invite_pool_amount      = obj.invite_pool_amount + z1;
     });
-    inline_transfer(_self , invite_itor->inviter , coreAsset , z2 * precision,inviter_withdraw.c_str(),inviter_withdraw.length());
+    inline_transfer(_self , invite_itor->inviter , coreAsset , z2,inviter_withdraw.c_str(),inviter_withdraw.length());
     tbrewards.emplace(get_trx_sender(), [&](auto &obj){
             obj.index           = tbrewards.available_primary_key();
             obj.round           = currentRound();
             obj.from            = sender;
             obj.to              = invite_itor->inviter;
-            obj.amount          = z2 * precision;
+            obj.amount          = z2;
             obj.type            = RWD_TYPE_INVITE;
         });
 }
+
+void starplan::distriInvRewardsSelf(uint64_t self)
+{
+    inline_transfer(_self, self, coreAsset, z2, SELFINVITERLOG, strlen(SELFINVITERLOG));
+
+    tbrounds.modify(lastRound(), self, [&](auto &obj)
+    {
+        obj.random_pool_amount = obj.random_pool_amount + z3;
+        obj.invite_pool_amount = obj.invite_pool_amount + z1;
+    });
+
+    tbrewards.emplace(get_trx_sender(), [&](auto &obj)
+    {
+        obj.index = tbrewards.available_primary_key();
+        obj.round = currentRound();
+        obj.from = self;
+        obj.to = self;
+        obj.amount = z2;
+        obj.type = RWD_TYPE_INVITE;
+    });
+}
+
 void starplan::updateActivePlanetsByBig(uint64_t sender)
 {
-    auto invite_idx = tbinvites.get_index<N(byaccid)>();
+    auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(invite_itor->inviter);
@@ -526,7 +541,7 @@ void starplan::updateActivePlanetsByBig(uint64_t sender)
         act_idx.modify(act_itor,sender,[&](auto &obj){                                   //修改活力星
             if(obj.invite_count == 5){
                 obj.invite_count = 1;
-                obj.create_round = currentRound();
+                obj.create_round = currentRound();//TODO check
                 obj.weight       = weight;
             }else{
                 obj.invite_count = obj.invite_count + 1;
@@ -543,6 +558,33 @@ void starplan::updateActivePlanetsByBig(uint64_t sender)
         });
     }
 }
+
+void starplan::updateActivePlanetsBySelf(uint64_t self)
+{
+    auto act_idx = tbactiveplans.get_index<N(byaccid)>();
+    auto act_itor = act_idx.find(self);
+    if(act_itor != act_idx.end()){
+        act_idx.modify(act_itor,self,[&](auto &obj){                                   //修改活力星
+            if(obj.invite_count == 5){
+                obj.invite_count = 1;
+                obj.create_round = currentRound();//TODO check
+                obj.weight       = weight;
+            }else{
+                obj.invite_count = obj.invite_count + 1;
+            }
+        });
+    }else{
+        tbactiveplans.emplace(self,[&](auto &obj){                                      //创建活力星
+            obj.index           = tbactiveplans.available_primary_key();
+            obj.id              = invite_itor->inviter;
+            obj.invite_count    = 1;
+            obj.create_time     = get_head_block_time();
+            obj.create_round    = 0;
+            obj.weight          = 0;
+        });
+    }
+}
+
 void starplan::updateActivePlanetsBySuper(uint64_t sender)
 {
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
@@ -550,7 +592,7 @@ void starplan::updateActivePlanetsBySuper(uint64_t sender)
     if(act_itor != act_idx.end()){
         act_idx.modify(act_itor,sender,[&](auto &obj){                                   //修改活力星
             obj.invite_count    = 0;
-            obj.create_round    = currentRound();
+            obj.create_round    = currentRound();//TODO check
             obj.weight          = weight;
         });
     }else{
@@ -571,15 +613,15 @@ void starplan::calcCurrentRoundPoolAmount()
     auto &round = lastRound();
 
     // 2、默认底池
-    auto pool_amount = roundAmount * precision + round.invite_pool_amount;
+    auto pool_amount = roundAmount + round.invite_pool_amount;
     // 3、超过四小时，每小时减少底池金额
     auto x = currentRound()%bigRoundSize + 1;
     // 4、计算当前小轮的运行时间
     if(get_head_block_time() - round.start_time > decayTime){
         auto dursize = ((get_head_block_time() - round.start_time - decayTime) / decayDur) + 1;
         dursize = dursize > maxDecayCount ? maxDecayCount:dursize;
-        graphene_assert(pool_amount > (dursize * x * precision), CHECKATTENMSG);
-        pool_amount = pool_amount - dursize * x * precision;
+        graphene_assert(pool_amount > (dursize * x), CHECKATTENMSG);
+        pool_amount = pool_amount - dursize * x;
     }
     // 5、修改当前轮底池 pool_amount
     auto sender = get_trx_sender();
@@ -849,7 +891,7 @@ bool starplan::canUpdateSmall(uint64_t sender)
     for(;itor != stk_idx.end();itor++){
         if(itor->account == sender && itor->claimed == false){
             total_vote += itor->amount;
-            if(total_vote>=y*precision){
+            if(total_vote>=y){
                 retValue = true;
                 break;
             }

@@ -75,7 +75,9 @@ class starplan : public contract
     bool                hasInvited(uint64_t sender);
     void                addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     void                distriInvRewards(uint64_t sender);
+    void                distriInvRewardsSelf(uint64_t self);
     void                updateActivePlanetsByBig(uint64_t sender);
+    void                updateActivePlanetsBySelf(uint64_t self);
     void                updateActivePlanetsBySuper(uint64_t sender);
     void                calcCurrentRoundPoolAmount();
     void                updateActivePlanets();
@@ -277,16 +279,16 @@ class starplan : public contract
         uint64_t create_time;               // 邀请时间
 
         uint64_t primary_key() const { return index; }
-        uint64_t by_acc_id() const { return invitee; }
-        uint64_t by_invite_id() const { return inviter; }
+        uint64_t by_invitee() const { return invitee; }
+        uint64_t by_inviter() const { return inviter; }
         uint64_t by_round() const { return create_round; }
         uint64_t by_enable() const { return enabled; }
 
         GRAPHENE_SERIALIZE(tbinvite, (index)(invitee)(inviter)(enabled)(create_round)(create_time))
     };
     typedef multi_index<N(tbinvite), tbinvite,
-                        indexed_by<N(byaccid), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_acc_id>>,
-                        indexed_by<N(byinviteid), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_invite_id>>,
+                        indexed_by<N(byinvitee), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_invitee>>,
+                        indexed_by<N(byinviter), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_inviter>>,
                         indexed_by<N(byenable), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_enable>>,
                         indexed_by<N(byround), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_round>>> tbinvite_index;
     tbinvite_index tbinvites;

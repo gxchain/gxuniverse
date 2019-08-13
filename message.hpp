@@ -24,6 +24,7 @@ const char* UNSTAKEMSG      =   "GXUniverse Contract Error: Unknown reason for u
 const char* UNFOUNDITORMSG  =   "GXUniverse Contract Error: Unfound itor";
 const char* UNSTAKELOG      =   "Log: unstake withdraw";
 const char* INVITERLOG      =   "Log: inviter withdraw 1 GXC";
+const char* SELFINVITERLOG  =   "Log: self invite withdraw 1 GXC";
 const char* RANDOMLOG       =   "Log: random withdraw";
 const char* BIGPLANETLOG    =   "Log: big planet withdraw";
 const char* ACTPLANETLOG    =   "Log: active planet withdraw";
