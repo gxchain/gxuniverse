@@ -51,12 +51,6 @@ const uint64_t      DELAY_TIME           = 12 * 3600;                //最后一
 const uint64_t      MAX_ROUND_REWARD    = ROUND_AMOUNT + ROUND_SIZE * Z1;
 const uint64_t      MAX_USER_REWARD     = MAX_ROUND_REWARD * ACTIVE_PERCENT / 100 * 1;//只有一个活力星的时候
 
-enum PLANET_AUTH {
-    SMALL_PLANET_AUTH   = 1,
-    BIG_PLANET_AUTH     = 1 << 1,
-    SUPER_STAR_AUTH     = 1 << 2
-};
-
 #define STAKE_TYPE_TO_SUPER          0
 #define STAKE_TYPE_VOTE             1
 #define STAKE_TYPE_SELF_INVITE      2
