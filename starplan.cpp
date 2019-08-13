@@ -4,18 +4,13 @@ void starplan::init()
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
     // 0、防止跨合约调用
-    graphene_assert(checkSender(), MSG_CHECK_SENDER);
+    uint64_t sender_id = checkSender();
 
     // 1、校验调用者，只有调用者可以初始化底池，只许调用一次
-    uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
-    // 2、校验充值的资产是否为initPool的大小
-    std::string deposit_check_msg = MSG_MINIMAL_AMOUNT_REQUIRED;
-    deposit_check_msg = deposit_check_msg.replace(deposit_check_msg.find("%d"),1,std::to_string(INIT_POOL));
-    uint64_t ast_id = get_action_asset_id();
-    uint64_t amount = get_action_asset_amount();
-    graphene_assert(ast_id == CORE_ASSET_ID && amount == INIT_POOL, deposit_check_msg.c_str());
+    // 2、校验充值的资产是否为INIT_POOL的大小
+    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -263,13 +258,12 @@ void starplan::claim(std::string account)
 void starplan::upgrade(uint64_t flag)
 {
     // 0、防止跨合约调用
-    graphene_assert(checkSender(), MSG_CHECK_SENDER);
+    uint64_t sender_id = checkSender();
 
     // 1、验证合约是否已经初始化
     graphene_assert(isInit(), MSG_NOT_INITIALIZED);
 
     // 2、验证调用者账户是否为admin账户
-    uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 3、修改global表
@@ -867,14 +861,15 @@ bool starplan::canUpdateSmall(uint64_t sender)
     }
     return retValue;
 }
-bool starplan::checkSender()
+
+uint64_t starplan::checkSender()
 {
-    bool retValue = false;
     auto sender_id = get_trx_sender();
     auto origin_id = get_trx_origin();
-    if(sender_id == origin_id){ retValue = true; }//TODO here to assert
-    return retValue;
+    graphene_assert(sender_id == origin_id, MSG_CHECK_SENDER);
+    return sender_id;
 }
+
 bool starplan::isUpgrading()
 {
     bool retValue   = false;
@@ -913,7 +908,7 @@ void starplan::cancelSuperStake(uint64_t superAccId)
 void starplan::baseCheck()
 {
     // 0、防止跨合约调用
-    graphene_assert(checkSender(), MSG_CHECK_SENDER);
+    checkSender();
     // 1、验证合约是否初始化
     graphene_assert(isInit(), MSG_NOT_INITIALIZED);
     // 1、验证合约是否在升级

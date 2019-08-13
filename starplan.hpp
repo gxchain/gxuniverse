@@ -100,7 +100,7 @@ class starplan : public contract
     void                createNewRound();
     bool                canUpdateSmall(uint64_t sender);
 
-    bool                checkSender();                                                  //验证调用者和原始调用者是否相同
+    inline uint64_t     checkSender();                                                  //验证调用者和原始调用者是否相同
     bool                isUpgrading();                                                    //验证合约状态升级
     void                cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount);
     void                cancelSuperStake(uint64_t superAccId);
