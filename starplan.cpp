@@ -8,14 +8,14 @@ void starplan::init()
 
     // 1、校验调用者，只有调用者可以初始化底池，只许调用一次
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(sender_id == adminId, MSG_CHECK_ADMIN);
+    graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 2、校验充值的资产是否为initPool的大小
     std::string deposit_check_msg = MSG_MINIMAL_AMOUNT_REQUIRED;
-    deposit_check_msg = deposit_check_msg.replace(deposit_check_msg.find("%d"),1,std::to_string(initPool));
+    deposit_check_msg = deposit_check_msg.replace(deposit_check_msg.find("%d"),1,std::to_string(INIT_POOL));
     uint64_t ast_id = get_action_asset_id();
     uint64_t amount = get_action_asset_amount();
-    graphene_assert(ast_id == coreAsset && amount == initPool, deposit_check_msg.c_str());
+    graphene_assert(ast_id == CORE_ASSET_ID && amount == INIT_POOL, deposit_check_msg.c_str());
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -55,7 +55,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     uint64_t sender_id = get_trx_origin();
 
     // 2、判断充值是否 >= 0.1GXC
-    uint64_t amount = amountBiggerCheck(precision / 10, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
+    uint64_t amount = amountBiggerCheck(PRECISION / 10, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
 
     // 3、验证inviter
     auto inviter_id = inviterCheck(inviter, sender_id);
@@ -91,7 +91,7 @@ void starplan::selfinvite(std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = amountEqualCheck(z + z1 + z2 + z3, MSG_INVALID_SELF_INVITE_AMOUNT);
+    uint64_t amount = amountEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_INVITE_AMOUNT);
 
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_INVITE_AUTH_ERR);
@@ -104,13 +104,13 @@ void starplan::selfinvite(std::string superstar)
     uint64_t vote_index = 0;
     createVote(sender_id, superstar, vote_index);
 
-    addStake(sender_id, z, super_id, STAKE_TYPE_SELF_INVITE, vote_index);
+    addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_index);
 
     distriInvRewardsSelf(sender_id);
 
     progress(sender_id);
 
-    if(lastRound().current_round_invites >= roundSize ){
+    if(lastRound().current_round_invites >= ROUND_SIZE ){
         endround();
     }
 }
@@ -125,7 +125,7 @@ void starplan::uptobig()
     uint64_t amount = get_action_asset_amount();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(z1 + z2 + z3, MSG_INVALID_SELF_INVITE_AMOUNT);//TODO update errMsg
+    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_SELF_INVITE_AMOUNT);//TODO update errMsg
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -151,7 +151,7 @@ void starplan::uptobig()
         updateActivePlanet(invitee_itor->inviter);
 
     // 9、当邀请关系满100人，开启新的一轮
-    if(lastRound().current_round_invites >= roundSize ){
+    if(lastRound().current_round_invites >= ROUND_SIZE ){
         endround();
     }
 }
@@ -165,7 +165,7 @@ void starplan::uptosuper(std::string inviter)
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(x, MSG_MINIMAL_AMOUNT_REQUIRED);
+    uint64_t amount = amountEqualCheck(X, MSG_MINIMAL_AMOUNT_REQUIRED);
 
     uint64_t sender_id = get_trx_origin();
 
@@ -195,9 +195,9 @@ void starplan::endround()
     baseCheck();
 
     // 2、验证调用者账户是否为admin账户
-    if(lastRound().current_round_invites < roundSize ){
+    if(lastRound().current_round_invites < ROUND_SIZE ){
         uint64_t sender_id = get_trx_origin();
-        graphene_assert(sender_id == adminId, MSG_CHECK_ADMIN);
+        graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
     }
 
     // 3、验证当前轮是否可以结束
@@ -242,7 +242,7 @@ void starplan::claim(std::string account)
     for(; itor != sta_idx.end() && itor->account == acc_id;){
         if(get_head_block_time() > itor->end_time && itor->claimed == false){
             // 1.1、解除抵押提现
-            inline_transfer(_self , acc_id , coreAsset , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
+            inline_transfer(_self , acc_id , CORE_ASSET_ID , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
             // 1.2、修改该项抵押失效 
             sta_idx.modify(itor,get_trx_sender(),[&](auto &obj){
                 obj.claimed          =   true;
@@ -272,7 +272,7 @@ void starplan::upgrade(uint64_t flag)
 
     // 2、验证调用者账户是否为admin账户
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(sender_id == adminId, MSG_CHECK_ADMIN);
+    graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 3、修改global表
     auto itor = tbglobals.find(0);
@@ -391,7 +391,7 @@ bool starplan::isInviteTimeout(uint64_t &lastBigPlanet)
     if(big_itor->create_round !=currentRound()){ return false;}
 
     graphene_assert(get_head_block_time() > big_itor->create_time, MSG_ILLIGAL_BIG_PLANET_CREATE_TIME);
-    if((get_head_block_time() - big_itor->create_time) > delaytime) {
+    if((get_head_block_time() - big_itor->create_time) > DELAY_TIME) {
         lastBigPlanet = big_itor->id;
         return true;
     }
@@ -404,7 +404,7 @@ bool starplan::isRoundFull()
     auto round_itor = tbrounds.end();
     graphene_assert(round_itor != tbrounds.begin(), MSG_ROUND_NOT_FOUND);
     round_itor--;
-    return round_itor->current_round_invites >= roundSize;
+    return round_itor->current_round_invites >= ROUND_SIZE;
 }
 
 bool starplan::isRoundFinish()
@@ -470,7 +470,7 @@ void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t rea
         obj.index                   = tbstakes.available_primary_key();
         obj.account                 = sender;
         obj.amount                  = amount;
-        obj.end_time                = get_head_block_time() + stakingDelayTime;
+        obj.end_time                = get_head_block_time() + STAKING_DELAY_TIME;
         obj.staking_to              = to;
         obj.reason                  = reason;
         obj.claimed                 = false;
@@ -485,28 +485,28 @@ void starplan::distriInvRewards(uint64_t sender)
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
     tbrounds.modify(lastRound(), sender, [&](auto &obj){                               //修改奖池金额
-            obj.random_pool_amount      = obj.random_pool_amount + z3;
-            obj.invite_pool_amount      = obj.invite_pool_amount + z1;
+            obj.random_pool_amount      = obj.random_pool_amount + Z3;
+            obj.invite_pool_amount      = obj.invite_pool_amount + Z1;
     });
-    inline_transfer(_self , invite_itor->inviter , coreAsset , z2,inviter_withdraw.c_str(),inviter_withdraw.length());
+    inline_transfer(_self , invite_itor->inviter , CORE_ASSET_ID , Z2,inviter_withdraw.c_str(),inviter_withdraw.length());
     tbrewards.emplace(get_trx_sender(), [&](auto &obj){
             obj.index           = tbrewards.available_primary_key();
             obj.round           = currentRound();
             obj.from            = sender;
             obj.to              = invite_itor->inviter;
-            obj.amount          = z2;
+            obj.amount          = Z2;
             obj.type            = RWD_TYPE_INVITE;
         });
 }
 
 void starplan::distriInvRewardsSelf(uint64_t self)
 {
-    inline_transfer(_self, self, coreAsset, z2, LOG_SELF_INVITE_REWARD, strlen(LOG_SELF_INVITE_REWARD));
+    inline_transfer(_self, self, CORE_ASSET_ID, Z2, LOG_SELF_INVITE_REWARD, strlen(LOG_SELF_INVITE_REWARD));
 
     tbrounds.modify(lastRound(), self, [&](auto &obj)
     {
-        obj.random_pool_amount = obj.random_pool_amount + z3;
-        obj.invite_pool_amount = obj.invite_pool_amount + z1;
+        obj.random_pool_amount = obj.random_pool_amount + Z3;
+        obj.invite_pool_amount = obj.invite_pool_amount + Z1;
     });
 
     tbrewards.emplace(get_trx_sender(), [&](auto &obj)
@@ -515,7 +515,7 @@ void starplan::distriInvRewardsSelf(uint64_t self)
         obj.round = currentRound();
         obj.from = self;
         obj.to = self;
-        obj.amount = z2;
+        obj.amount = Z2;
         obj.type = RWD_TYPE_INVITE;
     });
 }
@@ -528,7 +528,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId)
         act_idx.modify(act_itor, activePlanetAccountId, [&](auto &obj) {
             obj.invite_count++;
             if(obj.invite_count == 5) {
-                obj.weight += weight;
+                obj.weight += WEIGHT;
                 obj.invite_count = 0;
             }
         });
@@ -550,7 +550,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
     auto act_itor = act_idx.find(activePlanetAccountId);
     if (act_itor != act_idx.end()) {
         act_idx.modify(act_itor, activePlanetAccountId, [&](auto &obj) {
-            obj.weight += weight;
+            obj.weight += WEIGHT;
         });
     } else {
         tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
@@ -559,7 +559,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
             obj.invite_count = 0;
             obj.create_time = get_head_block_time();
             obj.create_round = currentRound();
-            obj.weight = weight;
+            obj.weight = WEIGHT;
         });
     }
 }
@@ -570,13 +570,13 @@ void starplan::calcCurrentRoundPoolAmount()
     auto &round = lastRound();
 
     // 2、默认底池
-    auto pool_amount = roundAmount + round.invite_pool_amount;
+    auto pool_amount = ROUND_AMOUNT + round.invite_pool_amount;
     // 3、超过四小时，每小时减少底池金额
-    auto x = currentRound()%bigRoundSize + 1;
+    auto x = currentRound()%BIG_ROUND_SIZE + 1;
     // 4、计算当前小轮的运行时间
-    if(get_head_block_time() - round.start_time > decayTime){
-        uint64_t dursize = ((get_head_block_time() - round.start_time - decayTime) / decayDur) + 1;
-        dursize = dursize > maxDecayCount ? maxDecayCount:dursize;
+    if(get_head_block_time() - round.start_time > DECAY_TIME){
+        uint64_t dursize = ((get_head_block_time() - round.start_time - DECAY_TIME) / DECAY_DURATION) + 1;
+        dursize = dursize > MAX_DECAY_COUNT ? MAX_DECAY_COUNT:dursize;
         graphene_assert(pool_amount > (dursize * x), MSG_INSUFFICIENT_POOL_AMOUNT);
         pool_amount = pool_amount - dursize * x;
     }
@@ -597,7 +597,7 @@ void starplan::updateActivePlanets()
     auto act_itor = tbactiveplans.begin();
     for( ; act_itor != tbactiveplans.end(); act_itor++){
         tbactiveplans.modify(act_itor,get_trx_sender(),[&](auto &obj){                           //修改活力星的权重
-            uint64_t bDecay_prec = bDecay * 1000;
+            uint64_t bDecay_prec = B_DECAY * 1000;
             uint64_t new_weight  = obj.weight * bDecay_prec / 1000;
             obj.weight      = new_weight;
         });
@@ -691,8 +691,8 @@ void starplan::getBudgets(uint64_t &randomRewardBudget, uint64_t &bigPlanetRewar
 
     randomRewardBudget = round.random_pool_amount;
 
-    bigPlanetRewardBudget = round.pool_amount * payBackPercent / 100;
-    activePlanetRewardBudget = round.pool_amount * activePercent / 100;
+    bigPlanetRewardBudget = round.pool_amount * PAYBACK_PERCENT / 100;
+    activePlanetRewardBudget = round.pool_amount * ACTIVE_PERCENT / 100;
     superStarRewardBudget = round.pool_amount - bigPlanetRewardBudget - activePlanetRewardBudget;
 }
 
@@ -804,7 +804,7 @@ void starplan::doReward(vector<reward> &rewardList)
         inline_transfer(
                 _self,
                 reward.to,
-                coreAsset,
+                CORE_ASSET_ID,
                 reward.amount,
                 reward_reasons[reward.type],
                 strlen(reward_reasons[reward.type])
@@ -851,7 +851,7 @@ bool starplan::canUpdateSmall(uint64_t sender)
     for(;itor != stk_idx.end();itor++){
         if(itor->account == sender && itor->claimed == false){
             total_vote += itor->amount;
-            if(total_vote>=y){
+            if(total_vote>=Y){
                 retValue = true;
                 break;
             }
@@ -921,7 +921,7 @@ void starplan::roundFinishCheck()
 
 uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
 {
-    graphene_assert(get_action_asset_id() == coreAsset, MSG_CORE_ASSET_REQUIRED);
+    graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
     graphene_assert(get_action_asset_amount() == expectedAmount, errMsg);
 
     return expectedAmount;
@@ -929,7 +929,7 @@ uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
 
 uint64_t starplan::amountBiggerCheck(uint64_t expectedAmount, const char* errMsg)
 {
-    graphene_assert(get_action_asset_id() == coreAsset, MSG_CORE_ASSET_REQUIRED);
+    graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
     graphene_assert(get_action_asset_amount() >= expectedAmount, errMsg);
 
     return expectedAmount;
@@ -945,7 +945,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
         return inviter_id;
     }
 
-    return defaultinviter;
+    return DEFAULT_INVITER;
 }
 
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
