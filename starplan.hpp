@@ -99,7 +99,6 @@ class starplan : public contract
 
     void                createNewRound();
     bool                canUpdateSmall(uint64_t sender);
-    void                checkWithdraw(uint64_t pool,uint64_t amount);
 
     bool                checkSender();                                                  //验证调用者和原始调用者是否相同
     bool                isUpgrade();                                                    //验证合约状态升级

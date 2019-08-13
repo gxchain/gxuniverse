@@ -214,7 +214,7 @@ void starplan::endround()
     }
 
     // 3、验证当前轮是否可以结束
-    graphene_assert(isRoundFinish(),ISENDROUNDMSG);
+    graphene_assert(!isRoundFinish(),ISENDROUNDMSG);
     // 4、计算奖池
     calcCurrentRoundPoolAmount();
 
@@ -618,7 +618,7 @@ void starplan::calcCurrentRoundPoolAmount()
     auto x = currentRound()%bigRoundSize + 1;
     // 4、计算当前小轮的运行时间
     if(get_head_block_time() - round.start_time > decayTime){
-        auto dursize = ((get_head_block_time() - round.start_time - decayTime) / decayDur) + 1;
+        uint64_t dursize = ((get_head_block_time() - round.start_time - decayTime) / decayDur) + 1;
         dursize = dursize > maxDecayCount ? maxDecayCount:dursize;
         graphene_assert(pool_amount > (dursize * x), CHECKATTENMSG);
         pool_amount = pool_amount - dursize * x;
@@ -900,12 +900,6 @@ bool starplan::canUpdateSmall(uint64_t sender)
         }
     }
     return retValue;
-}
-void starplan::checkWithdraw(uint64_t pool,uint64_t amount)
-{
-    if(pool<amount){
-        graphene_assert(false, CHECKAMOUNTMSG);
-    }
 }
 bool starplan::checkSender()
 {
