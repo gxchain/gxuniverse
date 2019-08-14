@@ -269,6 +269,15 @@ ACTION claim(){
 }
 ```
 
+### 8. 超级星更新备注
+
+```c++
+ACTION starplan::updatememo(std::string memo){
+  // 判断sender是否为超级星
+  // 更新sender对应超级星的memo
+}
+```
+
 
 ## 内部方法（Private methods）
 
