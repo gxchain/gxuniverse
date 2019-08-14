@@ -97,6 +97,12 @@ void starplan::selfactivate(std::string superstar)
 
     addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_ACTIVATE, vote_id);
 
+    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();//TODO delete dup code
+    auto sup_itor = sup_idx.find(super_id);
+    sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {
+        obj.vote_num = obj.vote_num + Z;
+    });
+
     distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVATE);
 
     progress(sender_id);
@@ -114,7 +120,7 @@ void starplan::uptobig()
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_REQUIRED);//FIXME wrong errMsg
+    uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_REQUIRED);
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -505,7 +511,8 @@ uint64_t starplan::getInviter(uint64_t invitee)
 
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
 {
-    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, reward_reasons[rewardType],strlen(reward_reasons[rewardType ]));
+    //TODO reward_reasons;
+    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, reward_reasons[rewardType], strlen(reward_reasons[rewardType]));
 
     tbrounds.modify(lastRound(), invitee, [&](auto &obj)
     {
@@ -531,7 +538,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
     if (act_itor != act_idx.end()) {
         act_idx.modify(act_itor, subAccountId, [&](auto &obj) {
             obj.invite_list.push_back(subAccountId);
-            if(obj.invite_list.size() == 5) {
+            if(obj.invite_list.size() == 5) {//TODO 5 is a const config
                 obj.weight += WEIGHT;
                 obj.invite_list.clear();
             }
