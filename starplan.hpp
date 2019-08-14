@@ -72,7 +72,6 @@ class starplan : public contract
     inline bool         isRoundFinish();
 
     bool                isInviter(std::string accname);
-    bool                isAccount(std::string accname);
     bool                isInit();
     bool                hasInvited(uint64_t sender);
     void                addStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);

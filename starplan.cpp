@@ -295,13 +295,6 @@ void starplan::updatememo(std::string memo)
         obj.memo                    = memo;
     });
 }
-bool starplan::isAccount(std::string accname)
-{
-    bool retValue = false;
-    int64_t acc_id = get_account_id(accname.c_str(), accname.length());
-    if(acc_id != -1){ retValue = true; }
-    return retValue;
-}
 
 bool starplan::isInit()
 {
@@ -950,7 +943,6 @@ uint64_t starplan::assetLargerCheck(uint64_t expectedAmount, const char* errMsg)
 uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 {
     if ("" != inviter) {
-        graphene_assert(isAccount(inviter), MSG_CHECK_ACCOUNT_EXIST);
         uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
         graphene_assert(isInviter(inviter), MSG_CHECK_INVITER_VALID);
         graphene_assert(inviter_id != inviteeId, MSG_CHECK_INVITE_SELF);
@@ -962,7 +954,6 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
 {
-    graphene_assert(isAccount(superStarAccount), MSG_CHECK_ACCOUNT_EXIST);
     int64_t super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
     graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);//TODO FIXME check super_id type
     return super_id;
