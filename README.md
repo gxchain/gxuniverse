@@ -461,7 +461,7 @@ bool hasInvited(uint64_t original_sender,std::string inviter);
 ### 25. 添加一个抵押项
 
 ```c++
-void addStake(uint64_t sender,uint64_t amount,uint64_t to,std::string reason);
+void addStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t stakingType, uint64_t index);
 ```
 
 ### 26. 大行星升级时，更新活力星
