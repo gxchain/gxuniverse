@@ -58,7 +58,7 @@ class starplan : public contract
   private:
 
     void                invite(uint64_t sender, uint64_t inviter);
-    inline void         activeInvite(uint64_t sender);                           //激活邀请关系
+    inline void         activateInvite(uint64_t sender);                           //激活邀请关系
     uint64_t            createVote(uint64_t sender,std::string superstar, uint64_t voteCount);
     bool                isSuperStar(uint64_t sender);
     bool                addSuperStar(uint64_t sender,std::string memo);

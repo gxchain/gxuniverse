@@ -131,7 +131,7 @@ void starplan::uptobig()
     graphene_assert(addBigPlanet(sender_id), MSG_ALREADY_BIG_PLANET);
 
     // 6、激活邀请关系
-    activeInvite(sender_id);
+    activateInvite(sender_id);
 
     // 7、当前轮进度+1
     progress(sender_id);
@@ -177,7 +177,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
 
     // 7、保存邀请关系，激活邀请关系
     invite(sender_id, inviter_id);
-    activeInvite(sender_id);
+    activateInvite(sender_id);
 
     // 8、当前轮进度+1
     progress(sender_id);
@@ -453,7 +453,7 @@ void starplan::invite(uint64_t sender, uint64_t inviter)
     }
 }
 
-void starplan::activeInvite(uint64_t sender)
+void starplan::activateInvite(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
