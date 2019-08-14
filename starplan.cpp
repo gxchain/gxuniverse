@@ -124,7 +124,7 @@ void starplan::uptobig()
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(isSmallPlanet(sender_id), MSG_ALREADY_SMALL_PLANET);
+    graphene_assert(isSmallPlanet(sender_id), MSG_NOT_SMALL_PLANET);
 
     //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
     // 5、存到bigPlanet表
