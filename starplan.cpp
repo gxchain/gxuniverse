@@ -95,7 +95,7 @@ void starplan::selfactivate(std::string superstar)
 
     uint64_t vote_id = createVote(sender_id, superstar, Z);
 
-    addStaking(sender_id, Z, super_id, STAKE_TYPE_SELF_ACTIVATE, vote_id);
+    addStaking(sender_id, Z, super_id, STAKING_TYPE_SELF_ACTIVATE, vote_id);
 
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();//TODO delete dup code
     auto sup_itor = sup_idx.find(super_id);
@@ -173,7 +173,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     graphene_assert(addSuperStar(sender_id,memo), MSG_ALREADY_SUPER_STAR);
 
     // 6、创建抵押项
-    addStaking(sender_id, amount, sender_id, STAKE_TYPE_TO_SUPER);
+    addStaking(sender_id, amount, sender_id, STAKING_TYPE_TO_SUPER);
 
     // 7、保存邀请关系，激活邀请关系
     invite(sender_id, inviter_id);
@@ -253,7 +253,7 @@ void starplan::claim(std::string account)
             // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
             if(itor->staking_type == STAKE_TYPE_VOTE){
                 cancelVote(itor->vote_index,itor->staking_to,itor->amount);
-            }else if(itor->staking_type == STAKE_TYPE_TO_SUPER){
+            }else if(itor->staking_type == STAKING_TYPE_TO_SUPER){
                 cancelSuperStake(itor->staking_to);
             }else{
                 graphene_assert(false,MSG_UNKNOWN_CLAIM_REASON);
