@@ -120,7 +120,7 @@ void starplan::uptobig()
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_REQUIRED);
+    uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_AMOUNT);
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
