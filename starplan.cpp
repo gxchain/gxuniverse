@@ -529,7 +529,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(activePlanetAccountId);
     if (act_itor != act_idx.end()) {
-        act_idx.modify(act_itor, activePlanetAccountId, [&](auto &obj) {
+        act_idx.modify(act_itor, subAccountId, [&](auto &obj) {
             obj.invite_list.push_back(subAccountId);
             if(obj.invite_list.size() == 5) {
                 obj.weight += WEIGHT;
@@ -537,7 +537,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
             }
         });
     } else {
-        tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
+        tbactiveplans.emplace(subAccountId, [&](auto &obj) {                                      //创建活力星
             obj.index = tbactiveplans.available_primary_key();
             obj.id = activePlanetAccountId;
             obj.invite_list.push_back(subAccountId);
