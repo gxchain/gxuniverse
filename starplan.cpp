@@ -84,10 +84,10 @@ void starplan::selfactivate(std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = assetEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVE_AMOUNT);
+    uint64_t amount = assetEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVATE_AMOUNT);
 
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_ACTIVE_AUTH_ERR);
+    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_ACTIVATE_AUTH_ERR);
 
     auto super_id = superStarCheck(superstar);
 
@@ -95,9 +95,9 @@ void starplan::selfactivate(std::string superstar)
 
     uint64_t vote_id = createVote(sender_id, superstar, Z);
 
-    addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_id);
+    addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_ACTIVATE, vote_id);
 
-    distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVE);
+    distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVATE);
 
     progress(sender_id);
 
