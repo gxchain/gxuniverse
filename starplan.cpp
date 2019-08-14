@@ -10,7 +10,7 @@ void starplan::init()
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 2、校验充值的资产是否为INIT_POOL的大小
-    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_INVALID_INIT_REQUIRED);//TODO update errMsg
+    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_INVALID_INIT_AMOUNT);
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
