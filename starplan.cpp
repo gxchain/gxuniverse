@@ -65,7 +65,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     uint64_t vote_id = createVote(sender_id, superstar, amount);
 
     // 8、添加一个新的抵押金额
-    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE,vote_id);
+    addStaking(sender_id,amount,super_id,STAKE_TYPE_VOTE,vote_id);
 
     // 9、存到smallPlanet表(不允许重复创建)
     if(canUpdateSmall(sender_id))
@@ -95,7 +95,7 @@ void starplan::selfactivate(std::string superstar)
 
     uint64_t vote_id = createVote(sender_id, superstar, Z);
 
-    addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_ACTIVATE, vote_id);
+    addStaking(sender_id, Z, super_id, STAKE_TYPE_SELF_ACTIVATE, vote_id);
 
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();//TODO delete dup code
     auto sup_itor = sup_idx.find(super_id);
@@ -173,7 +173,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     graphene_assert(addSuperStar(sender_id,memo), MSG_ALREADY_SUPER_STAR);
 
     // 6、创建抵押项
-    addStake(sender_id, amount, sender_id, STAKE_TYPE_TO_SUPER);
+    addStaking(sender_id, amount, sender_id, STAKE_TYPE_TO_SUPER);
 
     // 7、保存邀请关系，激活邀请关系
     invite(sender_id, inviter_id);
@@ -251,9 +251,9 @@ void starplan::claim(std::string account)
                 obj.claim_time       =   get_head_block_time();
             });
             // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
-            if(itor->stake_type == STAKE_TYPE_VOTE){
+            if(itor->staking_type == STAKE_TYPE_VOTE){
                 cancelVote(itor->vote_index,itor->staking_to,itor->amount);
-            }else if(itor->stake_type == STAKE_TYPE_TO_SUPER){
+            }else if(itor->staking_type == STAKE_TYPE_TO_SUPER){
                 cancelSuperStake(itor->staking_to);
             }else{
                 graphene_assert(false,MSG_UNKNOWN_CLAIM_REASON);
@@ -492,15 +492,15 @@ uint64_t starplan::createVote(uint64_t sender, std::string superstar, uint64_t v
 
     return vote_id;
 }
-void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t stakeType,uint64_t index)
+void starplan::addStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t stakingType, uint64_t index)
 {
     tbstakes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbstakes.available_primary_key();
         obj.account                 = sender;
         obj.amount                  = amount;
-        obj.end_time                = get_head_block_time() + STAKING_DELAY_TIME;
+        obj.end_time                = get_head_block_time() + STAKING_DURATION_TIME;
         obj.staking_to              = to;
-        obj.stake_type              = stakeType;
+        obj.staking_type            = stakingType;
         obj.claimed                 = false;
         obj.claim_time              = 0;
         obj.vote_index              = index;

@@ -26,7 +26,7 @@ const uint64_t      Z                    = 11 * PRECISION;           //自激活
 const uint64_t      DECAY_TIME           = 4 * 60;                   //衰减时间阈值，单位秒（4*3600s）
 const uint64_t      DECAY_DURATION       = 1 * 60;                   //衰减时间间隔，单位秒（1*3600s）
 const uint64_t      INIT_POOL            = 200 * PRECISION;          //初始化充值200GXC
-const uint64_t      STAKING_DELAY_TIME   = 1800;                     //抵押30分钟后解锁
+const uint64_t      STAKING_DURATION_TIME= 1800;                     //抵押30分钟后解锁
 const uint64_t      DELAY_TIME           = 2 * 3600;                 //最后一个大行星的延迟时间（2小时）
 
 //////////////////////// for release ////////////////////////
