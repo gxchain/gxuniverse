@@ -227,7 +227,7 @@ void starplan::endround()
     });
 
     // 5、更新活力星权重
-    updateActivePlanets();
+    decayActivePlanetWeight();
 
     // 6、开启新的一轮
     createNewRound();
@@ -526,7 +526,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
         obj.invite_pool_amount = obj.invite_pool_amount + Z1;
     });
 
-    tbrewards.emplace(get_trx_sender(), [&](auto &obj)
+    tbrewards.emplace(invitee, [&](auto &obj)
     {
         obj.index = tbrewards.available_primary_key();
         obj.round = currentRound();
@@ -603,7 +603,7 @@ void starplan::calcCurrentRoundPoolAmount()
         obj.pool_amount = pool_amount;
     });
 }
-void starplan::updateActivePlanets()
+void starplan::decayActivePlanetWeight()
 {
     // 更新活力星的权重
     auto act_itor = tbactiveplans.begin();
