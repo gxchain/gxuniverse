@@ -69,6 +69,6 @@ const char* const reward_reasons[7] = {
         "RWD_TYPE_SUPER",
         "RWD_TYPE_TIMEOUT",
         "RWD_TYPE_INVITE",
-        "RWD_TYPE_SELF_UPGRADE"
+        "RWD_TYPE_SELF_ACTIVE"
 };
 

@@ -99,7 +99,7 @@ void starplan::selfactivate(std::string superstar)
 
     addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_index);
 
-    distributeInviteRewards(sender_id);
+    distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVE);
 
     progress(sender_id);
 
@@ -133,7 +133,7 @@ void starplan::uptobig()
     progress(sender_id);
 
     // 7、将2个GXC转移到奖池，1个GXC发送给邀请人
-    distributeInviteRewards(getInviter(sender_id));
+    distributeInviteRewards(sender_id, getInviter(sender_id), RWD_TYPE_INVITE);
 
     // 8、创建/更新活力星
     auto invitee_idx = tbinvites.get_index<N(byinvitee)>();
@@ -503,11 +503,11 @@ uint64_t starplan::getInviter(uint64_t invitee)
     return invite_itor->inviter;
 }
 
-void starplan::distributeInviteRewards(uint64_t accountId)
+void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
 {
-    inline_transfer(_self, accountId, CORE_ASSET_ID, Z2, reward_reasons[RWD_TYPE_SELF_ACTIVE],strlen(reward_reasons[RWD_TYPE_SELF_ACTIVE ]));
+    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, reward_reasons[rewardType],strlen(reward_reasons[rewardType ]));
 
-    tbrounds.modify(lastRound(), accountId, [&](auto &obj)
+    tbrounds.modify(lastRound(), invitee, [&](auto &obj)
     {
         obj.random_pool_amount = obj.random_pool_amount + Z3;
         obj.invite_pool_amount = obj.invite_pool_amount + Z1;
@@ -517,10 +517,10 @@ void starplan::distributeInviteRewards(uint64_t accountId)
     {
         obj.index = tbrewards.available_primary_key();
         obj.round = currentRound();
-        obj.from = accountId;
-        obj.to = accountId;
+        obj.from = invitee;
+        obj.to = rewardAccountId;
         obj.amount = Z2;
-        obj.type = RWD_TYPE_SELF_ACTIVE;
+        obj.type = rewardType;
     });
 }
 

@@ -77,7 +77,7 @@ class starplan : public contract
     bool                hasInvited(uint64_t sender);
     void                addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     inline uint64_t     getInviter(uint64_t invitee);
-    void                distributeInviteRewards(uint64_t accountId);
+    void                distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);
     void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
     void                calcCurrentRoundPoolAmount();
