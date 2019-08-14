@@ -188,6 +188,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
 void starplan::endround()
 {
     baseCheck();
+    roundFinishCheck();
 
     // 2、验证调用者账户是否为admin账户
     if(lastRound().current_round_invites < ROUND_SIZE){
@@ -195,8 +196,6 @@ void starplan::endround()
         graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
     }
 
-    // 3、验证当前轮是否可以结束
-    graphene_assert(!isRoundFinish(),MSG_CHECK_ROUND_ENDED);
     // 4、计算奖池
     calcCurrentRoundPoolAmount();
 
@@ -227,7 +226,7 @@ void starplan::endround()
     });
 
     // 5、更新活力星权重
-    updateActivePlanets();
+    decayActivePlanetWeight();
 
     // 6、开启新的一轮
     createNewRound();
@@ -526,7 +525,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
         obj.invite_pool_amount = obj.invite_pool_amount + Z1;
     });
 
-    tbrewards.emplace(get_trx_sender(), [&](auto &obj)
+    tbrewards.emplace(invitee, [&](auto &obj)
     {
         obj.index = tbrewards.available_primary_key();
         obj.round = currentRound();
@@ -603,7 +602,7 @@ void starplan::calcCurrentRoundPoolAmount()
         obj.pool_amount = pool_amount;
     });
 }
-void starplan::updateActivePlanets()
+void starplan::decayActivePlanetWeight()
 {
     // 更新活力星的权重
     auto act_itor = tbactiveplans.begin();

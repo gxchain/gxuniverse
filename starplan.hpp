@@ -81,7 +81,7 @@ class starplan : public contract
     void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
     void                calcCurrentRoundPoolAmount();
-    void                updateActivePlanets();
+    void                decayActivePlanetWeight();
 
     void                getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
     uint64_t            getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
