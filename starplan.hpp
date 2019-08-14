@@ -53,15 +53,16 @@ class starplan : public contract
     ACTION              endround();
     ACTION              claim(std::string account);
     ACTION              upgrade(uint64_t flag);
-    ACTION              updatememo(std::string memo);
+    ACTION              updatememo(const std::string &memo);
 
   private:
 
     void                invite(uint64_t sender, uint64_t inviter);
-    inline void         activateInvite(uint64_t sender);                           //激活邀请关系
+    inline void         activateInvite(uint64_t sender);
     uint64_t            createVote(uint64_t sender,std::string superstar, uint64_t voteCount);
+    inline void         addVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
     bool                isSuperStar(uint64_t sender);
-    bool                addSuperStar(uint64_t sender,std::string memo);
+    bool                addSuperStar(uint64_t sender, const std::string &memo);
     bool                isSmallPlanet(uint64_t sender);
     bool                addSmallPlanet(uint64_t sender);
     bool                isBigPlanet(uint64_t sender);
@@ -76,6 +77,7 @@ class starplan : public contract
     bool                hasInvited(uint64_t sender);
     void                addStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     inline uint64_t     getInviter(uint64_t invitee);
+    inline void         buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason);
     void                distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);
     void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
@@ -133,6 +135,7 @@ class starplan : public contract
         uint64_t round;                     // 索引
         uint64_t current_round_invites;     // 当前轮完成邀请数
         uint64_t pool_amount;               // 当前轮奖池资产数
+        uint64_t actual_rewards;            // actual rewards
         uint64_t random_pool_amount;        // 当前随机池资产数
         uint64_t invite_pool_amount;        // 当前邀请奖励池资产数
         uint64_t start_time;                // 当前轮的启动时间
@@ -140,7 +143,7 @@ class starplan : public contract
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(pool_amount)(random_pool_amount)(invite_pool_amount)(start_time)(end_time))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(pool_amount)(actual_rewards)(random_pool_amount)(invite_pool_amount)(start_time)(end_time))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;

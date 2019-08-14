@@ -22,22 +22,22 @@ void starplan::init()
 
     //////////////////////////////////////// 校验通过后，初始化资金池 //////////////////////////////////////////
     // 5、初始化总资金池
-    tbglobals.emplace(sender_id,[&](auto &obj) {
-            obj.index           = 0;
-            obj.pool_amount     = amount;
-            obj.current_round   = 0;
-            obj.is_upgrade      = 0;
-        });
+	tbglobals.emplace(sender_id, [&](auto &obj) {
+		obj.index           = 0;
+		obj.pool_amount     = amount;
+		obj.current_round   = 0;
+		obj.is_upgrade      = 0;
+	});
     // 6、初始化第一轮资金池，并启动第一轮
-    tbrounds.emplace(sender_id,[&](auto &obj) {
-            obj.round                   = tbrounds.available_primary_key();
-            obj.current_round_invites   = 0;
-            obj.pool_amount             = 0;
-            obj.random_pool_amount      = 0;
-            obj.invite_pool_amount      = 0;
-            obj.start_time              = get_head_block_time();;
-            obj.end_time                = 0;
-        });
+	tbrounds.emplace(sender_id, [&](auto &obj) {
+		obj.round                   = tbrounds.available_primary_key();
+		obj.current_round_invites   = 0;
+		obj.pool_amount             = 0;
+		obj.random_pool_amount      = 0;
+		obj.invite_pool_amount      = 0;
+		obj.start_time              = get_head_block_time();;
+		obj.end_time                = 0;
+	});
 }
 
 void starplan::vote(std::string inviter,std::string superstar)
@@ -47,8 +47,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    // 2、判断充值是否 >= 0.1GXC
-    uint64_t amount = assetLargerCheck(PRECISION / 10, MSG_INVALID_VOTE_AMOUNT);
+    uint64_t amount = assetLargerCheck(MIN_VOTE_AMOUNT, MSG_INVALID_VOTE_AMOUNT);
 
     // 3、验证inviter
     uint64_t sender_id = get_trx_origin();
@@ -72,11 +71,7 @@ void starplan::vote(std::string inviter,std::string superstar)
         addSmallPlanet(sender_id);
 
     // 10、修改超级星的得票数
-    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
-    auto sup_itor = sup_idx.find(super_id);
-    sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {
-        obj.vote_num = obj.vote_num + amount;
-    });
+    addVote(super_id, amount, sender_id);
 }
 
 void starplan::selfactivate(std::string superstar)
@@ -97,11 +92,7 @@ void starplan::selfactivate(std::string superstar)
 
     addStaking(sender_id, Z, super_id, STAKING_TYPE_SELF_ACTIVATE, vote_id);
 
-    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();//TODO delete dup code
-    auto sup_itor = sup_idx.find(super_id);
-    sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {
-        obj.vote_num = obj.vote_num + Z;
-    });
+    addVote(super_id, Z, sender_id);
 
     distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVATE);
 
@@ -185,18 +176,17 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetForSuper(sender_id);
 }
+
 void starplan::endround()
 {
     baseCheck();
     roundFinishCheck();
 
-    // 2、验证调用者账户是否为admin账户
-    if(lastRound().current_round_invites < ROUND_SIZE){
-        uint64_t sender_id = get_trx_origin();
+    uint64_t sender_id = get_trx_origin();
+    if (lastRound().current_round_invites < ROUND_SIZE) {
         graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
     }
 
-    // 4、计算奖池
     calcCurrentRoundPoolAmount();
 
     uint64_t randomBudget = 0;
@@ -207,23 +197,22 @@ void starplan::endround()
 
     uint64_t actualReward = 0;
     vector<reward> rewardList;
-
     actualReward += calcRandomReward(rewardList, randomBudget);
     actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
     actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
     actualReward += calcSuperStarReward(rewardList, superStarBudget);
 
-    if (baseSecureCheck(rewardList))
-    {
+    if (baseSecureCheck(rewardList)) {
         doReward(rewardList);
     }
 
-    //TODO update tbround.actual_amount;
     // 6、修改总的资金池
     auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor,sender,[&](auto &obj){
-        obj.pool_amount = obj.pool_amount - actualReward;
+    tbglobals.modify(g_itor, sender_id, [&](auto &obj) {
+        obj.pool_amount -= actualReward;
     });
+
+    lastRound().actual_rewards = actualReward;
 
     // 5、更新活力星权重
     decayActivePlanetWeight();
@@ -236,7 +225,7 @@ void starplan::claim(std::string account)
 {
     baseCheck();
 
-    const std::string unstake_withdraw = LOG_CLAIM;                        //抵押提现
+    const std::string unstake_withdraw = LOG_CLAIM;
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
     auto sta_idx = tbstakes.get_index<N(byaccid)>();
     auto itor = sta_idx.find(acc_id);
@@ -277,22 +266,25 @@ void starplan::upgrade(uint64_t flag)
 
     // 3、修改global表
     auto itor = tbglobals.find(0);
-    tbglobals.modify(itor,sender_id,[&](auto &obj) {
-        obj.is_upgrade          =   flag;
+    tbglobals.modify(itor, sender_id, [&](auto &obj) {
+        obj.is_upgrade = flag;
     });
 }
-void starplan::updatememo(std::string memo)
+
+void starplan::updatememo(const std::string &memo)
 {
+    graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
     baseCheck();
     roundFinishCheck();
+
     // 1、判断账户是否为超级星
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isSuperStar(sender_id), MSG_CHECK_SUPER_STAR_EXIST);
     // 2、更新账户memo
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(sender_id);
-    sup_idx.modify(sup_itor,sender_id,[&](auto &obj) {                 //创建超级星
-        obj.memo                    = memo;
+    sup_idx.modify(sup_itor, sender_id, [&](auto &obj) {
+        obj.memo = memo;
     });
 }
 
@@ -303,7 +295,9 @@ bool starplan::isInit()
     auto itor = tbglobals.find(0);
     // 2 校验当前轮资金池是否已经初始化
     auto itor2 = tbrounds.find(0);
-    if(itor != tbglobals.end() && itor2 != tbrounds.end()){ retValue = true;}
+    if (itor != tbglobals.end() && itor2 != tbrounds.end()) {
+        retValue = true;
+    }
     return retValue;
 }
 
@@ -326,10 +320,11 @@ bool starplan::isSuperStar(uint64_t sender)
     return retValue;
 }
 
-bool starplan::addSuperStar(uint64_t sender,std::string memo)
+bool starplan::addSuperStar(uint64_t sender, const std::string &memo)//TODO memo should be lawful
 {
+    graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
     if(!isBigPlanet(sender)){
-        tbsuperstars.emplace(sender,[&](auto &obj) {                 //创建超级星
+        tbsuperstars.emplace(sender,[&](auto &obj) {
             obj.index                   = tbsuperstars.available_primary_key();
             obj.id                      = sender;
             obj.create_time             = get_head_block_time();
@@ -354,7 +349,7 @@ bool starplan::isSmallPlanet(uint64_t sender)
 
 bool starplan::addSmallPlanet(uint64_t sender)
 {
-    if(!isSmallPlanet(sender)){                                                  //创建小行星
+    if(!isSmallPlanet(sender)){
         tbsmallplans.emplace(sender,[&](auto &obj){
             obj.index                   = tbsmallplans.available_primary_key();
             obj.id                      = sender;
@@ -371,19 +366,21 @@ bool starplan::isBigPlanet(uint64_t sender)
     bool retValue = false;
     auto big_idx = tbbigplanets.get_index<N(byaccid)>();
     auto big_itor = big_idx.find(sender);
-    if(big_itor != big_idx.end()) { retValue = true; }
+    if (big_itor != big_idx.end()) {
+        retValue = true;
+    }
     return retValue;
 }
 
 bool starplan::addBigPlanet(uint64_t sender)
 {
-    if(!isBigPlanet(sender)){
-        tbbigplanets.emplace(sender,[&](auto &obj){                            //创建一个大行星
-                obj.index                   = tbbigplanets.available_primary_key();
-                obj.id                      = sender;
-                obj.create_time             = get_head_block_time();
-                obj.create_round            = currentRound();
-            });
+    if (!isBigPlanet(sender)) {
+        tbbigplanets.emplace(sender, [&](auto &obj) {
+            obj.index           = tbbigplanets.available_primary_key();
+            obj.id              = sender;
+            obj.create_time     = get_head_block_time();
+            obj.create_round    = currentRound();
+        });
         return true;
     }
     return false;
@@ -394,22 +391,26 @@ bool starplan::hasInvited(uint64_t sender)
     bool retValue = false;
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
-    if(invite_itor != invite_idx.end()) { retValue = true; }
+    if (invite_itor != invite_idx.end()) {
+        retValue = true;
+    }
     return retValue;
 }
 
 bool starplan::isInviteTimeout(uint64_t &lastBigPlanet)
 {
     auto big_itor = tbbigplanets.end();
-    if(big_itor == tbbigplanets.begin()){
+    if (big_itor == tbbigplanets.begin()) {
         return false;
     }
     big_itor--;
 
-    if(big_itor->create_round !=currentRound()){ return false;}
+    if (big_itor->create_round != currentRound()) {
+        return false;
+    }
 
     graphene_assert(get_head_block_time() > big_itor->create_time, MSG_ILLIGAL_BIG_PLANET_CREATE_TIME);
-    if((get_head_block_time() - big_itor->create_time) > DELAY_TIME) {
+    if ((get_head_block_time() - big_itor->create_time) > DELAY_TIME) {
         lastBigPlanet = big_itor->id;
         return true;
     }
@@ -439,14 +440,14 @@ uint64_t starplan::currentRound()
 
 void starplan::invite(uint64_t sender, uint64_t inviter)
 {
-    if(!hasInvited(sender)){                                 //不存在邀请关系则创建，
-        tbinvites.emplace(sender,[&](auto &obj) {
-            obj.index                   = tbinvites.available_primary_key();
-            obj.invitee                 = sender;
-            obj.inviter                 = inviter;
-            obj.enabled                 = false;
-            obj.create_round            = currentRound();                      //升级为大行星或者超级星时，重新设置
-            obj.create_time             = get_head_block_time();
+    if (!hasInvited(sender)) {
+        tbinvites.emplace(sender, [&](auto &obj) {
+            obj.index           = tbinvites.available_primary_key();
+            obj.invitee         = sender;
+            obj.inviter         = inviter;
+            obj.enabled         = false;
+            obj.create_round    = currentRound();
+            obj.create_time     = get_head_block_time();
         });
     }
 }
@@ -455,8 +456,8 @@ void starplan::activateInvite(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
-    invite_idx.modify(invite_itor,sender,[&](auto &obj){
-        obj.enabled                 = true;
+    invite_idx.modify(invite_itor, sender, [&](auto &obj) {
+        obj.enabled = true;
     });
 }
 
@@ -484,6 +485,16 @@ uint64_t starplan::createVote(uint64_t sender, std::string superstar, uint64_t v
 
     return vote_id;
 }
+
+void starplan::addVote(uint64_t account, uint64_t voteCount, uint64_t feePayer)
+{
+    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
+    auto sup_itor = sup_idx.find(account);
+    sup_idx.modify(sup_itor, feePayer, [&](auto &obj) {
+        obj.vote_num += voteCount;
+    });
+}
+
 void starplan::addStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t stakingType, uint64_t index)
 {
     tbstakes.emplace(sender,[&](auto &obj) {
@@ -507,10 +518,28 @@ uint64_t starplan::getInviter(uint64_t invitee)
     return invite_itor->inviter;
 }
 
+void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason)
+{
+    char inviteeName[64] = { 0 };
+    char inviterName[64] = { 0 };
+
+
+    if(RWD_TYPE_SELF_ACTIVATE == rewardType) {
+        graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
+    } else if (RWD_TYPE_INVITE == rewardType) {
+        graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
+        graphene_assert(0 == get_account_name_by_id(inviterName, 63, inviter), MSG_GET_INVITER_NAME_FAIL);
+    } else {
+    }
+
+    rewardReason = std::string(inviterName) + "get reward for invite " + std::string(inviteeName);
+}
+
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
 {
-    //TODO reward_reasons;
-    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, reward_reasons[rewardType], strlen(reward_reasons[rewardType]));
+    std::string rewardReason;
+    buildRewardReason(invitee, rewardAccountId, rewardType, rewardReason);
+    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, rewardReason.c_str(), rewardReason.length()));
 
     tbrounds.modify(lastRound(), invitee, [&](auto &obj)
     {
