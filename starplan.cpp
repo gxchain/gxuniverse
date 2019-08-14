@@ -10,7 +10,7 @@ void starplan::init()
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 2、校验充值的资产是否为INIT_POOL的大小
-    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_INVALID_INIT_AMOUNT);
+    uint64_t amount = assetEqualCheck(INIT_POOL, MSG_INVALID_INIT_AMOUNT);
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -48,25 +48,24 @@ void starplan::vote(std::string inviter,std::string superstar)
     roundFinishCheck();
 
     // 2、判断充值是否 >= 0.1GXC
-    uint64_t amount = amountLargerCheck(PRECISION / 10, MSG_INVALID_VOTE_AMOUNT);
+    uint64_t amount = assetLargerCheck(PRECISION / 10, MSG_INVALID_VOTE_AMOUNT);
 
     // 3、验证inviter
     uint64_t sender_id = get_trx_origin();
-    auto inviter_id = inviterCheck(inviter, sender_id);
+    uint64_t inviter_id = inviterCheck(inviter, sender_id);
 
     // 5、验证超级星账户
-    auto super_id = superStarCheck(superstar);
+    uint64_t super_id = superStarCheck(superstar);
     //////////////////////////////////////// 校验通过后，创建一个小行星 //////////////////////////////////////////
 
     // 6、保存邀请关系(不允许重复邀请)
     invite(sender_id, inviter_id);
 
     // 7、vote(允许重复投票)
-    uint64_t vote_index = 0;
-    createVote(sender_id,superstar,vote_index);
+    uint64_t vote_id = createVote(sender_id, superstar, amount);
 
     // 8、添加一个新的抵押金额
-    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE,vote_index);
+    addStake(sender_id,amount,super_id,STAKE_TYPE_VOTE,vote_id);
 
     // 9、存到smallPlanet表(不允许重复创建)
     if(canUpdateSmall(sender_id))
@@ -85,7 +84,7 @@ void starplan::selfactivate(std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = amountEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVE_AMOUNT);
+    uint64_t amount = assetEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVE_AMOUNT);
 
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_ACTIVE_AUTH_ERR);
@@ -94,10 +93,9 @@ void starplan::selfactivate(std::string superstar)
 
     updateActivePlanet(sender_id,sender_id);
 
-    uint64_t vote_index = 0;
-    createVote(sender_id, superstar, vote_index);
+    uint64_t vote_id = createVote(sender_id, superstar, amount);
 
-    addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_index);
+    addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_id);
 
     distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVE);
 
@@ -116,7 +114,7 @@ void starplan::uptobig()
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_REQUIRED);//FIXME wrong errMsg
+    uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_REQUIRED);//FIXME wrong errMsg
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -156,7 +154,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(X, MSG_INVALID_SUPER_REQUIRED);
+    uint64_t amount = assetEqualCheck(X, MSG_INVALID_SUPER_REQUIRED);
 
     uint64_t sender_id = get_trx_origin();
 
@@ -465,20 +463,22 @@ void starplan::progress(uint64_t ramPayer)
     });
 }
 
-void starplan::createVote(uint64_t sender,std::string superstar,uint64_t &index)
+uint64_t starplan::createVote(uint64_t sender, std::string superstar, uint64_t voteCount)
 {
-    uint64_t amount = get_action_asset_amount();
+    uint64_t vote_id;
     uint64_t super_id = get_account_id(superstar.c_str(), superstar.length());
     tbvotes.emplace(sender,[&](auto &obj) {
         obj.index                   = tbvotes.available_primary_key();
-        index                       = obj.index;
         obj.round                   = currentRound();
-        obj.staking_amount          = amount;
+        obj.staking_amount          = voteCount;
         obj.from                    = sender;
         obj.to                      = super_id;
         obj.vote_time               = get_head_block_time();
         obj.disabled                = false;
+        vote_id                     = obj.index;
     });
+
+    return vote_id;
 }
 void starplan::addStake(uint64_t sender,uint64_t amount,uint64_t to,uint64_t stakeType,uint64_t index)
 {
@@ -923,7 +923,7 @@ void starplan::roundFinishCheck()
     graphene_assert(!isRoundFinish(), MSG_CHECK_ROUND_ENDED);
 }
 
-uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
+uint64_t starplan::assetEqualCheck(uint64_t expectedAmount, const char* errMsg)
 {
     graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
     graphene_assert(get_action_asset_amount() == expectedAmount, errMsg);
@@ -931,7 +931,7 @@ uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
     return expectedAmount;
 }
 
-uint64_t starplan::amountLargerCheck(uint64_t expectedAmount, const char* errMsg)
+uint64_t starplan::assetLargerCheck(uint64_t expectedAmount, const char* errMsg)
 {
     uint64_t actualAmount = get_action_asset_amount();
     graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
@@ -956,7 +956,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
 {
     graphene_assert(isAccount(superStarAccount), MSG_CHECK_ACCOUNT_EXIST);
-    auto super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
-    graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);
+    int64_t super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
+    graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);//TODO FIXME check super_id type
     return super_id;
 }

@@ -59,7 +59,7 @@ class starplan : public contract
 
     void                invite(uint64_t sender, uint64_t inviter);
     inline void         activeInvite(uint64_t sender);                           //激活邀请关系
-    void                createVote(uint64_t sender,std::string superstar,uint64_t &index);
+    uint64_t            createVote(uint64_t sender,std::string superstar, uint64_t voteCount);
     bool                isSuperStar(uint64_t sender);
     bool                addSuperStar(uint64_t sender,std::string memo);
     bool                isSmallPlanet(uint64_t sender);
@@ -108,8 +108,8 @@ class starplan : public contract
 
     inline void         baseCheck();
     inline void         roundFinishCheck();
-    inline uint64_t     amountEqualCheck(uint64_t expectedAmount, const char* errMsg);
-    inline uint64_t     amountLargerCheck(uint64_t expectedAmount, const char* errMsg);
+    inline uint64_t     assetEqualCheck(uint64_t expectedAmount, const char* errMsg);
+    inline uint64_t     assetLargerCheck(uint64_t expectedAmount, const char* errMsg);
     inline uint64_t     inviterCheck(const std::string &inviter, uint64_t inviteeId);
     inline uint64_t     superStarCheck(const std::string &superStarAccount);
     inline void         progress(uint64_t ramPayer);
