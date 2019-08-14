@@ -188,6 +188,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
 void starplan::endround()
 {
     baseCheck();
+    roundFinishCheck();
 
     // 2、验证调用者账户是否为admin账户
     if(lastRound().current_round_invites < ROUND_SIZE){
@@ -195,8 +196,6 @@ void starplan::endround()
         graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
     }
 
-    // 3、验证当前轮是否可以结束
-    graphene_assert(!isRoundFinish(),MSG_CHECK_ROUND_ENDED);
     // 4、计算奖池
     calcCurrentRoundPoolAmount();
 
