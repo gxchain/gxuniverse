@@ -65,7 +65,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     uint64_t vote_id = createVote(sender_id, superstar, amount);
 
     // 8、添加一个新的抵押金额
-    addStaking(sender_id,amount,super_id,STAKE_TYPE_VOTE,vote_id);
+    addStaking(sender_id,amount,super_id,STAKING_TYPE_VOTE,vote_id);
 
     // 9、存到smallPlanet表(不允许重复创建)
     if(canUpdateSmall(sender_id))
@@ -250,7 +250,7 @@ void starplan::claim(std::string account)
                 obj.claim_time       =   get_head_block_time();
             });
             // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
-            if(itor->staking_type == STAKE_TYPE_VOTE){
+            if(itor->staking_type == STAKING_TYPE_VOTE){
                 cancelVote(itor->vote_index,itor->staking_to,itor->amount);
             }else if(itor->staking_type == STAKING_TYPE_TO_SUPER){
                 cancelSuperStake(itor->staking_to);
