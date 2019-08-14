@@ -10,7 +10,7 @@ void starplan::init()
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 2、校验充值的资产是否为INIT_POOL的大小
-    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
+    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_INVALID_INIT_REQUIRED);//TODO update errMsg
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -48,7 +48,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     roundFinishCheck();
 
     // 2、判断充值是否 >= 0.1GXC
-    uint64_t amount = amountBiggerCheck(PRECISION / 10, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
+    uint64_t amount = amountBiggerCheck(PRECISION / 10, MSG_INVALID_VOTE_REQUIRED);//TODO update errMsg
 
     // 3、验证inviter
     uint64_t sender_id = get_trx_origin();
@@ -116,7 +116,7 @@ void starplan::uptobig()
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVE_AMOUNT);//FIXME wrong errMsg
+    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_REQUIRED);//FIXME wrong errMsg
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -156,7 +156,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(X, MSG_MINIMAL_AMOUNT_REQUIRED);
+    uint64_t amount = amountEqualCheck(X, MSG_INVALID_SUPER_REQUIRED);
 
     uint64_t sender_id = get_trx_origin();
 
