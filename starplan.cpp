@@ -190,7 +190,7 @@ void starplan::endround()
     baseCheck();
 
     // 2、验证调用者账户是否为admin账户
-    if(lastRound().current_round_invites < ROUND_SIZE ){
+    if(lastRound().current_round_invites < ROUND_SIZE){
         uint64_t sender_id = get_trx_origin();
         graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
     }
@@ -219,6 +219,12 @@ void starplan::endround()
         doReward(rewardList);
     }
 
+    //TODO update tbround.actual_amount;
+    // 6、修改总的资金池
+    auto g_itor = tbglobals.find(0);
+    tbglobals.modify(g_itor,sender,[&](auto &obj){
+        obj.pool_amount = obj.pool_amount - actualReward;
+    });
 
     // 5、更新活力星权重
     updateActivePlanets();
@@ -594,12 +600,7 @@ void starplan::calcCurrentRoundPoolAmount()
     // 5、修改当前轮底池 pool_amount
     auto sender = get_trx_sender();
     tbrounds.modify(round, sender, [&](auto &obj){                               //修改奖池金额pool_amount
-        obj.pool_amount      = pool_amount;
-    });
-    // 6、修改总的资金池
-    auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor,sender,[&](auto &obj){
-        obj.pool_amount      = obj.pool_amount - pool_amount;
+        obj.pool_amount = pool_amount;
     });
 }
 void starplan::updateActivePlanets()
@@ -795,13 +796,11 @@ bool starplan::baseSecureCheck(vector<reward> &rewardList)
 
     uint64_t totalReward = 0;
     for(const auto &reward : rewardList) {
-        graphene_assert(reward.to > 0, MSG_INVALID_REWARD_ACCOUNT);
         totalReward += reward.amount;
-        graphene_assert(reward.amount > 0, MSG_INVALID_REWARD_AMOUNT);
-        graphene_assert(reward.amount < MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
+        graphene_assert(reward.amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
     }
 
-    graphene_assert(totalReward < MAX_ROUND_REWARD, MSG_ROUND_REWARD_TOO_MUCH);
+    graphene_assert(totalReward <= MAX_ROUND_REWARD, MSG_ROUND_REWARD_TOO_MUCH);
 
     //TODO add other secure check
     return true;
@@ -811,6 +810,8 @@ void starplan::doReward(vector<reward> &rewardList)
 {
     for (const auto &reward : rewardList)
     {
+        if(reward.amount == 0) continue;
+
         inline_transfer(
                 _self,
                 reward.to,
