@@ -10,7 +10,7 @@ void starplan::init()
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 2、校验充值的资产是否为INIT_POOL的大小
-    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
+    uint64_t amount = amountEqualCheck(INIT_POOL, MSG_INVALID_INIT_REQUIRED);//TODO update errMsg
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -48,7 +48,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     roundFinishCheck();
 
     // 2、判断充值是否 >= 0.1GXC
-    uint64_t amount = amountBiggerCheck(PRECISION / 10, MSG_MINIMAL_AMOUNT_REQUIRED);//TODO update errMsg
+    uint64_t amount = amountBiggerCheck(PRECISION / 10, MSG_INVALID_VOTE_REQUIRED);//TODO update errMsg
 
     // 3、验证inviter
     uint64_t sender_id = get_trx_origin();
@@ -99,7 +99,7 @@ void starplan::selfactivate(std::string superstar)
 
     addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_index);
 
-    distributeInviteRewards(sender_id);
+    distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVE);
 
     progress(sender_id);
 
@@ -116,7 +116,7 @@ void starplan::uptobig()
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVE_AMOUNT);//FIXME wrong errMsg
+    uint64_t amount = amountEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_REQUIRED);//FIXME wrong errMsg
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -133,7 +133,7 @@ void starplan::uptobig()
     progress(sender_id);
 
     // 7、将2个GXC转移到奖池，1个GXC发送给邀请人
-    distributeInviteRewards(getInviter(sender_id));
+    distributeInviteRewards(sender_id, getInviter(sender_id), RWD_TYPE_INVITE);
 
     // 8、创建/更新活力星
     auto invitee_idx = tbinvites.get_index<N(byinvitee)>();
@@ -156,7 +156,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = amountEqualCheck(X, MSG_MINIMAL_AMOUNT_REQUIRED);
+    uint64_t amount = amountEqualCheck(X, MSG_INVALID_SUPER_REQUIRED);
 
     uint64_t sender_id = get_trx_origin();
 
@@ -503,11 +503,11 @@ uint64_t starplan::getInviter(uint64_t invitee)
     return invite_itor->inviter;
 }
 
-void starplan::distributeInviteRewards(uint64_t accountId)
+void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
 {
-    inline_transfer(_self, accountId, CORE_ASSET_ID, Z2, reward_reasons[RWD_TYPE_SELF_ACTIVE],strlen(reward_reasons[RWD_TYPE_SELF_ACTIVE ]));
+    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, reward_reasons[rewardType],strlen(reward_reasons[rewardType ]));
 
-    tbrounds.modify(lastRound(), accountId, [&](auto &obj)
+    tbrounds.modify(lastRound(), invitee, [&](auto &obj)
     {
         obj.random_pool_amount = obj.random_pool_amount + Z3;
         obj.invite_pool_amount = obj.invite_pool_amount + Z1;
@@ -517,10 +517,10 @@ void starplan::distributeInviteRewards(uint64_t accountId)
     {
         obj.index = tbrewards.available_primary_key();
         obj.round = currentRound();
-        obj.from = accountId;
-        obj.to = accountId;
+        obj.from = invitee;
+        obj.to = rewardAccountId;
         obj.amount = Z2;
-        obj.type = RWD_TYPE_SELF_ACTIVE;
+        obj.type = rewardType;
     });
 }
 
@@ -529,7 +529,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(activePlanetAccountId);
     if (act_itor != act_idx.end()) {
-        act_idx.modify(act_itor, activePlanetAccountId, [&](auto &obj) {
+        act_idx.modify(act_itor, subAccountId, [&](auto &obj) {
             obj.invite_list.push_back(subAccountId);
             if(obj.invite_list.size() == 5) {
                 obj.weight += WEIGHT;
@@ -537,7 +537,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
             }
         });
     } else {
-        tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
+        tbactiveplans.emplace(subAccountId, [&](auto &obj) {                                      //创建活力星
             obj.index = tbactiveplans.available_primary_key();
             obj.id = activePlanetAccountId;
             obj.invite_list.push_back(subAccountId);
