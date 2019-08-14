@@ -93,7 +93,7 @@ void starplan::selfactivate(std::string superstar)
 
     updateActivePlanet(sender_id,sender_id);
 
-    uint64_t vote_id = createVote(sender_id, superstar, amount);
+    uint64_t vote_id = createVote(sender_id, superstar, Z);
 
     addStake(sender_id, Z, super_id, STAKE_TYPE_SELF_INVITE, vote_id);
 
