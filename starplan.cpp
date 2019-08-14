@@ -146,7 +146,7 @@ void starplan::uptobig()
         updateActivePlanet(invitee_itor->inviter,invitee_itor->invitee);
 
     // 9、当邀请关系满100人，开启新的一轮
-    if(lastRound().current_round_invites >= ROUND_SIZE ){
+    if(lastRound().current_round_invites >= ROUND_SIZE){
         endround();
     }
 }
@@ -160,7 +160,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = assetEqualCheck(X, MSG_INVALID_SUPER_REQUIRED);
+    uint64_t amount = assetEqualCheck(X, MSG_INVALID_SUPER_AMOUNT);
 
     uint64_t sender_id = get_trx_origin();
 
