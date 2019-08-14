@@ -48,7 +48,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     roundFinishCheck();
 
     // 2、判断充值是否 >= 0.1GXC
-    uint64_t amount = amountBiggerCheck(PRECISION / 10, MSG_INVALID_VOTE_REQUIRED);//TODO update errMsg
+    uint64_t amount = amountLargerCheck(PRECISION / 10, MSG_INVALID_VOTE_AMOUNT);
 
     // 3、验证inviter
     uint64_t sender_id = get_trx_origin();
@@ -931,7 +931,7 @@ uint64_t starplan::amountEqualCheck(uint64_t expectedAmount, const char* errMsg)
     return expectedAmount;
 }
 
-uint64_t starplan::amountBiggerCheck(uint64_t expectedAmount, const char* errMsg)
+uint64_t starplan::amountLargerCheck(uint64_t expectedAmount, const char* errMsg)
 {
     uint64_t actualAmount = get_action_asset_amount();
     graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
