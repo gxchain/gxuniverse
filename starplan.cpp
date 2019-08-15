@@ -26,7 +26,7 @@ void starplan::init()
 		obj.index           = 0;
 		obj.pool_amount     = amount;
 		obj.current_round   = 0;
-		obj.is_upgrade      = 0;
+		obj.upgrading       = 0;
 	});
     // 6、初始化第一轮资金池，并启动第一轮
 	tbrounds.emplace(sender_id, [&](auto &obj) {
@@ -268,7 +268,7 @@ void starplan::upgrade(uint64_t flag)
     // 3、修改global表
     auto itor = tbglobals.find(0);
     tbglobals.modify(itor, sender_id, [&](auto &obj) {
-        obj.is_upgrade = flag;
+        obj.upgrading = flag;
     });
 }
 
@@ -921,7 +921,7 @@ bool starplan::isUpgrading()
     bool retValue   = false;
     graphene_assert(isInit(), MSG_NOT_INITIALIZED);
     auto itor = tbglobals.find(0);
-    if(itor->is_upgrade > 0){retValue = true;}
+    if(itor->upgrading > 0){retValue = true;}
     return retValue;
 }
 void starplan::cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount)

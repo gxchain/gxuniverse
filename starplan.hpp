@@ -121,11 +121,11 @@ class starplan : public contract
         uint64_t index;
         uint64_t pool_amount;               // 总资金池剩余资产
         uint64_t current_round;             // 当前轮数
-        uint64_t is_upgrade;                // 合约升级
+        uint64_t upgrading;                // 合约升级
 
         uint64_t primary_key() const { return index; }
 
-        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(is_upgrade))
+        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(upgrading))
     };
     typedef multi_index<N(tbglobal), tbglobal> tbglobal_index;
     tbglobal_index tbglobals;
