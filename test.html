@@ -12,10 +12,13 @@
 
 <body>
     <div id='app'>
-        <h3>{{accountName}}</h3>
+        <nav>
+            <span>{{accountName}}</span>
+            <button v-if='!accountName' @click="login()">Login</button>
+            <button v-if='accountName' @click="logout()">Logout</button>
+        </nav>
+        <hr>
         <div>
-            <button @click="login()">Login</button>
-            <button @click="logout()">Logout</button>
             <button @click="init()">init</button>
             <button @click="uptosuper()">uptosuper</button>
             <button @click="vote()">vote</button>
@@ -26,11 +29,14 @@
             <button @click="upgrade()">upgrade</button>
             <button @click="updatememo()">updatememo</button>
         </div>
-        <h3>Logs<button @click="logs=[]">Clear</button></h3>
+        
+        <p>Logs<button v-if="logs.length>0" @click="logs=[]">Clear</button></p>
         <div>
-            <p style="font-size:.5rem" v-for="log in logs"><span style="display: inline-block;color:green">{{log.time.toLocaleString()}}:</span>&nbsp;{{log.text}}</p>
+            <p style="font-size:.5rem" v-for="log in logs"><span
+                    style="display: inline-block;color:green">{{log.time.toLocaleString()}}:</span>&nbsp;{{log.text}}
+            </p>
         </div>
-    </div>    
+    </div>
     <script>
         const network = {
             blockchain: 'gxc',
@@ -48,10 +54,10 @@
             el: '#app',
             data: {
                 accountName: '',
-                logs:[]
+                logs: []
             },
-            methods:{
-                output(){
+            methods: {
+                output() {
                     const combined = Array.from(arguments).map(arg => {
                         if (typeof arg === 'object') {
                             return JSON.stringify(arg)
@@ -60,84 +66,84 @@
                         }
                     })
                     console.log(...arguments)
-                    this.logs.push({time:new Date(),text:combined.join('\n--------------\n')})
+                    this.logs.push({ time: new Date(), text: combined.join('\n--------------\n') })
                 },
-                async login () {
+                async login() {
                     // required fields, it will appear at gscatter.identity
                     const identity = await GScatterJS.gscatter.getIdentity({ accounts: [network] })
                     if (identity) {
                         const account = gscatter.identity.accounts.find(x => x.blockchain === 'gxc')
-                        this.accountName=account.name
+                        this.accountName = account.name
                     }
                     this.output(identity)
                 },
-                async logout(){
+                async logout() {
                     try {
                         await GScatterJS.gscatter.forgetIdentity()
-                        this.accountName="";
+                        this.accountName = "";
                     } catch (err) {
                         // no identity found
                         this.output(err)
                     }
                 },
-                init(){
-                    gxc.callContract(contractName, 'init', {}, '100 GXC', true).then(trx=>{
+                init() {
+                    gxc.callContract(contractName, 'init', {}, '100 GXC', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                uptosuper(){
-                    gxc.callContract(contractName, 'uptosuper', {inviter:""}, '20 GXC', true).then(trx=>{
+                uptosuper() {
+                    gxc.callContract(contractName, 'uptosuper', { inviter: "" }, '20 GXC', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                vote(){
-                    gxc.callContract(contractName, 'vote', {inviter:"",superstar:"gxb122"}, '10 GXC', true).then(trx=>{
+                vote() {
+                    gxc.callContract(contractName, 'vote', { inviter: "", superstar: "gxb122" }, '10 GXC', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                uptobig(){
-                    gxc.callContract(contractName, 'uptobig', {}, '3 GXC', true).then(trx=>{
+                uptobig() {
+                    gxc.callContract(contractName, 'uptobig', {}, '3 GXC', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                endround(){
-                    gxc.callContract(contractName, 'endround', {}, '', true).then(trx=>{
+                endround() {
+                    gxc.callContract(contractName, 'endround', {}, '', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                claim(){
-                    gxc.callContract(contractName, 'endround', {}, '', true).then(trx=>{
+                claim() {
+                    gxc.callContract(contractName, 'endround', {}, '', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                upgrade(){
-                    gxc.callContract(contractName, 'upgrade', {flag:true}, '', true).then(trx=>{
+                upgrade() {
+                    gxc.callContract(contractName, 'upgrade', { flag: true }, '', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                updatememo(){
-                    gxc.callContract(contractName, 'updatememo', {memo:`memo:${(new Date()).getTime()}`}, '', true).then(trx=>{
+                updatememo() {
+                    gxc.callContract(contractName, 'updatememo', { memo: `memo:${(new Date()).getTime()}` }, '', true).then(trx => {
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 }
             },
-            mounted(){
+            mounted() {
                 GScatterJS.gscatter.connect('starProgram').then(async connected => {
                     if (!connected) return false
                     gscatter = GScatterJS.gscatter
@@ -148,13 +154,13 @@
                     // if identity exist, means user has authorize the website and already unlock, you could display user info then
                     if (gscatter.identity) {
                         let account = gscatter.identity.accounts.find(x => x.blockchain === 'gxc')
-                        this.accountName=account.name
+                        this.accountName = account.name
                     }
                 })
             }
         })
     </script>
-    
+
 </body>
 
 </html>
