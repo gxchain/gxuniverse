@@ -652,31 +652,31 @@ void starplan::getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets)
 uint64_t starplan::getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets)
 {
     auto act_idx = tbactiveplans.get_index<N(byweight)>();
-    uint64_t total_weight = 0;
+    uint64_t total_weights = 0;
     auto itor = act_idx.upper_bound(0);
     while (itor != act_idx.end() && itor->weight > 0)
     {
-        total_weight += itor->weight;
+        total_weights += itor->weight;
         activePlanets.push_back(ActivePlanet { itor->id, itor->weight });
         itor++;
     }
 
-    return total_weight;
+    return total_weights;
 }
 
 uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
 {
-    uint64_t total_vote = 0;
+    uint64_t total_votes = 0;
 
     for (auto itor = tbsuperstars.begin(); itor != tbsuperstars.end(); itor++)
     {
         if(itor->disabled == false){
-            total_vote += itor->vote_num;
+            total_votes += itor->vote_num;
             superStars.push_back(SuperStar{itor->id, itor->vote_num, itor->vote_num != 0});
         }
     }
 
-    return total_vote;
+    return total_votes;
 }
 
 void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed)
