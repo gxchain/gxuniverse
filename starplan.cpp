@@ -883,7 +883,7 @@ bool starplan::canUpdateSmall(uint64_t sender)
     uint64_t total_vote = 0;
     auto itor = stk_idx.find(sender);
     for(;itor != stk_idx.end();itor++){
-        if(itor->account == sender && itor->claimed == false){
+        if(itor->account == sender && itor->claimed == false && itor->staking_type == STAKING_TYPE_VOTE){
             total_vote += itor->amount;
             if(total_vote>=Y){
                 retValue = true;

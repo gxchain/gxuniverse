@@ -179,7 +179,7 @@ class starplan : public contract
         uint64_t amount;                    // 抵押数量
         uint64_t end_time;                  // 抵押时间
         uint64_t staking_to;                // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
-        uint64_t stake_type;                // 抵押类型
+        uint64_t staking_type;              // 抵押类型
 
         uint64_t claimed;                   // 是否解除抵押
         uint64_t claim_time;                // 解除抵押的时间
@@ -188,7 +188,7 @@ class starplan : public contract
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
 
-        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(stake_type)(claimed)(claim_time)(vote_index))
+        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(staking_type)(claimed)(claim_time)(vote_index))
     };
     typedef multi_index<N(tbstaking), tbstaking,
                         indexed_by<N(byaccid), const_mem_fun<tbstaking, uint64_t, &tbstaking::by_acc_id>>> tbstaking_index;
