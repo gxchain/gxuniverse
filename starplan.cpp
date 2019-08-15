@@ -206,7 +206,7 @@ void starplan::endround()
     actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
     actualReward += calcSuperStarReward(rewardList, superStarBudget);
 
-    if (baseSecureCheck(rewardList)) {
+    if (baseSecureCheck(rewardList, randomBudget)) {
         doReward(rewardList);
     }
 
@@ -827,7 +827,7 @@ uint64_t starplan::calcSuperStarReward(vector<reward> &rewardList, uint64_t rewa
     return totalAmount;
 }
 
-bool starplan::baseSecureCheck(vector<reward> &rewardList)
+bool starplan::baseSecureCheck(vector<reward> &rewardList, uint64_t randomBudget)
 {
     if (rewardList.size() == 0) {
         return false;
@@ -839,7 +839,7 @@ bool starplan::baseSecureCheck(vector<reward> &rewardList)
         graphene_assert(reward.amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
     }
 
-    graphene_assert(totalReward <= MAX_ROUND_REWARD, MSG_ROUND_REWARD_TOO_MUCH);
+    graphene_assert(totalReward <= MAX_ROUND_REWARD + randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
 
     //TODO add other secure check
     return true;

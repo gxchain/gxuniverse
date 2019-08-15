@@ -96,7 +96,7 @@ class starplan : public contract
     inline uint64_t     calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
     inline uint64_t     calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
 
-    bool                baseSecureCheck(vector<reward> &rewardList);
+    bool                baseSecureCheck(vector<reward> &rewardList, uint64_t baseSecureCheck);
     void                doReward(vector<reward> &rewardList);
 
     void                createNewRound();
