@@ -243,7 +243,7 @@ void starplan::claim(std::string account)
             if(itor->staking_type == STAKING_TYPE_VOTE){
                 cancelVote(itor->vote_index,itor->staking_to,itor->amount);
             }else if(itor->staking_type == STAKING_TYPE_TO_SUPER){
-                cancelSuperStake(itor->staking_to);
+                disableSuperStar(itor->staking_to);
             }else{
                 graphene_assert(false,MSG_UNKNOWN_CLAIM_REASON);
             }
