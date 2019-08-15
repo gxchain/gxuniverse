@@ -175,12 +175,16 @@ void starplan::uptosuper(std::string inviter,std::string memo)
 
     // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetForSuper(sender_id);
+
+    if(lastRound().current_round_invites >= ROUND_SIZE){
+        endround();
+    }
 }
 
 void starplan::endround()
 {
     baseCheck();
-    roundFinishCheck();
+    graphene_assert(isRoundFinish(), MSG_ROUND_END);
 
     uint64_t sender_id = get_trx_origin();
     if (lastRound().current_round_invites < ROUND_SIZE) {
@@ -541,7 +545,7 @@ void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t re
     } else if (RWD_TYPE_INVITE == rewardType) {
         graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
         graphene_assert(0 == get_account_name_by_id(inviterName, 63, inviter), MSG_GET_INVITER_NAME_FAIL);
-        rewardReason = std::string(inviterName) + "get reward for invite " + std::string(inviteeName);
+        rewardReason = std::string(inviterName) + "get reward for invitee " + std::string(inviteeName);
     } else {
     }
 }
@@ -963,7 +967,7 @@ void starplan::baseCheck()
 
 void starplan::roundFinishCheck()
 {
-    graphene_assert(!isRoundFinish(), MSG_CHECK_ROUND_ENDED);
+    graphene_assert(!isRoundFinish(), MSG_ROUND_END);
 }
 
 uint64_t starplan::assetEqualCheck(uint64_t expectedAmount, const char* errMsg)
