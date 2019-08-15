@@ -323,7 +323,9 @@ bool starplan::isSuperStar(uint64_t sender)
 bool starplan::addSuperStar(uint64_t sender, const std::string &memo)//TODO memo should be lawful
 {
     graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
-    if(!isSuperStar(sender)){
+    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
+    auto sup_itor = sup_idx.find(sender);
+    if(sup_itor == sup_idx.end()){
         tbsuperstars.emplace(sender,[&](auto &obj) {
             obj.index                   = tbsuperstars.available_primary_key();
             obj.id                      = sender;
@@ -334,6 +336,16 @@ bool starplan::addSuperStar(uint64_t sender, const std::string &memo)//TODO memo
             obj.memo                    = memo;
         });
         return true;
+    }else{
+        if(sup_itor->disabled == true) { 
+            sup_idx.modify(sup_itor,sender,[&](auto &obj) {
+                obj.disabled                = false;
+                obj.memo                    = memo;
+            });
+            return true;
+        }else{
+            return false;
+        }
     }
     return false;
 }
