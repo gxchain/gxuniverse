@@ -188,7 +188,7 @@ PAYABLE init(){
   // globals[0].index = 0;
   // globals[0].poll_amount = 2000000;
   // globals[0].current_round=0;
-  // globals[0].current_round=0;
+  // globals[0].upgrading=false;
 
 }
 ```
