@@ -323,7 +323,7 @@ bool starplan::isSuperStar(uint64_t sender)
 bool starplan::addSuperStar(uint64_t sender, const std::string &memo)//TODO memo should be lawful
 {
     graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
-    if(!isBigPlanet(sender)){
+    if(!isSuperStar(sender)){
         tbsuperstars.emplace(sender,[&](auto &obj) {
             obj.index                   = tbsuperstars.available_primary_key();
             obj.id                      = sender;
