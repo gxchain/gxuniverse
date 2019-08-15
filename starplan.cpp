@@ -698,19 +698,25 @@ uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
 
 void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed)
 {
-    auto bigplanet_size = bigPlanets.size() > 10 ? 10 : bigPlanets.size();
+    if(bigPlanets.size() <= RANDOM_COUNT){
+        choosed = bigPlanets;
+        return;
+    }
+    auto bigplanet_size = RANDOM_COUNT;
     int64_t block_num = get_head_block_num();
     uint64_t block_time = get_head_block_time();
     std::string random_str = std::to_string(block_num) + std::to_string(block_time);
     checksum160 sum160;
     ripemd160(const_cast<char *>(random_str.c_str()), random_str.length(), &sum160);
+    checksum160 block_hash;
+    get_head_block_id(&block_hash);
     for (uint64_t i = 0; i < bigplanet_size; i++)
     {
         auto j = i;
         while (true)
         {
             uint8_t share = (uint8_t) (sum160.hash[j % 20] * (j + 1));
-            uint8_t number = share % bigplanet_size;
+            uint8_t number = (share + block_hash.hash[j % 20]) % bigplanet_size;
             auto it = std::find(choosed.begin(), choosed.end(), number);
             if (it != choosed.end())
             {
