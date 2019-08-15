@@ -276,7 +276,6 @@ void starplan::updatememo(const std::string &memo)
 {
     graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
     baseCheck();
-    roundFinishCheck();
 
     // 1、判断账户是否为超级星
     uint64_t sender_id = get_trx_origin();
