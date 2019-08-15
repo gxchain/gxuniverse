@@ -22,22 +22,22 @@ void starplan::init()
 
     //////////////////////////////////////// 校验通过后，初始化资金池 //////////////////////////////////////////
     // 5、初始化总资金池
-	tbglobals.emplace(sender_id, [&](auto &obj) {
-		obj.index           = 0;
-		obj.pool_amount     = amount;
-		obj.current_round   = 0;
-		obj.upgrading       = 0;
-	});
+    tbglobals.emplace(sender_id, [&](auto &obj) {
+        obj.index           = 0;
+        obj.pool_amount     = amount;
+        obj.current_round   = 0;
+        obj.upgrading       = 0;
+    });
     // 6、初始化第一轮资金池，并启动第一轮
-	tbrounds.emplace(sender_id, [&](auto &obj) {
-		obj.round                   = tbrounds.available_primary_key();
-		obj.current_round_invites   = 0;
-		obj.pool_amount             = 0;
-		obj.random_pool_amount      = 0;
-		obj.invite_pool_amount      = 0;
-		obj.start_time              = get_head_block_time();;
-		obj.end_time                = 0;
-	});
+    tbrounds.emplace(sender_id, [&](auto &obj) {
+        obj.round                   = tbrounds.available_primary_key();
+        obj.current_round_invites   = 0;
+        obj.pool_amount             = 0;
+        obj.random_pool_amount      = 0;
+        obj.invite_pool_amount      = 0;
+        obj.start_time              = get_head_block_time();;
+        obj.end_time                = 0;
+    });
 }
 
 void starplan::vote(std::string inviter,std::string superstar)
@@ -719,7 +719,7 @@ void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64
             }
             else
             {
-                choosed.push_back(number);
+                choosed.push_back(bigPlanets[number]);
                 break;
             }
         }
