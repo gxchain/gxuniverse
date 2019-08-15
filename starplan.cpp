@@ -526,7 +526,7 @@ uint64_t starplan::getInviter(uint64_t invitee)
 {
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(invitee);
-    graphene_assert(invite_itor != invite_idx.end(), "");//TODO udpate errMsg, FIXME: invite_itor != invite_idx.end()
+    graphene_assert(invite_itor != invite_idx.end(), MSG_INVITER_NOT_EXIST);
     return invite_itor->inviter;
 }
 
