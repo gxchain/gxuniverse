@@ -6,7 +6,6 @@ const uint64_t      Z1                      = 1 * PRECISION;            //大行
 const uint64_t      Z2                      = 1 * PRECISION;            //大行星奖励给邀请人的资产数（1GXC）
 const uint64_t      Z3                      = 1 * PRECISION;            //大行星投入每轮随机奖励池资产数（1GXC）
 
-const uint64_t      MAX_DECAY_COUNT         = 20;                       //最大衰减次数（20）
 const uint64_t      PAYBACK_PERCENT         = 10;                       //返现比例（10%）
 const uint64_t      ACTIVE_PERCENT          = 50;                       //活力星瓜分比例（50%），剩余40%为超级星瓜分比例
 const uint64_t      WEIGHT                  = 1000;                     //权重，带三位精度
@@ -30,6 +29,7 @@ const uint64_t      DECAY_DURATION          = 1 * 60;                   //衰减
 const uint64_t      INIT_POOL               = 400 * PRECISION;          //初始化充值200GXC
 const uint64_t      STAKING_DURATION_TIME   = 1800;                     //抵押30分钟后解锁
 const uint64_t      DELAY_TIME              = 2 * 3600;                 //最后一个大行星的延迟时间（2小时）
+const uint64_t      MAX_DECAY_COUNT         = 5;                        //最大衰减次数（5）
 
 //////////////////////// for release ////////////////////////
 /*
@@ -47,6 +47,7 @@ const uint64_t      DECAY_DURATION          = 1 * 3600;                 //衰减
 const uint64_t      INIT_POOL               = 2000000 * PRECISION;      //初始化充值200万GXC
 const uint64_t      STAKING_DELAY_TIME      = 90 * 24 * 3600;           //抵押90天后解锁
 const uint64_t      DELAY_TIME              = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
+const uint64_t      MAX_DECAY_COUNT         = 20;                       //最大衰减次数（20）
 */
 
 //////////////////////// common ////////////////////////

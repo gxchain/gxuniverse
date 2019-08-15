@@ -632,7 +632,7 @@ void starplan::calcCurrentRoundPoolAmount()
         uint64_t takeInteger = mod > 0 ? 1 : 0;
         uint64_t dursize = ((get_head_block_time() - round.start_time - DECAY_TIME) / DECAY_DURATION) + takeInteger;
         dursize = dursize > MAX_DECAY_COUNT ? MAX_DECAY_COUNT:dursize;
-        graphene_assert(pool_amount > (dursize * x), MSG_INSUFFICIENT_POOL_AMOUNT);
+        graphene_assert(pool_amount > (dursize * x * PRECISION), MSG_INSUFFICIENT_POOL_AMOUNT);
         pool_amount = pool_amount - dursize * x * PRECISION;
     }
     // 5、修改当前轮底池 pool_amount
