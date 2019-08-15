@@ -522,16 +522,15 @@ void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t re
     char inviteeName[64] = { 0 };
     char inviterName[64] = { 0 };
 
-
     if(RWD_TYPE_SELF_ACTIVATE == rewardType) {
         graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
+        rewardReason = std::string(inviterName) + "get reward for self activate";
     } else if (RWD_TYPE_INVITE == rewardType) {
         graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
         graphene_assert(0 == get_account_name_by_id(inviterName, 63, inviter), MSG_GET_INVITER_NAME_FAIL);
+        rewardReason = std::string(inviterName) + "get reward for invite " + std::string(inviteeName);
     } else {
     }
-
-    rewardReason = std::string(inviterName) + "get reward for invite " + std::string(inviteeName);
 }
 
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
