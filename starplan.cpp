@@ -656,6 +656,7 @@ uint64_t starplan::getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlan
     auto itor = act_idx.upper_bound(0);
     while (itor != act_idx.end() && itor->weight > 0)
     {
+        if(itor->id == DEFAULT_INVITER) continue;
         total_weights += itor->weight;
         activePlanets.push_back(ActivePlanet { itor->id, itor->weight });
         itor++;
