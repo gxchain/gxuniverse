@@ -212,7 +212,9 @@ void starplan::endround()
         obj.pool_amount -= actualReward;
     });
 
-    lastRound().actual_rewards = actualReward;
+    tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
+        obj.actual_rewards = actualReward;
+    });
 
     // 5、更新活力星权重
     decayActivePlanetWeight();
