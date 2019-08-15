@@ -17,10 +17,14 @@
             <button @click="login()">Login</button>
             <button @click="logout()">Logout</button>
             <button @click="init()">init</button>
-            <button @click="uptosmall()">uptosmall</button>
-            <button @click="uptobig()">uptobig</button>
             <button @click="uptosuper()">uptosuper</button>
+            <button @click="vote()">vote</button>
+            <button @click="uptobig()">uptobig</button>
+            <button @click="selfactivate()">selfactivate</button>
             <button @click="endround()">endround</button>
+            <button @click="claim()">claim</button>
+            <button @click="upgrade()">upgrade</button>
+            <button @click="updatememo()">updatememo</button>
         </div>
         <h3>Logs<button @click="logs=[]">Clear</button></h3>
         <div>
@@ -83,8 +87,15 @@
                         this.output(error)
                     })
                 },
-                uptosmall(){
-                    gxc.callContract(contractName, 'uptosmall', {inviter:"",superstar:"gxb122"}, '10 GXC', true).then(trx=>{
+                uptosuper(){
+                    gxc.callContract(contractName, 'uptosuper', {inviter:""}, '20 GXC', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
+                },
+                vote(){
+                    gxc.callContract(contractName, 'vote', {inviter:"",superstar:"gxb122"}, '10 GXC', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
@@ -97,15 +108,29 @@
                         this.output(error)
                     })
                 },
-                uptosuper(){
-                    gxc.callContract(contractName, 'uptosuper', {inviter:""}, '20 GXC', true).then(trx=>{
+                endround(){
+                    gxc.callContract(contractName, 'endround', {}, '', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
                     })
                 },
-                endround(){
+                claim(){
                     gxc.callContract(contractName, 'endround', {}, '', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
+                },
+                upgrade(){
+                    gxc.callContract(contractName, 'upgrade', {flag:true}, '', true).then(trx=>{
+                        this.output(`call contract success`, trx)
+                    }).catch(error => {
+                        this.output(error)
+                    })
+                },
+                updatememo(){
+                    gxc.callContract(contractName, 'updatememo', {memo:`memo:${(new Date()).getTime()}`}, '', true).then(trx=>{
                         this.output(`call contract success`, trx)
                     }).catch(error => {
                         this.output(error)
