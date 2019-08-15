@@ -538,7 +538,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
 {
     std::string rewardReason;
     buildRewardReason(invitee, rewardAccountId, rewardType, rewardReason);
-    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, rewardReason.c_str(), rewardReason.length()));
+    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, rewardReason.c_str(), rewardReason.length());
 
     tbrounds.modify(lastRound(), invitee, [&](auto &obj)
     {
@@ -564,7 +564,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
     if (act_itor != act_idx.end()) {
         act_idx.modify(act_itor, subAccountId, [&](auto &obj) {
             obj.invite_list.push_back(subAccountId);
-            if(obj.invite_list.size() == 5) {//TODO 5 is a const config
+            if(obj.invite_list.size() == ACTIVE_PROMOT_INVITES) {
                 obj.weight += WEIGHT;
                 obj.invite_list.clear();
             }
