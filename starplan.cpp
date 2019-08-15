@@ -927,7 +927,7 @@ void starplan::cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount
         obj.vote_num            =   obj.vote_num - amount;
     });
 }
-void starplan::cancelSuperStake(uint64_t superAccId)
+void starplan::disableSuperStar(uint64_t superAccId)
 {
     // 修改超级星表失效
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();

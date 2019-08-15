@@ -105,7 +105,7 @@ class starplan : public contract
     inline uint64_t     checkSender();                                                  //验证调用者和原始调用者是否相同
     bool                isUpgrading();                                                    //验证合约状态升级
     void                cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount);
-    void                cancelSuperStake(uint64_t superAccId);
+    void                disableSuperStar(uint64_t superAccId);
 
     inline void         baseCheck();
     inline void         roundFinishCheck();
