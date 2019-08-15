@@ -212,7 +212,9 @@ void starplan::endround()
         obj.pool_amount -= actualReward;
     });
 
-    lastRound().actual_rewards = actualReward;
+    tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
+        obj.actual_rewards = actualReward;
+    });
 
     // 5、更新活力星权重
     decayActivePlanetWeight();
@@ -225,14 +227,13 @@ void starplan::claim(std::string account)
 {
     baseCheck();
 
-    const std::string unstake_withdraw = LOG_CLAIM;
     uint64_t acc_id = get_account_id(account.c_str(), account.length());
     auto sta_idx = tbstakes.get_index<N(byaccid)>();
     auto itor = sta_idx.find(acc_id);
     for(; itor != sta_idx.end() && itor->account == acc_id;){
         if(get_head_block_time() > itor->end_time && itor->claimed == false){
             // 1.1、解除抵押提现
-            inline_transfer(_self , acc_id , CORE_ASSET_ID , itor->amount, unstake_withdraw.c_str(),unstake_withdraw.length());
+            inline_transfer(_self , acc_id , CORE_ASSET_ID , itor->amount, LOG_CLAIM,strlen(LOG_CLAIM));
             // 1.2、修改该项抵押失效 
             sta_idx.modify(itor,get_trx_sender(),[&](auto &obj){
                 obj.claimed          =   true;
@@ -275,7 +276,6 @@ void starplan::updatememo(const std::string &memo)
 {
     graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
     baseCheck();
-    roundFinishCheck();
 
     // 1、判断账户是否为超级星
     uint64_t sender_id = get_trx_origin();
@@ -523,16 +523,15 @@ void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t re
     char inviteeName[64] = { 0 };
     char inviterName[64] = { 0 };
 
-
     if(RWD_TYPE_SELF_ACTIVATE == rewardType) {
         graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
+        rewardReason = std::string(inviterName) + "get reward for self activate";
     } else if (RWD_TYPE_INVITE == rewardType) {
         graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
         graphene_assert(0 == get_account_name_by_id(inviterName, 63, inviter), MSG_GET_INVITER_NAME_FAIL);
+        rewardReason = std::string(inviterName) + "get reward for invite " + std::string(inviteeName);
     } else {
     }
-
-    rewardReason = std::string(inviterName) + "get reward for invite " + std::string(inviteeName);
 }
 
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
@@ -613,7 +612,9 @@ void starplan::calcCurrentRoundPoolAmount()
     auto x = currentRound()%BIG_ROUND_SIZE + 1;
     // 4、计算当前小轮的运行时间
     if(get_head_block_time() - round.start_time > DECAY_TIME){
-        uint64_t dursize = ((get_head_block_time() - round.start_time - DECAY_TIME) / DECAY_DURATION) + 1;
+        uint64_t mod = (get_head_block_time() - round.start_time - DECAY_TIME) % DECAY_DURATION;
+        uint64_t takeInteger = mod > 0 ? 1 : 0;
+        uint64_t dursize = ((get_head_block_time() - round.start_time - DECAY_TIME) / DECAY_DURATION) + takeInteger;
         dursize = dursize > MAX_DECAY_COUNT ? MAX_DECAY_COUNT:dursize;
         graphene_assert(pool_amount > (dursize * x), MSG_INSUFFICIENT_POOL_AMOUNT);
         pool_amount = pool_amount - dursize * x;
