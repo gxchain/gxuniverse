@@ -549,7 +549,7 @@ void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t re
     } else if (RWD_TYPE_INVITE == rewardType) {
         graphene_assert(0 == get_account_name_by_id(inviteeName, 63, invitee), MSG_GET_INVITEE_NAME_FAIL);
         graphene_assert(0 == get_account_name_by_id(inviterName, 63, inviter), MSG_GET_INVITER_NAME_FAIL);
-        rewardReason = std::string(inviterName) + "get reward for invitee " + std::string(inviteeName);
+        rewardReason = std::string(inviterName) + "get reward for inviting " + std::string(inviteeName);
     } else {
     }
 }
