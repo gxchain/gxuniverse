@@ -78,6 +78,7 @@ class starplan : public contract
     void                addStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     inline uint64_t     getInviter(uint64_t invitee);
     inline void         buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason);
+    inline void         buildDepositMsg(uint64_t amount,uint64_t type, std::string &msg);
     void                distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);
     void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
@@ -109,8 +110,8 @@ class starplan : public contract
 
     inline void         baseCheck();
     inline void         roundFinishCheck();
-    inline uint64_t     assetEqualCheck(uint64_t expectedAmount, const char* errMsg);
-    inline uint64_t     assetLargerCheck(uint64_t expectedAmount, const char* errMsg);
+    inline uint64_t     assetEqualCheck(uint64_t expectedAmount);
+    inline uint64_t     assetLargerCheck(uint64_t expectedAmount);
     inline uint64_t     inviterCheck(const std::string &inviter, uint64_t inviteeId);
     inline uint64_t     superStarCheck(const std::string &superStarAccount);
     inline void         progress(uint64_t ramPayer);

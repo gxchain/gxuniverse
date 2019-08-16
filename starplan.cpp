@@ -10,7 +10,7 @@ void starplan::init()
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
 
     // 2、校验充值的资产是否为INIT_POOL的大小
-    uint64_t amount = assetEqualCheck(INIT_POOL, MSG_INVALID_INIT_AMOUNT);
+    uint64_t amount = assetEqualCheck(INIT_POOL);
 
     // 3、校验底池是否已经初始化
     auto glo_itor = tbglobals.find(0);
@@ -48,7 +48,7 @@ void starplan::vote(std::string inviter,std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = assetLargerCheck(MIN_VOTE_AMOUNT, MSG_INVALID_VOTE_AMOUNT);
+    uint64_t amount = assetLargerCheck(MIN_VOTE_AMOUNT);
 
     // 3、验证inviter
     uint64_t sender_id = get_trx_origin();
@@ -80,7 +80,7 @@ void starplan::selfactivate(std::string superstar)
     baseCheck();
     roundFinishCheck();
 
-    uint64_t amount = assetEqualCheck(Z + Z1 + Z2 + Z3, MSG_INVALID_SELF_ACTIVATE_AMOUNT);
+    uint64_t amount = assetEqualCheck(Z + Z1 + Z2 + Z3);
 
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_ACTIVATE_AUTH_ERR);
@@ -112,7 +112,7 @@ void starplan::uptobig()
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3, MSG_INVALID_BIG_AMOUNT);
+    uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3);
 
     // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
@@ -152,7 +152,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     roundFinishCheck();
 
     // 2、判断是否存入足够GXC
-    uint64_t amount = assetEqualCheck(X, MSG_INVALID_SUPER_AMOUNT);
+    uint64_t amount = assetEqualCheck(X);
 
     uint64_t sender_id = get_trx_origin();
 
@@ -552,6 +552,13 @@ void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t re
         rewardReason = std::string(inviterName) + "get reward for invitee " + std::string(inviteeName);
     } else {
     }
+} 
+void starplan::buildDepositMsg(uint64_t amount,uint64_t type,std::string &msg)
+{
+    if(type)
+        msg = "Error: "+std::to_string(amount)+" GXC required";
+    else
+        msg = "Error: Minimum "+std::to_string(amount)+" GXC required";
 }
 
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
@@ -979,19 +986,23 @@ void starplan::roundFinishCheck()
     graphene_assert(!isRoundFinish(), MSG_ROUND_END);
 }
 
-uint64_t starplan::assetEqualCheck(uint64_t expectedAmount, const char* errMsg)
+uint64_t starplan::assetEqualCheck(uint64_t expectedAmount)
 {
+    std::string errMsg;
+    buildDepositMsg(expectedAmount,true,errMsg);
     graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
-    graphene_assert(get_action_asset_amount() == expectedAmount, errMsg);
+    graphene_assert(get_action_asset_amount() == expectedAmount, errMsg.c_str());
 
     return expectedAmount;
 }
 
-uint64_t starplan::assetLargerCheck(uint64_t expectedAmount, const char* errMsg)
+uint64_t starplan::assetLargerCheck(uint64_t expectedAmount)
 {
+    std::string errMsg;
+    buildDepositMsg(expectedAmount,false,errMsg);
     uint64_t actualAmount = get_action_asset_amount();
     graphene_assert(get_action_asset_id() == CORE_ASSET_ID, MSG_CORE_ASSET_REQUIRED);
-    graphene_assert(actualAmount >= expectedAmount, errMsg);
+    graphene_assert(actualAmount >= expectedAmount, errMsg.c_str());
 
     return actualAmount;
 }
