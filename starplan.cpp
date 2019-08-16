@@ -184,7 +184,7 @@ void starplan::uptosuper(std::string inviter,std::string memo)
 void starplan::endround()
 {
     baseCheck();
-    graphene_assert(isRoundFinish(), MSG_ROUND_END);
+    graphene_assert(isRoundFinish(), MSG_ROUND_NOT_END);
 
     uint64_t sender_id = get_trx_origin();
     if (lastRound().current_round_invites < ROUND_SIZE) {
