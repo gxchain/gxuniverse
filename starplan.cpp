@@ -32,9 +32,10 @@ void starplan::init()
     tbrounds.emplace(sender_id, [&](auto &obj) {
         obj.round                   = tbrounds.available_primary_key();
         obj.current_round_invites   = 0;
-        obj.pool_amount             = 0;
+        obj.actual_rewards          = 0;
+        obj.base_pool_amount        = 0;
         obj.random_pool_amount      = 0;
-        obj.invite_pool_amount      = 0;
+        obj.invite_reward_amount    = 0;
         obj.start_time              = get_head_block_time();;
         obj.end_time                = 0;
     });
@@ -562,7 +563,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
     tbrounds.modify(lastRound(), invitee, [&](auto &obj)
     {
         obj.random_pool_amount = obj.random_pool_amount + Z3;
-        obj.invite_pool_amount = obj.invite_pool_amount + Z1;
+        obj.invite_reward_amount = obj.invite_reward_amount + Z1;
     });
 
     tbrewards.emplace(invitee, [&](auto &obj)
@@ -626,7 +627,7 @@ void starplan::calcCurrentRoundPoolAmount()
     auto &round = lastRound();
 
     // 2、默认底池
-    auto pool_amount = ROUND_AMOUNT + round.invite_pool_amount;
+    auto pool_amount = ROUND_AMOUNT + round.invite_reward_amount;
     // 3、超过四小时，每小时减少底池金额
     auto x = currentRound()%BIG_ROUND_SIZE + 1;
     // 4、计算当前小轮的运行时间
@@ -641,7 +642,7 @@ void starplan::calcCurrentRoundPoolAmount()
     // 5、修改当前轮底池 pool_amount
     auto sender = get_trx_sender();
     tbrounds.modify(round, sender, [&](auto &obj){                               //修改奖池金额pool_amount
-        obj.pool_amount = pool_amount;
+        obj.base_pool_amount = pool_amount;
     });
 }
 void starplan::decayActivePlanetWeight()
@@ -750,9 +751,9 @@ void starplan::getBudgets(uint64_t &randomRewardBudget, uint64_t &bigPlanetRewar
 
     randomRewardBudget = round.random_pool_amount;
 
-    bigPlanetRewardBudget = round.pool_amount * PAYBACK_PERCENT / 100;
-    activePlanetRewardBudget = round.pool_amount * ACTIVE_PERCENT / 100;
-    superStarRewardBudget = round.pool_amount - bigPlanetRewardBudget - activePlanetRewardBudget;
+    bigPlanetRewardBudget = round.base_pool_amount * PAYBACK_PERCENT / 100;
+    activePlanetRewardBudget = round.base_pool_amount * ACTIVE_PERCENT / 100;
+    superStarRewardBudget = round.base_pool_amount - bigPlanetRewardBudget - activePlanetRewardBudget;
 }
 
 uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget)
@@ -894,9 +895,10 @@ void starplan::createNewRound()
     tbrounds.emplace(sender,[&](auto &obj) {
         obj.round                   = tbrounds.available_primary_key();
         obj.current_round_invites   = 0;
-        obj.pool_amount             = 0;
+        obj.actual_rewards          = 0;
+        obj.base_pool_amount        = 0;
         obj.random_pool_amount      = 0;
-        obj.invite_pool_amount      = 0;
+        obj.invite_reward_amount    = 0;
         obj.start_time              = get_head_block_time();
         obj.end_time                = 0;
     });
