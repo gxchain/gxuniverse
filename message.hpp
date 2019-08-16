@@ -32,6 +32,7 @@ const char* MSG_MEMO_TOO_LONG = "Error: max memo length is 15";
 const char* MSG_GET_INVITEE_NAME_FAIL = "Error: get invitee name fail";
 const char* MSG_GET_INVITER_NAME_FAIL = "Error: get inviter name fail";
 const char* MSG_INVITER_NOT_EXIST = "Error: invitee has no inviter";
+const char* MSG_MORTGAGE_NOT_FOUND = "Error: Mortgage not found";
 const char* REWARD_ID_ERR_MSG = "Error: Reward id must larger than 0";
 const char* REWARD_ZERO_ERR_MSG = "Error: Reward amount is 0";
 const char* USER_REWARD_TOO_HIGH_ERR_MSG = "Error: User reward is too high ";
