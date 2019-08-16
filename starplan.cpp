@@ -916,8 +916,6 @@ bool starplan::canUpdateSmall(uint64_t sender)
                 retValue = true;
                 break;
             }
-        }else{
-            break;
         }
     }
     return retValue;
