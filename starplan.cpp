@@ -96,6 +96,8 @@ void starplan::selfactivate(std::string superstar)
 
     addStaking(sender_id, Z, super_id, STAKING_TYPE_SELF_ACTIVATE, vote_id);
 
+    updateAccount(sender_id,Z,0);
+
     addVote(super_id, Z, sender_id);
 
     distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVATE);
@@ -179,6 +181,9 @@ void starplan::uptosuper(std::string inviter,std::string memo)
 
     // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetForSuper(sender_id);
+
+    // 9、更新账户信息
+    updateAccount(sender_id,0,amount);
 
     if(lastRound().current_round_invites >= ROUND_SIZE){
         endround();
@@ -553,9 +558,9 @@ void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t re
 void starplan::buildDepositMsg(uint64_t amount,uint64_t type,std::string &msg)
 {
     if(type)
-        msg = "Error: "+std::to_string(amount)+" GXC required";
+        msg = "Error: "+std::to_string(amount/PRECISION)+" GXC required";
     else
-        msg = "Error: Minimum "+std::to_string(amount)+" GXC required";
+        msg = "Error: Minimum "+std::to_string(amount/PRECISION)+" GXC required";
 }
 
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
