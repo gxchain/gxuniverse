@@ -67,6 +67,9 @@ void starplan::vote(std::string inviter,std::string superstar)
     // 8、添加一个新的抵押金额
     addStaking(sender_id,amount,super_id,STAKING_TYPE_VOTE,vote_id);
 
+    // 9、修改账户信息表
+    updateAccount(sender_id,amount,0);
+
     // 9、存到smallPlanet表(不允许重复创建)
     if(canUpdateSmall(sender_id))
         addSmallPlanet(sender_id);
@@ -913,16 +916,10 @@ void starplan::createNewRound()
 bool starplan::canUpdateSmall(uint64_t sender)
 {
     bool retValue = false;
-    auto stk_idx = tbstakes.get_index<N(byaccid)>();
-    uint64_t total_vote = 0;
-    auto itor = stk_idx.find(sender);
-    for(;itor != stk_idx.end();itor++){
-        if(itor->account == sender && itor->claimed == false && itor->staking_type == STAKING_TYPE_VOTE){
-            total_vote += itor->amount;
-            if(total_vote>=Y){
-                retValue = true;
-                break;
-            }
+    auto itor = tbaccounts.find(sender);
+    if(itor != tbaccounts.end()){
+        if(itor->vote_count >= Y){
+            retValue = true;
         }
     }
     return retValue;
@@ -1024,4 +1021,20 @@ uint64_t starplan::superStarCheck(const std::string &superStarAccount)
     int64_t super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
     graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);//TODO FIXME check super_id type
     return super_id;
+}
+void starplan::updateAccount(uint64_t sender,uint64_t voteCount,uint64_t stakingAmount)
+{
+    auto itor = tbaccounts.find(sender);
+    if(itor == tbaccounts.end()){
+        tbaccounts.emplace(sender,[&](auto &obj){
+            obj.account_id      = sender;
+            obj.vote_count      = voteCount;
+            obj.staking_amount  = stakingAmount;
+        });
+    }else{
+        tbaccounts.modify(itor,sender,[&](auto &obj){
+            obj.vote_count      += voteCount;
+            obj.staking_amount  += stakingAmount;
+        });
+    }
 }

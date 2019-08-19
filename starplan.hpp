@@ -34,6 +34,7 @@ class starplan : public contract
             contract(id),
             tbglobals(_self, _self),
             tbrounds(_self, _self),
+            tbaccounts(_self,_self),
             tbvotes(_self, _self),
             tbstakes(_self,_self),
             tbsmallplans(_self, _self),
@@ -71,6 +72,7 @@ class starplan : public contract
     inline bool         isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
     inline bool         isRoundFull();//>=100 inviatees
     inline bool         isRoundFinish();
+    inline void         updateAccount(uint64_t sender,uint64_t voteCount,uint64_t stakingAmount);
 
     bool                isInviter(std::string accname);
     bool                isInit();
@@ -148,6 +150,19 @@ class starplan : public contract
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
+
+    //@abi table tbaccount i64
+    struct tbaccount {
+        uint64_t account_id;
+        uint64_t vote_count;
+        uint64_t staking_amount;
+
+        uint64_t primary_key() const { return account_id; }
+
+        GRAPHENE_SERIALIZE(tbaccount, (account_id)(vote_count)(staking_amount)(staking_amount)(to))
+    };
+    typedef multi_index<N(tbaccount), tbaccount> tbaccount_index;
+    tbaccount_index tbaccounts;
 
     //@abi table tbvote i64
     struct tbvote {
