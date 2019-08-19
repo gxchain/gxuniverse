@@ -231,21 +231,18 @@ void starplan::endround()
     createNewRound();
 }
 
-void starplan::claim(std::string account)
+void starplan::claim(uint64_t stakingid)
 {
     baseCheck();
-
-    uint64_t acc_id = get_account_id(account.c_str(), account.length());
-    auto sta_idx = tbstakes.get_index<N(byaccid)>();
-    auto itor = sta_idx.find(acc_id);
     bool isFind = false;
-    for(; itor != sta_idx.end() && itor->account == acc_id;){
+    auto itor = tbstakes.find(stakingid);
+    if(itor != tbstakes.end()){
         if(get_head_block_time() > itor->end_time && itor->claimed == false){
             // 1.1、解除抵押提现
             isFind = true;
-            inline_transfer(_self , acc_id , CORE_ASSET_ID , itor->amount, LOG_CLAIM,strlen(LOG_CLAIM));
+            inline_transfer(_self , itor->account , CORE_ASSET_ID , itor->amount, LOG_CLAIM,strlen(LOG_CLAIM));
             // 1.2、修改该项抵押失效 
-            sta_idx.modify(itor,get_trx_sender(),[&](auto &obj){
+            tbstakes.modify(itor,get_trx_sender(),[&](auto &obj){
                 obj.claimed          =   true;
                 obj.claim_time       =   get_head_block_time();
             });
@@ -257,9 +254,6 @@ void starplan::claim(std::string account)
             }else{
                 graphene_assert(false,MSG_UNKNOWN_CLAIM_REASON);
             }
-            itor++;
-        }else{
-            itor++;
         }
     }
     graphene_assert(isFind,MSG_MORTGAGE_NOT_FOUND);
