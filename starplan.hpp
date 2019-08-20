@@ -52,9 +52,17 @@ class starplan : public contract
     PAYABLE             uptobig();
     PAYABLE             uptosuper(std::string inviter,std::string memo);
     ACTION              endround();
-    ACTION              claim(std::string account);
+    ACTION              claim(uint64_t stakingid);
     ACTION              upgrade(uint64_t flag);
     ACTION              updatememo(const std::string &memo);
+
+    ACTION              getbudget();
+    ACTION              calcrdmrwd();
+    ACTION              calcbigrwd();
+    ACTION              calcactrwd();
+    ACTION              calcsuprwd();
+    ACTION              dorwd(uint64_t limit);
+    ACTION              newround();
 
   private:
 
@@ -117,8 +125,23 @@ class starplan : public contract
     inline uint64_t     inviterCheck(const std::string &inviter, uint64_t inviteeId);
     inline uint64_t     superStarCheck(const std::string &superStarAccount);
     inline void         progress(uint64_t ramPayer);
+    inline void         endRoundCheck(bool check,const std::string &msg);
 
   private:
+    struct budgetstate{
+        uint64_t randomBudget;
+        uint64_t bigPlanetBudget;
+        uint64_t activePlanetBudget;
+        uint64_t superStarBudget;
+        bool flag;
+    };
+    struct rewardstate{
+        bool randomPoolFlag;
+        bool bigFlag;
+        bool activeFlag;
+        bool superFlag;
+    };
+
     //@abi table tbglobal i64
     struct tbglobal {                       // 全局状态表
         uint64_t index;
@@ -144,9 +167,14 @@ class starplan : public contract
         uint64_t start_time;                // 当前轮的启动时间
         uint64_t end_time;                  // 当前轮的结束时间
 
+        budgetstate bstate;                 // 当前轮endround获取应发奖励状态
+        rewardstate rstate;                 // 当前轮endround奖励计算进度状态
+        uint64_t travIndex;                 // 当前轮endround遍历活力星表进度
+        uint64_t actualReward;              // 当前轮endround实际发放奖励统计
+
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(travIndex)(actualReward))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
@@ -323,18 +351,21 @@ class starplan : public contract
         uint64_t to;                        // 奖励去向账户
         uint64_t amount;                    // 奖励金额
         uint64_t type;                      // 奖励类型
+        uint64_t flag;                      // 是否已经发放
 
         uint64_t primary_key() const { return index; }
         uint64_t by_round() const { return round; }
         uint64_t by_acc_id() const { return to; }
+        uint64_t by_flag() const { return flag;}
 
-        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type))
+        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(flag))
     };
     typedef multi_index<N(tbreward), tbreward,
                         indexed_by<N(byaccid), const_mem_fun<tbreward, uint64_t, &tbreward::by_round>>,
-                        indexed_by<N(byinviteid), const_mem_fun<tbreward, uint64_t, &tbreward::by_acc_id>>> tbreward_index;
+                        indexed_by<N(byinviteid), const_mem_fun<tbreward, uint64_t, &tbreward::by_acc_id>>,
+                        indexed_by<N(byflag), const_mem_fun<tbreward, uint64_t, &tbreward::by_flag>>> tbreward_index;
     tbreward_index tbrewards;
 
     inline const struct starplan::tbround& lastRound();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo))
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcsuprwd)(dorwd)(newround))
