@@ -52,7 +52,7 @@ class starplan : public contract
     PAYABLE             uptobig();
     PAYABLE             uptosuper(std::string inviter,std::string memo);
     ACTION              endround();
-    ACTION              claim(std::string account);
+    ACTION              claim(uint64_t stakingid);
     ACTION              upgrade(uint64_t flag);
     ACTION              updatememo(const std::string &memo);
 
