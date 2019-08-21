@@ -36,6 +36,7 @@ const char* MSG_PROGRESS_SUPER_REWARDS = "Error: Super star reward progress fail
 const char* MSG_CALC_REWARDS = "Error: Calc rewards progress filed";
 const char* MSG_REWARDS_NOT_FOUND = "Error: Rewards not found";
 const char* MSG_BIG_PLANET_COUNTS = "Error: The total number of current round big planets is 0";
+const char* MSG_ACTIVE_PLANET_NOT_FOUND = "Error: Active planet not found";
 const char* REWARD_ID_ERR_MSG = "Error: Reward id must larger than 0";
 const char* REWARD_ZERO_ERR_MSG = "Error: Reward amount is 0";
 const char* USER_REWARD_TOO_HIGH_ERR_MSG = "Error: User reward is too high ";
