@@ -187,51 +187,51 @@ void starplan::uptosuper(std::string inviter,std::string memo)
     }
 }
 
-void starplan::endround()
-{
-    baseCheck();
-    graphene_assert(isRoundFinish(), MSG_ROUND_NOT_END);
-
-    uint64_t sender_id = get_trx_origin();
-    if (lastRound().current_round_invites < ROUND_SIZE) {
-        graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
-    }
-
-    calcCurrentRoundPoolAmount();
-
-    uint64_t randomBudget = 0;
-    uint64_t bigPlanetBudget = 0;
-    uint64_t activePlanetBudget = 0;
-    uint64_t superStarBudget = 0;
-    getBudgets(randomBudget, bigPlanetBudget, activePlanetBudget, superStarBudget);
-
-    uint64_t actualReward = 0;
-    vector<reward> rewardList;
-    actualReward += calcRandomReward(rewardList, randomBudget);
-    actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
-    actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
-    actualReward += calcSuperStarReward(rewardList, superStarBudget);
-
-    if (baseSecureCheck(rewardList, randomBudget)) {
-        doReward(rewardList);
-    }
-
-    // 6、修改总的资金池
-    auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor, sender_id, [&](auto &obj) {
-        obj.pool_amount -= actualReward;
-    });
-
-    tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
-        obj.actual_rewards = actualReward;
-    });
-
-    // 5、更新活力星权重
-    decayActivePlanetWeight();
-
-    // 6、开启新的一轮
-    createNewRound();
-}
+//void starplan::endround()
+//{
+//    baseCheck();
+//    graphene_assert(isRoundFinish(), MSG_ROUND_NOT_END);
+//
+//    uint64_t sender_id = get_trx_origin();
+//    if (lastRound().current_round_invites < ROUND_SIZE) {
+//        graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
+//    }
+//
+//    calcBudgets();
+//
+//    uint64_t randomBudget = 0;
+//    uint64_t bigPlanetBudget = 0;
+//    uint64_t activePlanetBudget = 0;
+//    uint64_t superStarBudget = 0;
+//    getBudgets(randomBudget, bigPlanetBudget, activePlanetBudget, superStarBudget);
+//
+//    uint64_t actualReward = 0;
+//    vector<reward> rewardList;
+//    actualReward += calcRandomReward(rewardList, randomBudget);
+//    actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
+//    actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
+//    actualReward += calcSuperStarReward(rewardList, superStarBudget);
+//
+//    if (baseSecureCheck(rewardList, randomBudget)) {
+//        doReward(rewardList);
+//    }
+//
+//    // 6、修改总的资金池
+//    auto g_itor = tbglobals.find(0);
+//    tbglobals.modify(g_itor, sender_id, [&](auto &obj) {
+//        obj.pool_amount -= actualReward;
+//    });
+//
+//    tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
+//        obj.actual_rewards = actualReward;
+//    });
+//
+//    // 5、更新活力星权重
+//    decayActivePlanetWeight();
+//
+//    // 6、开启新的一轮
+//    createNewRound();
+//}
 
 void starplan::claim(uint64_t stakingid)
 {
@@ -296,25 +296,10 @@ void starplan::updatememo(const std::string &memo)
 }
 void starplan::getbudget()
 {
-    bool check = lastRound().bstate.flag == false;
-    endRoundCheck(check,MSG_GET_BUDGET);
-    uint64_t sender_id = get_trx_sender();
-    calcCurrentRoundPoolAmount();
-
-    uint64_t randomBudget = 0;
-    uint64_t bigPlanetBudget = 0;
-    uint64_t activePlanetBudget = 0;
-    uint64_t superStarBudget = 0;
-    getBudgets(randomBudget, bigPlanetBudget, activePlanetBudget, superStarBudget);
-
-    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
-        obj.bstate.randomBudget         =   randomBudget;
-        obj.bstate.bigPlanetBudget      =   bigPlanetBudget;
-        obj.bstate.activePlanetBudget   =   activePlanetBudget;
-        obj.bstate.superStarBudget      =   superStarBudget;
-        obj.bstate.flag                 =   true;
-    });
+    endRoundCheck(lastRound().bstate.flag == false, MSG_GET_BUDGET);
+    calcBudgets();
 }
+
 void starplan::calcrdmrwd()
 {
     bool check = lastRound().bstate.flag == true && lastRound().rstate.randomPoolFlag == false;
@@ -884,7 +869,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
     }
 }
 
-void starplan::calcCurrentRoundPoolAmount()
+void starplan::calcBudgets()
 {
     // 1、获取平均奖励池
     auto &round = lastRound();
@@ -902,12 +887,23 @@ void starplan::calcCurrentRoundPoolAmount()
         graphene_assert(pool_amount > (dursize * x * PRECISION), MSG_INSUFFICIENT_POOL_AMOUNT);
         pool_amount = pool_amount - dursize * x * PRECISION;
     }
-    // 5、修改当前轮底池 pool_amount
+
+    uint64_t randomBudget = round.random_pool_amount;
+    uint64_t bigPlanetBudget = pool_amount * PAYBACK_PERCENT / 100;
+    uint64_t activePlanetBudget = pool_amount * ACTIVE_PERCENT / 100;
+    uint64_t superStarBudget = pool_amount - bigPlanetBudget - activePlanetBudget;
+
     auto sender = get_trx_sender();
-    tbrounds.modify(round, sender, [&](auto &obj){                               //修改奖池金额pool_amount
-        obj.base_pool_amount = pool_amount;
+    tbrounds.modify(round, sender, [&](auto &obj){
+        obj.base_pool_amount            = pool_amount;
+        obj.bstate.randomBudget         = randomBudget;
+        obj.bstate.bigPlanetBudget      = bigPlanetBudget;
+        obj.bstate.activePlanetBudget   = activePlanetBudget;
+        obj.bstate.superStarBudget      = superStarBudget;
+        obj.bstate.flag                 = true;
     });
 }
+
 void starplan::decayActivePlanetWeight()
 {
     // 更新活力星的权重
@@ -1007,18 +1003,6 @@ const struct starplan::tbround& starplan::lastRound()
     graphene_assert(round_itor != tbrounds.begin(), MSG_ROUND_NOT_FOUND);
     round_itor--;
     return *round_itor;
-}
-
-void starplan::getBudgets(uint64_t &randomRewardBudget, uint64_t &bigPlanetRewardBudget,
-                       uint64_t &activePlanetRewardBudget, uint64_t &superStarRewardBudget)
-{
-    const tbround& round = lastRound();
-
-    randomRewardBudget = round.random_pool_amount;
-
-    bigPlanetRewardBudget = round.base_pool_amount * PAYBACK_PERCENT / 100;
-    activePlanetRewardBudget = round.base_pool_amount * ACTIVE_PERCENT / 100;
-    superStarRewardBudget = round.base_pool_amount - bigPlanetRewardBudget - activePlanetRewardBudget;
 }
 
 uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget)
