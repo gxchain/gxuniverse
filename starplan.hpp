@@ -81,7 +81,7 @@ class starplan : public contract
     inline bool         isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
     inline bool         isRoundFull();//>=100 inviatees
     inline bool         isRoundFinish();
-    inline void         updateAccount(uint64_t sender,uint64_t voteCount,uint64_t stakingAmount);
+    inline uint64_t     updateAccountVote(uint64_t sender,uint64_t voteCount);
 
     bool                isInviter(std::string accname);
     bool                isInit();
@@ -112,7 +112,6 @@ class starplan : public contract
     void                doReward(vector<reward> &rewardList);
 
     void                createNewRound();
-    bool                canUpdateSmall(uint64_t sender);
 
     inline uint64_t     checkSender();                                                  //验证调用者和原始调用者是否相同
     bool                isUpgrading();                                                    //验证合约状态升级
@@ -188,11 +187,10 @@ class starplan : public contract
     struct tbaccount {
         uint64_t account_id;
         uint64_t vote_count;
-        uint64_t staking_amount;
 
         uint64_t primary_key() const { return account_id; }
 
-        GRAPHENE_SERIALIZE(tbaccount, (account_id)(vote_count)(staking_amount)(staking_amount)(to))
+        GRAPHENE_SERIALIZE(tbaccount, (account_id)(vote_count))
     };
     typedef multi_index<N(tbaccount), tbaccount> tbaccount_index;
     tbaccount_index tbaccounts;

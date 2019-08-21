@@ -67,11 +67,11 @@ void starplan::vote(std::string inviter,std::string superstar)
     // 8、添加一个新的抵押金额
     addStaking(sender_id,amount,super_id,STAKING_TYPE_VOTE,vote_id);
 
-    // 9、修改账户信息表
-    updateAccount(sender_id,amount,0);
+    // 9、修改账户投票信息表
+    uint64_t totalVotes = updateAccountVote(sender_id,amount);
 
     // 9、存到smallPlanet表(不允许重复创建)
-    if(canUpdateSmall(sender_id))
+    if(totalVotes >= Y)
         addSmallPlanet(sender_id);
 
     // 10、修改超级星的得票数
@@ -96,7 +96,7 @@ void starplan::selfactivate(std::string superstar)
 
     addStaking(sender_id, Z, super_id, STAKING_TYPE_SELF_ACTIVATE, vote_id);
 
-    updateAccount(sender_id,Z,0);
+    updateAccountVote(sender_id,Z);
 
     addVote(super_id, Z, sender_id);
 
@@ -181,9 +181,6 @@ void starplan::uptosuper(std::string inviter,std::string memo)
 
     // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetForSuper(sender_id);
-
-    // 9、更新账户信息
-    updateAccount(sender_id,0,amount);
 
     if(lastRound().current_round_invites >= ROUND_SIZE){
         endround();
@@ -1168,17 +1165,6 @@ void starplan::createNewRound()
         obj.end_time                = 0;
     });
 }
-bool starplan::canUpdateSmall(uint64_t sender)
-{
-    bool retValue = false;
-    auto itor = tbaccounts.find(sender);
-    if(itor != tbaccounts.end()){
-        if(itor->vote_count >= Y){
-            retValue = true;
-        }
-    }
-    return retValue;
-}
 
 uint64_t starplan::checkSender()
 {
@@ -1277,21 +1263,23 @@ uint64_t starplan::superStarCheck(const std::string &superStarAccount)
     graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);//TODO FIXME check super_id type
     return super_id;
 }
-void starplan::updateAccount(uint64_t sender,uint64_t voteCount,uint64_t stakingAmount)
+uint64_t starplan::updateAccountVote(uint64_t sender,uint64_t voteCount)
 {
+    uint64_t totalVotes = 0;
     auto itor = tbaccounts.find(sender);
     if(itor == tbaccounts.end()){
         tbaccounts.emplace(sender,[&](auto &obj){
             obj.account_id      = sender;
             obj.vote_count      = voteCount;
-            obj.staking_amount  = stakingAmount;
+            totalVotes          = obj.vote_count;
         });
     }else{
         tbaccounts.modify(itor,sender,[&](auto &obj){
             obj.vote_count      += voteCount;
-            obj.staking_amount  += stakingAmount;
+            totalVotes          = obj.vote_count;
         });
     }
+    return totalVotes;
 }
 void starplan::endRoundCheck(bool check,const std::string &msg)
 {
