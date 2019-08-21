@@ -172,13 +172,12 @@ class starplan : public contract
 
         budgetstate bstate;                 // 当前轮endround获取应发奖励状态
         rewardstate rstate;                 // 当前轮endround奖励计算进度状态
-        uint64_t travIndex;                 // 当前轮endround遍历活力星表进度
         uint64_t actualReward;              // 当前轮endround实际发放奖励统计
         uint64_t totalWeight;               // 当前轮的总权重
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(travIndex)(actualReward)(totalWeight))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(actualReward)(totalWeight))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
