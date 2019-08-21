@@ -59,6 +59,7 @@ class starplan : public contract
     ACTION              getbudget();
     ACTION              calcrdmrwd();
     ACTION              calcbigrwd();
+    ACTION              calctotalwei();
     ACTION              calcactrwd();
     ACTION              calcsuprwd();
     ACTION              dorwd(uint64_t limit);
@@ -140,6 +141,9 @@ class starplan : public contract
         bool bigFlag;
         bool activeFlag;
         bool superFlag;
+        bool weightFlag;
+        uint64_t traveIndex;
+        uint64_t weightIndex;
     };
 
     //@abi table tbglobal i64
@@ -171,10 +175,11 @@ class starplan : public contract
         rewardstate rstate;                 // 当前轮endround奖励计算进度状态
         uint64_t travIndex;                 // 当前轮endround遍历活力星表进度
         uint64_t actualReward;              // 当前轮endround实际发放奖励统计
+        uint64_t totalWeight;               // 当前轮的总权重
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(travIndex)(actualReward))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(travIndex)(actualReward)(totalWeight))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
@@ -282,18 +287,21 @@ class starplan : public contract
         uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t weight;                    // 权重，每小轮0.85的幅度衰减，衰减为0，重新计算
+        uint64_t trave_index;               // 遍历索引，高位字节为bool值，保存是否为活力星（权重是否大于0），低7位字节表示账户id。0x01FFFFFFFFFFFFFF
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_weight() const { return weight; }
+        uint64_t by_trave() const { return trave_index; }
 
-        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invite_list)(create_time)(create_round)(weight))
+        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invite_list)(create_time)(create_round)(weight)(trave_index))
     };
     typedef multi_index<N(tbactiveplan), tbactiveplan,
                         indexed_by<N(byaccid), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_acc_id>>,
                         indexed_by<N(byround), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_create_round>>,
-                        indexed_by<N(byweight), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_weight>>> tbactiveplan_index;
+                        indexed_by<N(byweight), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_weight>>,
+                        indexed_by<N(bytrave), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_trave>>> tbactiveplan_index;
     tbactiveplan_index tbactiveplans;
 
     //@abi table tbsuperstar i64
@@ -368,4 +376,4 @@ class starplan : public contract
 
     inline const struct starplan::tbround& lastRound();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcsuprwd)(dorwd)(newround))
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calctotalwei)(calcactrwd)(calcsuprwd)(dorwd)(newround))

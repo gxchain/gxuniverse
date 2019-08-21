@@ -301,7 +301,7 @@ void starplan::getbudget()
 {
     bool check = lastRound().bstate.flag == false;
     endRoundCheck(check,MSG_GET_BUDGET);
-
+    uint64_t sender_id = get_trx_sender();
     calcCurrentRoundPoolAmount();
 
     uint64_t randomBudget = 0;
@@ -369,7 +369,7 @@ void starplan::calcbigrwd()
         tbrewards.emplace(sender_id, [&](auto &obj){
             obj.index = tbrewards.available_primary_key();
             obj.round = currentRound();
-            obj.from = sender_id;
+            obj.from = _self;
             obj.to = lastBigPlanet;
             obj.amount = lastRound().bstate.bigPlanetBudget;
             obj.type = RWD_TYPE_TIMEOUT;
@@ -383,7 +383,7 @@ void starplan::calcbigrwd()
             tbrewards.emplace(sender_id, [&](auto &obj){
                 obj.index = tbrewards.available_primary_key();
                 obj.round = currentRound();
-                obj.from = sender_id;
+                obj.from = _self;
                 obj.to = bigPlanetId;
                 obj.amount = rewardPerPlanet;
                 obj.type = RWD_TYPE_POOL;
@@ -396,11 +396,74 @@ void starplan::calcbigrwd()
         obj.actualReward                +=  actualRewardAmount;
     });
 }
+void starplan::calctotalwei()
+{
+    bool check = lastRound().bstate.flag == true && lastRound().rstate.activeFlag == false && lastRound().rstate.weightFlag == false;
+    endRoundCheck(true,MSG_PROGRESS_ACTIVE_REWARDS);
+    uint64_t sender_id = get_trx_sender();
+    auto act_idx = tbactiveplans.get_index<N(bytrave)>();
+    auto id = lastRound().rstate.weightIndex | 0x0100000000000000;
+    auto itor = act_idx.lower_bound(id);
+    uint64_t totalWeight = 0;
+    for(uint64_t count = 0;;itor != act_idx.end() && itor->traveIndex > 0x0100000000000000; itor++,count++){
+        if(count >= COUNT_OF_TRAVERSAL_PER) {
+            tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+                obj.totalWeight                     +=  totalWeight;
+                obj.rstate.weightIndex              =   itor->trave_index;
+            });
+            return;
+        }else{
+            totalWeight = itor->weight ;
+        }
+    }
+    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+        obj.rstate.weightFlag             =   true;
+        obj.totalWeight                   +=  totalWeight;
+    });
+}
 void starplan::calcactrwd()
 {
-    // TODO 
-    // 1 计算活力星总权重，并对权重进行衰减
+    // 1、校验
+    bool check = lastRound().bstate.flag == true && lastRound().rstate.activeFlag == false && lastRound().totalWeight != 0;
+    endRoundCheck(check,MSG_PROGRESS_ACTIVE_REWARDS);
+    uint64_t sender_id = get_trx_sender();
     // 2 计算每个活力星发的奖励
+    auto act_idx = tbactiveplans.get_index<N(bytrave)>();
+    auto id = lastRound().rstate.traveIndex | 0x0100000000000000;
+    auto itor = act_idx.lower_bound(id);
+    uint64_t amount = 0;
+    uint64_t totalAmount = 0;
+    for(uint64_t count = 0;itor != act_idx.end() && itor->traveIndex > 0x0100000000000000; itor++,count++){
+        if(count >= COUNT_OF_TRAVERSAL_PER) {
+            tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+                obj.actualReward                    +=  totalAmount;
+                obj.rstate.traveIndex               =   itor->trave_index;
+            });
+            return;
+        }else{
+            amount = lastRound().bstate.superStarBudget * itor->weight /  lastRound().totalWeight;
+            totalAmount += amount;
+            tbrewards.emplace(sender_id, [&](auto &obj){
+                obj.index = tbrewards.available_primary_key();
+                obj.round = currentRound();
+                obj.from = _self;
+                obj.to = itor->id;
+                obj.amount = amount;
+                obj.type = RWD_TYPE_ACTIVE;
+                obj.flag = false;
+            });
+            tbactiveplans.modify(itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
+                uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
+                obj.weight = new_weight;
+                if(obj.weight == 0) obj.trave_index = obj.trave_index | 0x0000000000000000;
+                else obj.trave_index = obj.trave_index | 0x0100000000000000;
+            });
+        }
+    }
+    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+        obj.rstate.activeFlag              =   true;
+        obj.actualReward                   +=  totalAmount;
+    });
 }
 void starplan::calcsuprwd()
 {
@@ -428,7 +491,7 @@ void starplan::calcsuprwd()
         tbrewards.emplace(sender_id, [&](auto &obj){
             obj.index = tbrewards.available_primary_key();
             obj.round = currentRound();
-            obj.from = sender_id;
+            obj.from = _self;
             obj.to = superStar.id;
             obj.amount = amount;
             obj.type = RWD_TYPE_SUPER;
@@ -783,6 +846,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
             if(obj.invite_list.size() == ACTIVE_PROMOT_INVITES) {
                 obj.weight += WEIGHT;
                 obj.invite_list.clear();
+                obj.trave_index = obj.trave_index | 0x0100000000000000;
             }
         });
     } else {
@@ -793,6 +857,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
             obj.create_time = get_head_block_time();
             obj.create_round = currentRound();
             obj.weight = 0;
+            obj.trave_index = activePlanetAccountId | 0x0000000000000000;
         });
     }
 }
@@ -804,6 +869,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
     if (act_itor != act_idx.end()) {
         act_idx.modify(act_itor, activePlanetAccountId, [&](auto &obj) {
             obj.weight += WEIGHT;
+            obj.trave_index = obj.trave_index | 0x0100000000000000;
         });
     } else {
         tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
@@ -813,6 +879,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
             obj.create_time = get_head_block_time();
             obj.create_round = currentRound();
             obj.weight = WEIGHT;
+            obj.trave_index = activePlanetAccountId | 0x0100000000000000;
         });
     }
 }
@@ -849,6 +916,8 @@ void starplan::decayActivePlanetWeight()
         tbactiveplans.modify(act_itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
             uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
             obj.weight = new_weight;
+            if(obj.weight == 0) obj.trave_index = obj.trave_index | 0x0000000000000000;
+            else obj.trave_index = obj.trave_index | 0x0100000000000000;
         });
     }
 }
