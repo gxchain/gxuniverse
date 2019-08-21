@@ -430,7 +430,7 @@ void starplan::calcactrwd()
     auto itor = act_idx.lower_bound(id);
     uint64_t amount = 0;
     uint64_t totalAmount = 0;
-    for(uint64_t count = 0;itor != act_idx.end() && itor->traveIndex > 0x0100000000000000; itor++,count++){
+    for(uint64_t count = 0;itor != act_idx.end() && itor->traveIndex > 0x0100000000000000; ){
         if(count >= COUNT_OF_TRAVERSAL_PER) {
             tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
                 obj.actualReward                    +=  totalAmount;
@@ -449,7 +449,10 @@ void starplan::calcactrwd()
                 obj.type = RWD_TYPE_ACTIVE;
                 obj.flag = false;
             });
-            tbactiveplans.modify(itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
+            auto pri_itor = tbactiveplans.find(itor->index);
+            graphene_assert(pri_itor != tbactiveplans.end(), MSG_ACTIVE_PLANET_NOT_FOUND);
+            itor++,count++;
+            tbactiveplans.modify(pri_itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
                 uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
                 obj.weight = new_weight;
                 if(obj.weight == 0) obj.trave_index = obj.trave_index | 0x0000000000000000;
