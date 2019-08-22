@@ -391,7 +391,7 @@ void starplan::calcsuprwd()
     uint64_t totalAmount = 0;
     for(const auto &superStar : superStars) {
         if(superStar.vote <= 0) continue;
-        amount = lastRound().bstate.bigPlanetBudget * superStar.vote / totalVote;
+        amount = lastRound().bstate.superStarBudget * superStar.vote / totalVote;
         totalAmount += amount;
         tbrewards.emplace(sender_id, [&](auto &obj){
             obj.index = tbrewards.available_primary_key();
