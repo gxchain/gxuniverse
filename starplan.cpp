@@ -76,7 +76,7 @@ void starplan::selfactivate(const std::string &superstar)
     uint64_t amount = assetEqualCheck(Z + Z1 + Z2 + Z3);
 
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(isBigPlanet(sender_id) || isSuperStar(sender_id), MSG_SELF_ACTIVATE_AUTH_ERR);
+    graphene_assert(isBigPlanet(sender_id) || superstarEnabled(sender_id), MSG_SELF_ACTIVATE_AUTH_ERR);
 
     auto super_id = superStarCheck(superstar);
 
@@ -117,14 +117,12 @@ void starplan::uptobig()
 
     distributeInviteRewards(sender_id, getInviter(sender_id), RWD_TYPE_INVITE);
 
-    // 8、创建/更新活力星
     auto invitee_idx = tbinvites.get_index<N(byinvitee)>();
     auto invitee_itor = invitee_idx.find(sender_id);
-    if(invitee_itor != invitee_idx.end())//TODO check
-        updateActivePlanet(invitee_itor->inviter,invitee_itor->invitee);
+    if(invitee_itor != invitee_idx.end())
+        updateActivePlanet(invitee_itor->inviter, invitee_itor->invitee);
 }
 
-// inviter为0，表示没有邀请账户
 void starplan::uptosuper(const std::string &inviter, const std::string &memo)
 {
     //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
@@ -132,35 +130,31 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     baseCheck();
     roundFinishCheck();
 
-    // 2、判断是否存入足够GXC
     uint64_t amount = assetEqualCheck(X);
 
     uint64_t sender_id = get_trx_origin();
-
-    // 3、验证账户是否存在
     uint64_t inviter_id = inviterCheck(inviter, sender_id);
+
+    graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
+    graphene_assert(!superstarEnabled(sender_id), MSG_ALREADY_SUPER_STAR);
 
     //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
 
-    // 5、创建超级星
-    graphene_assert(addSuperStar(sender_id,memo), MSG_ALREADY_SUPER_STAR);
+    if(superstarExist(sender_id)) {
+        enableSuperstar(sender_id, memo);
+    } else {
+        createSuperstar(sender_id, memo);
+    }
 
-    // 6、创建抵押项
     createStaking(sender_id, amount, sender_id, STAKING_TYPE_TO_SUPER);
 
-    // 7、保存邀请关系，激活邀请关系
     invite(sender_id, inviter_id);
+
     activateInvite(sender_id);
 
-    // 8、当前轮进度+1
     progress(sender_id);
 
-    // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetForSuper(sender_id);
-
-    if(lastRound().current_round_invites >= ROUND_SIZE){
-        endround();
-    }
 }
 
 //void starplan::endround()
@@ -234,7 +228,7 @@ void starplan::claim(uint64_t stakingid)
             }
         }
     }
-    graphene_assert(isFind,MSG_MORTGAGE_NOT_FOUND);
+    graphene_assert(isFind, MSG_MORTGAGE_NOT_FOUND);
 }
 
 void starplan::upgrade(uint64_t flag)
@@ -262,7 +256,7 @@ void starplan::updatememo(const std::string &memo)
 
     // 1、判断账户是否为超级星
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(isSuperStar(sender_id), MSG_CHECK_SUPER_STAR_EXIST);
+    graphene_assert(superstarEnabled(sender_id), MSG_CHECK_SUPER_STAR_EXIST);
     // 2、更新账户memo
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(sender_id);
@@ -517,51 +511,47 @@ bool starplan::isInit()
 
 bool starplan::isInviter(std::string accname)
 {
-    // 验证邀请账户是否为大行星或者超级星
-    bool retValue = false;
     uint64_t inviter_id = get_account_id(accname.c_str(), accname.length());
-    if(isSuperStar(inviter_id) || isBigPlanet(inviter_id))
-        retValue = true;
-    return retValue;
+    return superstarEnabled(inviter_id) || isBigPlanet(inviter_id);
 }
 
-bool starplan::isSuperStar(uint64_t sender)
+bool starplan::superstarEnabled(uint64_t superId)
 {
-    bool retValue = false;
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
-    auto sup_itor = sup_idx.find(sender);
-    if(sup_itor != sup_idx.end() && sup_itor->disabled == false) { retValue = true; }
-    return retValue;
+    auto sup_itor = sup_idx.find(superId);
+    return sup_itor != sup_idx.end() && sup_itor->disabled == false;
 }
 
-bool starplan::addSuperStar(uint64_t sender, const std::string &memo)//TODO memo should be lawful
+bool starplan::superstarExist(uint64_t superId)
 {
-    graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
-    auto sup_itor = sup_idx.find(sender);
-    if(sup_itor == sup_idx.end()){
-        tbsuperstars.emplace(sender,[&](auto &obj) {
-            obj.index                   = tbsuperstars.available_primary_key();
-            obj.id                      = sender;
-            obj.create_time             = get_head_block_time();
-            obj.create_round            = currentRound();
-            obj.vote_num                = 0;
-            obj.disabled                = false;
-            obj.memo                    = memo;
-        });
-        return true;
-    }else{
-        if(sup_itor->disabled == true) { 
-            sup_idx.modify(sup_itor,sender,[&](auto &obj) {
-                obj.disabled                = false;
-                obj.memo                    = memo;
-            });
-            return true;
-        }else{
-            return false;
-        }
-    }
-    return false;
+    auto sup_itor = sup_idx.find(superId);
+    return sup_itor != sup_idx.end();
+}
+
+void starplan::createSuperstar(uint64_t accountId, const std::string &memo)
+{
+    tbsuperstars.emplace(accountId, [&](auto &obj) {
+        obj.index                   = tbsuperstars.available_primary_key();
+        obj.id                      = accountId;
+        obj.create_time             = get_head_block_time();
+        obj.create_round            = currentRound();
+        obj.vote_num                = 0;
+        obj.disabled                = false;
+        obj.memo                    = memo;
+    });
+}
+
+void starplan::enableSuperstar(uint64_t superId, const std::string &memo) {
+    auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
+    auto sup_itor = sup_idx.find(superId);
+    sup_idx.modify(sup_itor, superId, [&memo](auto &obj) {
+        obj.disabled                = false;
+        obj.memo                    = memo;
+        obj.create_time             = get_head_block_time();
+        obj.create_round            = currentRound();
+//        obj.vote_num                = 0;//TODO CHECK
+    });
 }
 
 bool starplan::isSmallPlanet(uint64_t sender)
@@ -836,8 +826,8 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
         });
     }
     auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor,activePlanetAccountId,[&](auto &obj){
-        obj.total_weight      = obj.total_weight + WEIGHT;
+    tbglobals.modify(g_itor,activePlanetAccountId, [&](auto &obj){
+        obj.total_weight += WEIGHT;
     });
 }
 
@@ -1019,11 +1009,11 @@ void starplan::cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount
         obj.vote_num            =   obj.vote_num - amount;
     });
 }
-void starplan::disableSuperStar(uint64_t superAccId)
+
+void starplan::disableSuperStar(uint64_t superId)
 {
-    // 修改超级星表失效
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
-    auto sup_itor = sup_idx.find(superAccId);
+    auto sup_itor = sup_idx.find(superId);
     graphene_assert(sup_itor!=sup_idx.end(),MSG_INVALID_ITOR);
     sup_idx.modify(sup_itor,get_trx_sender(),[&](auto &obj){
         obj.disabled            =   true;
@@ -1078,7 +1068,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
 {
     int64_t super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
-    graphene_assert(isSuperStar(super_id), MSG_CHECK_SUPER_STAR_EXIST);//TODO FIXME check super_id type
+    graphene_assert(superstarEnabled(super_id), MSG_CHECK_SUPER_STAR_EXIST);//TODO FIXME check super_id type
     return super_id;
 }
 
