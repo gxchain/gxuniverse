@@ -156,53 +156,6 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
 
     updateActivePlanetForSuper(sender_id);
 }
-
-//void starplan::endround()
-//{
-//    baseCheck();
-//    graphene_assert(isRoundFinish(), MSG_ROUND_NOT_END);
-//
-//    uint64_t sender_id = get_trx_origin();
-//    if (lastRound().current_round_invites < ROUND_SIZE) {
-//        graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
-//    }
-//
-//    calcBudgets();
-//
-//    uint64_t randomBudget = 0;
-//    uint64_t bigPlanetBudget = 0;
-//    uint64_t activePlanetBudget = 0;
-//    uint64_t superStarBudget = 0;
-//    getBudgets(randomBudget, bigPlanetBudget, activePlanetBudget, superStarBudget);
-//
-//    uint64_t actualReward = 0;
-//    vector<reward> rewardList;
-//    actualReward += calcRandomReward(rewardList, randomBudget);
-//    actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
-//    actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
-//    actualReward += calcSuperStarReward(rewardList, superStarBudget);
-//
-//    if (baseSecureCheck(rewardList, randomBudget)) {
-//        doReward(rewardList);
-//    }
-//
-//    // 6、修改总的资金池
-//    auto g_itor = tbglobals.find(0);
-//    tbglobals.modify(g_itor, sender_id, [&](auto &obj) {
-//        obj.pool_amount -= actualReward;
-//    });
-//
-//    tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
-//        obj.actual_rewards = actualReward;
-//    });
-//
-//    // 5、更新活力星权重
-//    decayActivePlanetWeight();
-//
-//    // 6、开启新的一轮
-//    createNewRound();
-//}
-
 void starplan::claim(uint64_t stakingid)
 {
     baseCheck();
@@ -380,7 +333,7 @@ void starplan::calcactrwd()
     auto itor = act_idx.lower_bound(id);
     uint64_t amount = 0;
     uint64_t totalAmount = 0;
-    for(uint64_t count = 0;itor != act_idx.end() && itor->traveIndex > 0x0100000000000000; ){
+    for(uint64_t count = 0;itor != act_idx.end() && itor->trave_index > 0x0100000000000000; ){
         if(count >= COUNT_OF_TRAVERSAL_PER) {
             tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
                 obj.actualReward                    +=  totalAmount;
@@ -474,10 +427,11 @@ void starplan::dorwd(uint64_t limit)
                 reward_reasons[itor->type],
                 strlen(reward_reasons[itor->type])
         );
-        tbrewards.modify(itor,get_trx_sender(), [&](auto &obj){
+        auto pri_itor = tbrewards.find(itor->index);
+        itor++;
+        tbrewards.modify(pri_itor,get_trx_sender(), [&](auto &obj){
             obj.flag = true;
         });
-        itor++;
     }
 }
 void starplan::newround()
@@ -767,6 +721,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
         obj.to = rewardAccountId;
         obj.amount = Z2;
         obj.type = rewardType;
+        obj.flag = true;
     });
 }
 
