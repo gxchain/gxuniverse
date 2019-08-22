@@ -157,58 +157,7 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
 
     // 8、插入更新一条活力星记录，权重为1
     updateActivePlanetForSuper(sender_id);
-
-    if(lastRound().current_round_invites >= ROUND_SIZE){
-        endround();
-    }
 }
-
-//void starplan::endround()
-//{
-//    baseCheck();
-//    graphene_assert(isRoundFinish(), MSG_ROUND_NOT_END);
-//
-//    uint64_t sender_id = get_trx_origin();
-//    if (lastRound().current_round_invites < ROUND_SIZE) {
-//        graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
-//    }
-//
-//    calcBudgets();
-//
-//    uint64_t randomBudget = 0;
-//    uint64_t bigPlanetBudget = 0;
-//    uint64_t activePlanetBudget = 0;
-//    uint64_t superStarBudget = 0;
-//    getBudgets(randomBudget, bigPlanetBudget, activePlanetBudget, superStarBudget);
-//
-//    uint64_t actualReward = 0;
-//    vector<reward> rewardList;
-//    actualReward += calcRandomReward(rewardList, randomBudget);
-//    actualReward += calcBigPlanetReward(rewardList, bigPlanetBudget);
-//    actualReward += calcActivePlanetReward(rewardList, activePlanetBudget);
-//    actualReward += calcSuperStarReward(rewardList, superStarBudget);
-//
-//    if (baseSecureCheck(rewardList, randomBudget)) {
-//        doReward(rewardList);
-//    }
-//
-//    // 6、修改总的资金池
-//    auto g_itor = tbglobals.find(0);
-//    tbglobals.modify(g_itor, sender_id, [&](auto &obj) {
-//        obj.pool_amount -= actualReward;
-//    });
-//
-//    tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
-//        obj.actual_rewards = actualReward;
-//    });
-//
-//    // 5、更新活力星权重
-//    decayActivePlanetWeight();
-//
-//    // 6、开启新的一轮
-//    createNewRound();
-//}
-
 void starplan::claim(uint64_t stakingid)
 {
     baseCheck();

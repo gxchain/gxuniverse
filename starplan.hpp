@@ -51,7 +51,6 @@ class starplan : public contract
     PAYABLE             selfactivate(const std::string &superstar);
     PAYABLE             uptobig();
     PAYABLE             uptosuper(const std::string &inviter, const std::string &memo);
-    ACTION              endround();
     ACTION              claim(uint64_t stakingid);
     ACTION              upgrade(uint64_t flag);
     ACTION              updatememo(const std::string &memo);
@@ -362,4 +361,4 @@ class starplan : public contract
 
     inline const struct starplan::tbround& lastRound();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcsuprwd)(dorwd)(newround))
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcsuprwd)(dorwd)(newround))
