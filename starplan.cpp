@@ -228,7 +228,7 @@ void starplan::calcrdmrwd()//TODO 测试性能
 {
     baseCheck();
 
-    starplan::tbround &curRound = lastRound();
+    const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true && curRound.rstate.randomPoolReady == false;
     endRoundCheck(check, MSG_PROGRESS_RANDOM_REWARDS);
 
@@ -253,7 +253,7 @@ void starplan::calcrdmrwd()//TODO 测试性能
                 obj.to      = bigPlanetId;
                 obj.amount  = rewardPerPlanet;
                 obj.type    = RWD_TYPE_RANDOM;
-                obj.flag    = false;
+                obj.rewarded = false;
             });
         }
     }
@@ -270,7 +270,7 @@ void starplan::calcbigrwd()
 {
     baseCheck();
 
-    starplan::tbround &curRound = lastRound();
+    const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true && curRound.rstate.bigReady == false;
     endRoundCheck(check,MSG_PROGRESS_BIG_REWARDS);
 
@@ -297,7 +297,7 @@ void starplan::calcbigrwd()
             obj.to = lastBigPlanet;
             obj.amount = curRound.bstate.bigPlanetBudget;
             obj.type = RWD_TYPE_TIMEOUT;
-            obj.flag = false;
+            obj.rewarded = false;
         });
         graphene_assert(curRound.bstate.bigPlanetBudget <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
         actualRewardAmount = curRound.bstate.bigPlanetBudget;
@@ -318,7 +318,7 @@ void starplan::calcbigrwd()
         }
     }
 
-    tbrounds.modify(curRound, sender_id, [&actualRewardAmount](auto &obj) {
+    tbrounds.modify(curRound, sender_id, [&](auto &obj) {
         obj.rstate.bigReady = true;
         obj.actualReward += actualRewardAmount;
 
@@ -330,7 +330,7 @@ void starplan::calcactrwd()
 {
     baseCheck();
 
-    starplan::tbround &curRound = lastRound();
+    const struct tbround &curRound = lastRound();
     auto g_itor = tbglobals.find(0);
     bool check = curRound.bstate.finished == true && curRound.rstate.activeReady == false && g_itor->total_weight != 0;
     endRoundCheck(check, MSG_PROGRESS_ACTIVE_REWARDS);
@@ -386,7 +386,7 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
 {
     baseCheck();
 
-    starplan::tbround &curRound = lastRound();
+    const struct tbround &curRound = lastRound();
     auto g_itor = tbglobals.find(0);
     bool check = curRound.bstate.finished == true &&
                  curRound.rstate.activeReady == false &&
@@ -424,7 +424,7 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
         if(itor == tbactiveplans.end()) {
             tbrounds.modify(curRound, sender_id, [&](auto &obj) {
                 obj.rstate.activeReady = true;
-                curRound.rstate.traveIndex = 0;
+                obj.rstate.traveIndex = 0;
                 obj.actualReward += totalAmount;
                 graphene_assert(obj.actualReward <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
             });
@@ -447,7 +447,7 @@ void starplan::calcsuprwd()
 {
     baseCheck();
 
-    starplan::tbround &curRound = lastRound();
+    const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true && curRound.rstate.superReady == false;
     endRoundCheck(check, MSG_PROGRESS_SUPER_REWARDS);
 
@@ -481,7 +481,7 @@ void starplan::calcsuprwd()
         });
     }
 
-    tbrounds.modify(curRound, sender_id, [&totalAmount](auto &obj) {
+    tbrounds.modify(curRound, sender_id, [&](auto &obj) {
         obj.rstate.superReady = true;
         obj.actualReward += totalAmount;
 
@@ -493,7 +493,7 @@ void starplan::dorwd(uint64_t limit)
 {
     baseCheck();
 
-    starplan::tbround &curRound = lastRound();
+    const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true &&
                  curRound.rstate.bigReady == true &&
                  curRound.rstate.randomPoolReady == true &&
@@ -508,7 +508,7 @@ void starplan::dorwd(uint64_t limit)
 
     for (auto i = 0; i < limit; i++) {
         if (itor->amount == 0) continue;
-        if (itor == rwd_idx.end() || itor->finished == true) break;
+        if (itor == rwd_idx.end() || itor->rewarded == true) break;
 
         inline_transfer(_self,
                         itor->to,
@@ -530,7 +530,7 @@ void starplan::newround()
 {
     baseCheck();
 
-    starplan::tbround &curRound = lastRound();
+    const starplan::tbround &curRound = lastRound();
 
     bool check = curRound.bstate.finished == true &&
             curRound.rstate.bigReady == true &&
@@ -599,7 +599,7 @@ void starplan::createSuperstar(uint64_t accountId, const std::string &memo)
 void starplan::enableSuperstar(uint64_t superId, const std::string &memo) {
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superId);
-    sup_idx.modify(sup_itor, superId, [&memo](auto &obj) {
+    sup_idx.modify(sup_itor, superId, [&](auto &obj) {
         obj.disabled                = false;
         obj.memo                    = memo;
         obj.create_time             = get_head_block_time();
@@ -821,7 +821,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
         obj.to = rewardAccountId;
         obj.amount = Z2;
         obj.type = rewardType;
-        obj.flag = true;
+        obj.rewarded = true;
     });
 }
 
