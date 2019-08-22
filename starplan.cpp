@@ -161,7 +161,7 @@ void starplan::claim(uint64_t stakingid)
     baseCheck();
 
     auto itor = tbstakes.find(stakingid);
-    graphene_assert(itor == tbstakes.end(), MSG_MORTGAGE_NOT_FOUND);
+    graphene_assert(itor != tbstakes.end(), MSG_MORTGAGE_NOT_FOUND);
     graphene_assert(get_head_block_time() > itor->end_time, MSG_MORTGAGE_LOCKED);
     graphene_assert(itor->claimed == false, MSG_MORTGAGE_CLAIMED);
 
