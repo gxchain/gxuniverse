@@ -47,10 +47,10 @@ class starplan : public contract
     }
 
     PAYABLE             init();
-    PAYABLE             vote(std::string inviter,std::string superstar);
-    PAYABLE             selfactivate(std::string superstar);
+    PAYABLE             vote(const std::string &inviter, const std::string &superstar);
+    PAYABLE             selfactivate(const std::string &superstar);
     PAYABLE             uptobig();
-    PAYABLE             uptosuper(std::string inviter,std::string memo);
+    PAYABLE             uptosuper(const std::string &inviter, const std::string &memo);
     ACTION              endround();
     ACTION              claim(uint64_t stakingid);
     ACTION              upgrade(uint64_t flag);
@@ -67,14 +67,14 @@ class starplan : public contract
 
   private:
 
-    void                invite(uint64_t sender, uint64_t inviter);
+    void                invite(uint64_t invitee, uint64_t inviter);
     inline void         activateInvite(uint64_t sender);
-    uint64_t            createVote(uint64_t sender,std::string superstar, uint64_t voteCount);
-    inline void         addVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
+    uint64_t            createVote(uint64_t sender, uint64_t super_id, uint64_t voteCount);
+    inline void         updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
     bool                isSuperStar(uint64_t sender);
     bool                addSuperStar(uint64_t sender, const std::string &memo);
     bool                isSmallPlanet(uint64_t sender);
-    bool                addSmallPlanet(uint64_t sender);
+    inline void         createSmallPlanet(uint64_t sender);
     bool                isBigPlanet(uint64_t sender);
     bool                addBigPlanet(uint64_t sender);
     uint64_t            currentRound();
@@ -85,11 +85,11 @@ class starplan : public contract
 
     bool                isInviter(std::string accname);
     bool                isInit();
-    bool                hasInvited(uint64_t sender);
-    void                addStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
+    bool                hasInvited(uint64_t invitee);
+    void                createStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     inline uint64_t     getInviter(uint64_t invitee);
     inline void         buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason);
-    inline void         buildDepositMsg(uint64_t amount,uint64_t type, std::string &msg);
+    inline void         buildDepositMsg(uint64_t amount, bool equalCheck, std::string &msg);
     void                distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);
     void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
@@ -278,7 +278,7 @@ class starplan : public contract
     struct tbactiveplan {
         uint64_t index;                     // 索引
         uint64_t id;                        // 账户id
-        std::vector<uint64_t> invite_list;  // 邀请人数，每达到5个大行星，置为0，记录create_round=当前轮，weight=1
+        std::vector<uint64_t> invitees;     // 邀请人数，每达到5个大行星，置为0，记录create_round=当前轮，weight=1
         uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t weight;                    // 权重，每小轮0.85的幅度衰减，衰减为0，重新计算
@@ -290,7 +290,7 @@ class starplan : public contract
         uint64_t by_weight() const { return weight; }
         uint64_t by_trave() const { return trave_index; }
 
-        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invite_list)(create_time)(create_round)(weight)(trave_index))
+        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invitees)(create_time)(create_round)(weight)(trave_index))
     };
     typedef multi_index<N(tbactiveplan), tbactiveplan,
                         indexed_by<N(byaccid), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_acc_id>>,
