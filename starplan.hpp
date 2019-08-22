@@ -59,6 +59,7 @@ class starplan : public contract
     ACTION              calcrdmrwd();
     ACTION              calcbigrwd();
     ACTION              calcactrwd();
+    ACTION              calcactrwd1();
     ACTION              calcsuprwd();
     ACTION              dorwd(uint64_t limit);
     ACTION              newround();

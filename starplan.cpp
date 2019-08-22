@@ -382,6 +382,67 @@ void starplan::calcactrwd()
     });
 }
 
+void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒钟可以遍历20000条，这个性能可以接受
+{
+    baseCheck();
+
+    starplan::tbround &curRound = lastRound();
+    auto g_itor = tbglobals.find(0);
+    bool check = curRound.bstate.finished == true &&
+                 curRound.rstate.activeReady == false &&
+                 g_itor->total_weight != 0;
+    endRoundCheck(check, MSG_PROGRESS_ACTIVE_REWARDS);
+
+    uint64_t sender_id = get_trx_sender();
+
+    uint64_t count = 0;
+    uint64_t amount = 0;
+    uint64_t totalAmount = 0;
+    auto itor = tbactiveplans.find(curRound.rstate.traveIndex);
+    do {
+        if(itor->weight > 0) {
+            amount = curRound.bstate.superStarBudget * itor->weight / g_itor->total_weight;
+            graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
+            totalAmount += amount;
+
+            tbrewards.emplace(sender_id, [&](auto &obj) {
+                obj.index       = tbrewards.available_primary_key();
+                obj.round       = curRound.round;
+                obj.from        = _self;
+                obj.to          = itor->id;
+                obj.amount      = amount;
+                obj.type        = RWD_TYPE_ACTIVE;
+                obj.rewarded    = 0;
+            });
+
+            tbactiveplans.modify(itor, sender_id, [](auto &obj) {
+                obj.weight = obj.weight * B_DECAY_PERCENT / 100;
+            });
+        }
+
+        itor++;
+        if(itor == tbactiveplans.end()) {
+            tbrounds.modify(curRound, sender_id, [&](auto &obj) {
+                obj.rstate.activeReady = true;
+                curRound.rstate.traveIndex = 0;
+                obj.actualReward += totalAmount;
+                graphene_assert(obj.actualReward <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
+            });
+
+            return;
+        }
+
+        count++;
+        if(count == COUNT_OF_TRAVERSAL_PER) break;
+    } while (true);
+
+    tbrounds.modify(curRound, sender_id, [&](auto &obj) {
+        obj.actualReward += totalAmount;
+        obj.rstate.traveIndex += COUNT_OF_TRAVERSAL_PER;
+        graphene_assert(obj.actualReward <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
+    });
+}
+
 void starplan::calcsuprwd()
 {
     baseCheck();
