@@ -306,7 +306,7 @@ void starplan::calcrdmrwd()//TODO 测试性能
     uint64_t sender_id = get_trx_sender();
 
     if(bigPlanetsToReward.size() == 0){
-        tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+        tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
             obj.rstate.randomPoolFlag       =   true;
             obj.actualReward                +=  0;
         });
@@ -328,7 +328,7 @@ void starplan::calcrdmrwd()//TODO 测试性能
         });
     }
 
-    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+    tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
         obj.rstate.randomPoolFlag       =   true;
         obj.actualReward                +=  actualRewardAmount;
     });
@@ -345,7 +345,7 @@ void starplan::calcbigrwd()
     getCurrentRoundBigPlanets(bigPlanets);
 
     if(bigPlanets.size() == 0){
-        tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+        tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
             obj.rstate.bigFlag              =   true;
             obj.actualReward                +=  0;
         });
@@ -380,7 +380,7 @@ void starplan::calcbigrwd()
             });
         }
     }
-    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+    tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
         obj.rstate.bigFlag              =   true;
         obj.actualReward                +=  actualRewardAmount;
     });
@@ -402,7 +402,7 @@ void starplan::calcactrwd()
     uint64_t totalAmount = 0;
     for(uint64_t count = 0;itor != act_idx.end() && itor->traveIndex > 0x0100000000000000; ){
         if(count >= COUNT_OF_TRAVERSAL_PER) {
-            tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+            tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
                 obj.actualReward                    +=  totalAmount;
                 obj.rstate.traveIndex               =   itor->trave_index;
             });
@@ -422,14 +422,14 @@ void starplan::calcactrwd()
             auto pri_itor = tbactiveplans.find(itor->index);
             graphene_assert(pri_itor != tbactiveplans.end(), MSG_ACTIVE_PLANET_NOT_FOUND);
             itor++,count++;
-            tbactiveplans.modify(pri_itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
+            tbactiveplans.modify(pri_itor, get_trx_sender(), [&](auto &obj){                           //修改活力星的权重
                 uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
                 obj.weight = new_weight;
                 if(obj.weight == 0) obj.trave_index = obj.trave_index & 0xF0FFFFFFFFFFFFFF;
             });
         }
     }
-    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+    tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
         obj.rstate.activeFlag              =   true;
         obj.actualReward                   +=  totalAmount;
     });
@@ -445,7 +445,7 @@ void starplan::calcsuprwd()
 
     uint64_t totalVote = getCurrentRoundSuperStars(superStars);
     if(totalVote == 0) {
-        tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+        tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
             obj.rstate.superFlag            =   true;
             obj.actualReward                +=  0;
         });
@@ -468,7 +468,7 @@ void starplan::calcsuprwd()
             obj.flag = false;
         });
     }
-    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+    tbrounds.modify(lastRound(), sender_id, [&](auto &obj) {
         obj.rstate.superFlag            =   true;
         obj.actualReward                +=  totalAmount;
     });
@@ -700,7 +700,7 @@ void starplan::activateInvite(uint64_t sender)
 
 void starplan::progress(uint64_t ramPayer)
 {
-    tbrounds.modify(lastRound(), ramPayer, [](auto &obj) {
+    tbrounds.modify(lastRound(), ramPayer, [&](auto &obj) {
         obj.current_round_invites = obj.current_round_invites + 1;
     });
 }
