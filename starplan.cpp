@@ -86,17 +86,13 @@ void starplan::selfactivate(const std::string &superstar)
 
     createStaking(sender_id, Z, super_id, STAKING_TYPE_SELF_ACTIVATE, vote_id);
 
-    updateAccountVote(sender_id,Z);
+    updateAccountVote(sender_id, Z);
 
     updateSuperstarVote(super_id, Z, sender_id);
 
     distributeInviteRewards(sender_id, sender_id, RWD_TYPE_SELF_ACTIVATE);
 
     progress(sender_id);
-
-    if (lastRound().current_round_invites >= ROUND_SIZE) {
-        endround();
-    }
 }
 
 void starplan::uptobig()
@@ -106,24 +102,19 @@ void starplan::uptobig()
     baseCheck();
     roundFinishCheck();
 
-    // 2、判断是否存入足够GXC
     uint64_t amount = assetEqualCheck(Z1 + Z2 + Z3);
 
-    // 3、判断是否是small planet，如果还不不是，则提示“You have to become a small planet first”
     uint64_t sender_id = get_trx_origin();
     graphene_assert(isSmallPlanet(sender_id), MSG_NOT_SMALL_PLANET);
+    graphene_assert(!isBigPlanet(sender_id), MSG_ALREADY_BIG_PLANET);
 
     //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
-    // 5、存到bigPlanet表
-    graphene_assert(addBigPlanet(sender_id), MSG_ALREADY_BIG_PLANET);
+    createBigPlanet(sender_id);
 
-    // 6、激活邀请关系
     activateInvite(sender_id);
 
-    // 7、当前轮进度+1
     progress(sender_id);
 
-    // 7、将2个GXC转移到奖池，1个GXC发送给邀请人
     distributeInviteRewards(sender_id, getInviter(sender_id), RWD_TYPE_INVITE);
 
     // 8、创建/更新活力星
@@ -131,11 +122,6 @@ void starplan::uptobig()
     auto invitee_itor = invitee_idx.find(sender_id);
     if(invitee_itor != invitee_idx.end())//TODO check
         updateActivePlanet(invitee_itor->inviter,invitee_itor->invitee);
-
-    // 9、当邀请关系满100人，开启新的一轮
-    if(lastRound().current_round_invites >= ROUND_SIZE){
-        endround();
-    }
 }
 
 // inviter为0，表示没有邀请账户
@@ -521,17 +507,12 @@ void starplan::newround()
     // 2、开启新的一轮
     createNewRound();
 }
+
 bool starplan::isInit()
 {
-    bool retValue = false;
-    // 1 校验底池是否已经初始化
-    auto itor = tbglobals.find(0);
-    // 2 校验当前轮资金池是否已经初始化
-    auto itor2 = tbrounds.find(0);
-    if (itor != tbglobals.end() && itor2 != tbrounds.end()) {
-        retValue = true;
-    }
-    return retValue;
+    auto global_itor = tbglobals.find(0);
+    auto round_itor = tbrounds.find(0);
+    return global_itor != tbglobals.end() && round_itor != tbrounds.end();
 }
 
 bool starplan::isInviter(std::string accname)
@@ -585,11 +566,9 @@ bool starplan::addSuperStar(uint64_t sender, const std::string &memo)//TODO memo
 
 bool starplan::isSmallPlanet(uint64_t sender)
 {
-    bool retValue = false;
     auto small_idx = tbsmallplans.get_index<N(byaccid)>();
     auto small_itor = small_idx.find(sender);
-    if(small_itor != small_idx.end()) { retValue = true; }
-    return retValue;
+    return small_itor != small_idx.end();
 }
 
 void starplan::createSmallPlanet(uint64_t sender)
@@ -613,18 +592,14 @@ bool starplan::isBigPlanet(uint64_t sender)
     return retValue;
 }
 
-bool starplan::addBigPlanet(uint64_t sender)
+void starplan::createBigPlanet(uint64_t sender)
 {
-    if (!isBigPlanet(sender)) {
-        tbbigplanets.emplace(sender, [&](auto &obj) {
-            obj.index           = tbbigplanets.available_primary_key();
-            obj.id              = sender;
-            obj.create_time     = get_head_block_time();
-            obj.create_round    = currentRound();
-        });
-        return true;
-    }
-    return false;
+    tbbigplanets.emplace(sender, [&](auto &obj) {
+        obj.index = tbbigplanets.available_primary_key();
+        obj.id = sender;
+        obj.create_time = get_head_block_time();
+        obj.create_round = currentRound();
+    });
 }
 
 bool starplan::hasInvited(uint64_t invitee)
@@ -693,9 +668,11 @@ void starplan::activateInvite(uint64_t sender)
 {
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
-    invite_idx.modify(invite_itor, sender, [&](auto &obj) {
-        obj.enabled = true;
-    });
+    if(invite_itor != invite_idx.end()) {
+        invite_idx.modify(invite_itor, sender, [&](auto &obj) {
+            obj.enabled = true;
+        });
+    }
 }
 
 void starplan::progress(uint64_t ramPayer)
@@ -726,10 +703,11 @@ void starplan::updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_
 {
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(account);
-    if (sup_itor != sup_idx.end())
+    if (sup_itor != sup_idx.end()) {
         sup_idx.modify(sup_itor, feePayer, [&voteCount](auto &obj) {
             obj.vote_num += voteCount;
         });
+    }
 }
 
 void starplan::createStaking(uint64_t sender, uint64_t amount, uint64_t to, uint64_t stakingType, uint64_t index)
@@ -850,7 +828,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
         tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
             obj.index = tbactiveplans.available_primary_key();
             obj.id = activePlanetAccountId;
-            obj.invites = {};
+            obj.invitees = {};
             obj.create_time = get_head_block_time();
             obj.create_round = currentRound();
             obj.weight = WEIGHT;
