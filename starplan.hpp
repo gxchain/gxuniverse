@@ -71,7 +71,6 @@ class starplan : public contract
     inline void         updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
     inline bool         superstarEnabled(uint64_t superId);
     inline bool         superstarExist(uint64_t superId);
-    bool                addSuperStar(uint64_t sender, const std::string &memo);
     inline void         createSuperstar(uint64_t sender, const std::string &memo);
     void                enableSuperstar(uint64_t superId, const std::string &memo);
     void                disableSuperStar(uint64_t superId);
