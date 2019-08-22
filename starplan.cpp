@@ -351,7 +351,7 @@ void starplan::calcactrwd()
             });
             return;
         }else{
-            amount = curRound.bstate.superStarBudget * itor->weight /  g_itor->total_weight;
+            amount = curRound.bstate.activePlanetBudget * itor->weight /  g_itor->total_weight;
             graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
             totalAmount += amount;
             tbrewards.emplace(sender_id, [&](auto &obj){
@@ -384,7 +384,6 @@ void starplan::calcactrwd()
 
 void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒钟可以遍历20000条，这个性能可以接受
 {
-	//TODO FIXME round表遍历完之后不修改round状态
     baseCheck();
 
     const struct tbround &curRound = lastRound();
@@ -400,11 +399,9 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
     uint64_t amount = 0;
     uint64_t totalAmount = 0;
     auto itor = tbactiveplans.find(curRound.rstate.traveIndex);
-    print("curRound.rstate.traveIndex=", curRound.rstate.traveIndex, "\n");
-    print("itor->weight=", itor->weight, "\n");
     do {
         if(itor->weight > 0) {
-            amount = curRound.bstate.superStarBudget * itor->weight / g_itor->total_weight;
+            amount = curRound.bstate.activePlanetBudget * itor->weight / g_itor->total_weight;
             graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
             totalAmount += amount;
 
@@ -425,11 +422,9 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
 
         count++;
         if(count == COUNT_OF_TRAVERSAL_PER) break;
-        print("count=", count, "\n");
 
         itor++;
         if(itor == tbactiveplans.end()) {
-        	print("A\n");
             tbrounds.modify(curRound, sender_id, [&](auto &obj) {
                 obj.rstate.activeReady = true;
                 obj.rstate.traveIndex += count;
@@ -441,9 +436,7 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
         }
     } while (true);
 
-    print("B\n");
     tbrounds.modify(curRound, sender_id, [&](auto &obj) {
-    	print("C\n");
         obj.actualReward += totalAmount;
         obj.rstate.traveIndex += COUNT_OF_TRAVERSAL_PER;
         graphene_assert(obj.actualReward <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
