@@ -128,9 +128,7 @@ class starplan : public contract
         bool bigFlag;
         bool activeFlag;
         bool superFlag;
-        bool weightFlag;
         uint64_t traveIndex;
-        uint64_t weightIndex;
     };
 
     //@abi table tbglobal i64
