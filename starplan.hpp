@@ -76,7 +76,7 @@ class starplan : public contract
     bool                isSmallPlanet(uint64_t sender);
     inline void         createSmallPlanet(uint64_t sender);
     bool                isBigPlanet(uint64_t sender);
-    bool                addBigPlanet(uint64_t sender);
+    inline void         createBigPlanet(uint64_t sender);
     uint64_t            currentRound();
     inline bool         isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
     inline bool         isRoundFull();//>=100 inviatees
@@ -84,7 +84,7 @@ class starplan : public contract
     inline uint64_t     updateAccountVote(uint64_t sender,uint64_t voteCount);
 
     bool                isInviter(std::string accname);
-    bool                isInit();
+    inline bool         isInit();
     bool                hasInvited(uint64_t invitee);
     void                createStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
     inline uint64_t     getInviter(uint64_t invitee);
@@ -148,7 +148,7 @@ class starplan : public contract
         uint64_t index;
         uint64_t pool_amount;               // 总资金池剩余资产
         uint64_t current_round;             // 当前轮数
-        uint64_t upgrading;                // 合约升级
+        uint8_t upgrading;                  // 合约升级
 
         uint64_t primary_key() const { return index; }
 
