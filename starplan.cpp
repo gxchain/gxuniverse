@@ -778,6 +778,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
         obj.to = rewardAccountId;
         obj.amount = Z2;
         obj.type = rewardType;
+        obj.type = true;
     });
 }
 
