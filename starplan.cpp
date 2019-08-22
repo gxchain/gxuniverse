@@ -825,7 +825,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t invit
     if(is_add_weight == true)                                                                    //更新全局权重
     {
         auto g_itor = tbglobals.find(0);
-        tbglobals.modify(g_itor,subAccountId,[&](auto &obj){
+        tbglobals.modify(g_itor,inviteeId,[&](auto &obj){
             obj.total_weight      = obj.total_weight + WEIGHT;
         });
     }
