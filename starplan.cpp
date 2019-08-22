@@ -43,8 +43,7 @@ void starplan::init()
 
 void starplan::vote(const std::string &inviter, const std::string &superstar)
 {
-    //校验
-
+    //////////////////////////////// 校验 ////////////////////////////////
     baseCheck();
     roundFinishCheck();
 
@@ -55,7 +54,7 @@ void starplan::vote(const std::string &inviter, const std::string &superstar)
 
     uint64_t super_id = superStarCheck(superstar);
 
-    //执行
+    //////////////////////////////// 执行 ////////////////////////////////
     invite(sender_id, inviter_id);
 
     uint64_t vote_id = createVote(sender_id, super_id, amount);
@@ -70,6 +69,7 @@ void starplan::vote(const std::string &inviter, const std::string &superstar)
 
 void starplan::selfactivate(const std::string &superstar)
 {
+    //////////////////////////////// 校验 ////////////////////////////////
     baseCheck();
     roundFinishCheck();
 
@@ -80,6 +80,7 @@ void starplan::selfactivate(const std::string &superstar)
 
     auto super_id = superStarCheck(superstar);
 
+    //////////////////////////////// 执行 ////////////////////////////////
     updateActivePlanet(sender_id, sender_id);
 
     uint64_t vote_id = createVote(sender_id, super_id, Z);
@@ -97,8 +98,7 @@ void starplan::selfactivate(const std::string &superstar)
 
 void starplan::uptobig()
 {
-    //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
-
+    //////////////////////////////// 校验 ////////////////////////////////
     baseCheck();
     roundFinishCheck();
 
@@ -108,7 +108,7 @@ void starplan::uptobig()
     graphene_assert(isSmallPlanet(sender_id), MSG_NOT_SMALL_PLANET);
     graphene_assert(!isBigPlanet(sender_id), MSG_ALREADY_BIG_PLANET);
 
-    //////////////////////////////////////// 校验通过后，创建一个大行星 //////////////////////////////////////////
+    //////////////////////////////// 执行 ////////////////////////////////
     createBigPlanet(sender_id);
 
     activateInvite(sender_id);
@@ -125,8 +125,7 @@ void starplan::uptobig()
 
 void starplan::uptosuper(const std::string &inviter, const std::string &memo)
 {
-    //////////////////////////////////////// 对调用进行校验 /////////////////////////////////////////////////
-
+    //////////////////////////////// 校验 ////////////////////////////////
     baseCheck();
     roundFinishCheck();
 
@@ -138,8 +137,7 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
     graphene_assert(!superstarEnabled(sender_id), MSG_ALREADY_SUPER_STAR);
 
-    //////////////////////////////////////// 校验通过后，创建一个超级星 //////////////////////////////////////////
-
+    //////////////////////////////// 执行 ////////////////////////////////
     if(superstarExist(sender_id)) {
         enableSuperstar(sender_id, memo);
     } else {
@@ -156,32 +154,33 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
 
     updateActivePlanetForSuper(sender_id);
 }
+
 void starplan::claim(uint64_t stakingid)
 {
+    //TODO check 如果在一轮执行的过程中或者结算过程中调用会怎样？分小行星/大行星/超级星/活力星等情况分析
     baseCheck();
-    bool isFind = false;
+
     auto itor = tbstakes.find(stakingid);
-    if(itor != tbstakes.end()){
-        if(get_head_block_time() > itor->end_time && itor->claimed == false){
-            // 1.1、解除抵押提现
-            isFind = true;
-            inline_transfer(_self , itor->account , CORE_ASSET_ID , itor->amount, LOG_CLAIM,strlen(LOG_CLAIM));
-            // 1.2、修改该项抵押失效 
-            tbstakes.modify(itor,get_trx_sender(),[&](auto &obj){
-                obj.claimed          =   true;
-                obj.claim_time       =   get_head_block_time();
-            });
-            // 1.3、获取抵押类型，禁用某投票项，修改超级星得票数等等
-            if(itor->staking_type == STAKING_TYPE_VOTE){
-                cancelVote(itor->vote_index,itor->staking_to,itor->amount);
-            }else if(itor->staking_type == STAKING_TYPE_TO_SUPER){
-                disableSuperStar(itor->staking_to);
-            }else{
-                graphene_assert(false,MSG_UNKNOWN_CLAIM_REASON);
-            }
-        }
+    graphene_assert(itor == tbstakes.end(), MSG_MORTGAGE_NOT_FOUND);
+    graphene_assert(get_head_block_time() > itor->end_time, MSG_MORTGAGE_LOCKED);
+    graphene_assert(itor->claimed == false, MSG_MORTGAGE_CLAIMED);
+
+    inline_transfer(_self, itor->account, CORE_ASSET_ID, itor->amount, LOG_CLAIM, strlen(LOG_CLAIM));
+
+    tbstakes.modify(itor, get_trx_sender(), [&](auto &obj) {
+        obj.claimed = true;
+        obj.claim_time = get_head_block_time();
+    });
+
+    if (itor->staking_type == STAKING_TYPE_VOTE) {
+        cancelVote(itor->vote_index, itor->staking_to, itor->amount);
+    } else if (itor->staking_type == STAKING_TYPE_TO_SUPER) {
+        disableSuperStar(itor->staking_to);
+    } else if (itor->staking_type == STAKING_TYPE_SELF_ACTIVATE) {
+        //TODO impl
+    } else {
+        graphene_assert(false, MSG_UNKNOWN_CLAIM_REASON);
     }
-    graphene_assert(isFind, MSG_MORTGAGE_NOT_FOUND);
 }
 
 void starplan::upgrade(uint64_t flag)
@@ -209,7 +208,7 @@ void starplan::updatememo(const std::string &memo)
 
     // 1、判断账户是否为超级星
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(superstarEnabled(sender_id), MSG_CHECK_SUPER_STAR_EXIST);
+    graphene_assert(superstarEnabled(sender_id), MSG_SUPER_STAR_NOT_EXIST);
     // 2、更新账户memo
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(sender_id);
@@ -948,20 +947,22 @@ bool starplan::isUpgrading()
     return itor->upgrading > 0;
 }
 
-void starplan::cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount)
+void starplan::cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amount)
 {
     // 修改投票表
     auto vote_itor = tbvotes.find(voteIndex);
-    graphene_assert(vote_itor!=tbvotes.end(),MSG_INVALID_ITOR);
-    tbvotes.modify(vote_itor,get_trx_sender(),[&](auto &obj){
-        obj.disabled            =   true;
+    graphene_assert(vote_itor != tbvotes.end(), MSG_INVALID_ITOR);
+    tbvotes.modify(vote_itor, get_trx_sender(), [&](auto &obj) {
+        obj.disabled = true;//TODO check 修改了也没用了，只是用来记录和展示
     });
+
     // 修改超级星得票数
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superAccId);
-    graphene_assert(sup_itor!=sup_idx.end(),MSG_INVALID_ITOR);
-    sup_idx.modify(sup_itor,get_trx_sender(),[&](auto &obj){
-        obj.vote_num            =   obj.vote_num - amount;
+    graphene_assert(sup_itor != sup_idx.end(), MSG_INVALID_ITOR);
+    sup_idx.modify(sup_itor, get_trx_sender(), [&](auto &obj) {
+        graphene_assert(obj.vote_num >= amount, MSG_INVALID_VOTE_MODIFY);
+        obj.vote_num -= amount;
     });
 }
 
@@ -969,9 +970,9 @@ void starplan::disableSuperStar(uint64_t superId)
 {
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superId);
-    graphene_assert(sup_itor!=sup_idx.end(),MSG_INVALID_ITOR);
-    sup_idx.modify(sup_itor,get_trx_sender(),[&](auto &obj){
-        obj.disabled            =   true;
+    graphene_assert(sup_itor != sup_idx.end(), MSG_SUPER_STAR_NOT_EXIST);
+    sup_idx.modify(sup_itor, get_trx_sender(), [&](auto &obj) {
+        obj.disabled = true;
     });
 }
 
@@ -1023,7 +1024,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
 {
     int64_t super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
-    graphene_assert(superstarEnabled(super_id), MSG_CHECK_SUPER_STAR_EXIST);//TODO FIXME check super_id type
+    graphene_assert(superstarEnabled(super_id), MSG_SUPER_STAR_NOT_EXIST);//TODO FIXME check super_id type
     return super_id;
 }
 
