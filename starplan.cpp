@@ -1048,7 +1048,7 @@ void starplan::cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amou
     graphene_assert(sup_itor != sup_idx.end(), MSG_INVALID_ITOR);
     sup_idx.modify(sup_itor, get_trx_sender(), [&](auto &obj) {
         graphene_assert(obj.vote_num >= amount, MSG_INVALID_VOTE_MODIFY);
-        obj.vote_num -= amount;
+        obj.vote_num -= amount;//TODO check overflow
     });
 }
 
