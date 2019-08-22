@@ -294,13 +294,14 @@ void starplan::updatememo(const std::string &memo)
         obj.memo = memo;
     });
 }
+
 void starplan::getbudget()
 {
     endRoundCheck(lastRound().bstate.flag == false, MSG_GET_BUDGET);
     calcBudgets();
 }
 
-void starplan::calcrdmrwd()
+void starplan::calcrdmrwd()//TODO 测试性能
 {
     bool check = lastRound().bstate.flag == true && lastRound().rstate.randomPoolFlag == false;
     endRoundCheck(check,MSG_PROGRESS_RANDOM_REWARDS);
@@ -311,7 +312,7 @@ void starplan::calcrdmrwd()
     getCurrentRoundBigPlanets(bigPlanets);
     chooseBigPlanet(bigPlanets, bigPlanetsToReward);
 
-    graphene_assert(bigPlanetsToReward.size() > 0,MSG_BIG_PLANET_COUNTS);
+    graphene_assert(bigPlanetsToReward.size() > 0,MSG_BIG_PLANET_COUNTS); //TODO FIXME bigPlanetsToReward.size()当有100个自邀请的时候，这个判断是0
 
     uint64_t actualRewardAmount = 0;
     uint64_t rewardPerPlanet = lastRound().bstate.randomBudget / bigPlanetsToReward.size();
@@ -334,6 +335,7 @@ void starplan::calcrdmrwd()
         obj.actualReward                +=  actualRewardAmount;
     });
 }
+
 void starplan::calcbigrwd()
 {
     bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == false;
@@ -343,7 +345,7 @@ void starplan::calcbigrwd()
     vector<uint64_t> bigPlanets;
     getCurrentRoundBigPlanets(bigPlanets);
 
-    graphene_assert(bigPlanets.size() > 0,MSG_BIG_PLANET_COUNTS);
+    graphene_assert(bigPlanets.size() > 0,MSG_BIG_PLANET_COUNTS);//TODO FIXME bigPlanets.size()可能是0，当100个自邀请的时候
 
     uint64_t lastBigPlanet = 0;
     uint64_t actualRewardAmount = 0;
@@ -378,7 +380,8 @@ void starplan::calcbigrwd()
         obj.actualReward                +=  actualRewardAmount;
     });
 }
-void starplan::calctotalwei()
+
+void starplan::calctotalwei()//TODO 记录全局总权重并维护和更新，减少一次活力星表的全表遍历
 {
     bool check = lastRound().bstate.flag == true && lastRound().rstate.activeFlag == false && lastRound().rstate.weightFlag == false;
     endRoundCheck(true,MSG_PROGRESS_ACTIVE_REWARDS);
@@ -440,8 +443,8 @@ void starplan::calcactrwd()
             tbactiveplans.modify(pri_itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
                 uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
                 obj.weight = new_weight;
-                if(obj.weight == 0) obj.trave_index = obj.trave_index | 0x0000000000000000;
-                else obj.trave_index = obj.trave_index | 0x0100000000000000;
+                if(obj.weight == 0) obj.trave_index = obj.trave_index & 0xF0FFFFFFFFFFFFFF;
+//                else obj.trave_index = obj.trave_index | 0x0100000000000000;
             });
         }
     }
@@ -490,7 +493,7 @@ void starplan::calcsuprwd()
 }
 void starplan::dorwd(uint64_t limit)
 {
-    bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == false && lastRound().rstate.randomPoolFlag == false && lastRound().rstate.superFlag == false;
+    bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == false && lastRound().rstate.randomPoolFlag == false && lastRound().rstate.superFlag == false;//TODO active flag的检查
     endRoundCheck(check,MSG_CALC_REWARDS);
     uint64_t sender_id = get_trx_sender();
 
@@ -516,7 +519,7 @@ void starplan::dorwd(uint64_t limit)
 }
 void starplan::newround()
 {
-    bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == false && lastRound().rstate.randomPoolFlag == false && lastRound().rstate.superFlag == false;
+    bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == true && lastRound().rstate.randomPoolFlag == true && lastRound().rstate.superFlag == true;
     endRoundCheck(check,MSG_CALC_REWARDS);
     uint64_t sender_id = get_trx_sender();
 
