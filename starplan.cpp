@@ -287,12 +287,14 @@ void starplan::updatememo(const std::string &memo)
 
 void starplan::getbudget()
 {
+    baseCheck();
     endRoundCheck(lastRound().bstate.flag == false, MSG_GET_BUDGET);
     calcBudgets();
 }
 
 void starplan::calcrdmrwd()//TODO 测试性能
 {
+    baseCheck();
     bool check = lastRound().bstate.flag == true && lastRound().rstate.randomPoolFlag == false;
     endRoundCheck(check,MSG_PROGRESS_RANDOM_REWARDS);
 
@@ -334,6 +336,7 @@ void starplan::calcrdmrwd()//TODO 测试性能
 
 void starplan::calcbigrwd()
 {
+    baseCheck();
     bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == false;
     endRoundCheck(check,MSG_PROGRESS_BIG_REWARDS);
     uint64_t sender_id = get_trx_sender();
@@ -386,8 +389,8 @@ void starplan::calcbigrwd()
 void starplan::calcactrwd()
 {
     // 1、校验
+    baseCheck();
     auto g_itor = tbglobals.find(0);
-
     bool check = lastRound().bstate.flag == true && lastRound().rstate.activeFlag == false && g_itor->total_weight != 0;
     endRoundCheck(check,MSG_PROGRESS_ACTIVE_REWARDS);
     uint64_t sender_id = get_trx_sender();
@@ -433,6 +436,7 @@ void starplan::calcactrwd()
 }
 void starplan::calcsuprwd()
 {
+    baseCheck();
     bool check = lastRound().bstate.flag == true && lastRound().rstate.superFlag == false;
     endRoundCheck(check,MSG_PROGRESS_SUPER_REWARDS);
     uint64_t sender_id = get_trx_sender();
@@ -471,6 +475,7 @@ void starplan::calcsuprwd()
 }
 void starplan::dorwd(uint64_t limit)
 {
+    baseCheck();
     bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == true && lastRound().rstate.randomPoolFlag == true && lastRound().rstate.activeFlag == true && lastRound().rstate.superFlag == true;
     endRoundCheck(check,MSG_CALC_REWARDS);
     uint64_t sender_id = get_trx_sender();
@@ -497,6 +502,7 @@ void starplan::dorwd(uint64_t limit)
 }
 void starplan::newround()
 {
+    baseCheck();
     bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == true && lastRound().rstate.randomPoolFlag == true && lastRound().rstate.activeFlag == true && lastRound().rstate.superFlag == true;
     endRoundCheck(check,MSG_CALC_REWARDS);
     uint64_t sender_id = get_trx_sender();
@@ -1121,7 +1127,6 @@ uint64_t starplan::updateAccountVote(uint64_t sender, uint64_t voteCount)
 
 void starplan::endRoundCheck(bool check,const std::string &msg)
 {
-    baseCheck();
     graphene_assert(isRoundFinish(), MSG_ROUND_NOT_END);
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
