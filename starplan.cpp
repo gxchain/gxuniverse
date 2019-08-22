@@ -468,22 +468,30 @@ void starplan::dorwd(uint64_t limit)
 void starplan::newround()
 {
     baseCheck();
-    bool check = lastRound().bstate.finished == true && lastRound().rstate.bigReady == true && lastRound().rstate.randomPoolReady == true && lastRound().rstate.activeReady == true && lastRound().rstate.superReady == true;
-    endRoundCheck(check,MSG_CALC_REWARDS);
+
+    starplan::tbround &curRound = lastRound();
+
+    bool check = curRound.bstate.finished == true &&
+            curRound.rstate.bigReady == true &&
+            curRound.rstate.randomPoolReady == true &&
+            curRound.rstate.activeReady == true &&
+            curRound.rstate.superReady == true;
+
+    endRoundCheck(check, MSG_CALC_REWARDS);
+
     uint64_t sender_id = get_trx_sender();
 
      // 1、修改总的资金池
     auto g_itor = tbglobals.find(0);
     tbglobals.modify(g_itor, sender_id, [&](auto &obj) {
-        obj.pool_amount -= lastRound().actualReward;
+        obj.pool_amount -= curRound.actualReward;//TODO check overflow
         obj.total_weight = obj.total_weight * B_DECAY_PERCENT / 100;
     });
 
-    tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
-        obj.actual_rewards = lastRound().actualReward;
+    tbrounds.modify(curRound, sender_id, [&](auto &obj) {
+        obj.actual_rewards = curRound.actualReward;
     });
 
-    // 2、开启新的一轮
     createNewRound();
 }
 
@@ -927,15 +935,17 @@ const struct starplan::tbround& starplan::lastRound()
 void starplan::createNewRound()
 {
     // 1 结束当前轮，修改round表和global表
-    auto sender = get_trx_sender();
-    tbrounds.modify(lastRound(), sender, [&](auto &obj){
-        obj.end_time            = get_head_block_time();
+    uint64_t sender = get_trx_sender();
+    tbrounds.modify(lastRound(), sender, [&](auto &obj) {
+        obj.end_time = get_head_block_time();
     });
+
     // 2 创建新的一轮
     auto g_itor = tbglobals.find(0);
     tbglobals.modify(g_itor,sender,[&](auto &obj){
-        obj.current_round      = obj.current_round + 1;
+        obj.current_round += 1;
     });
+
     tbrounds.emplace(sender,[&](auto &obj) {
         obj.round                   = tbrounds.available_primary_key();
         obj.current_round_invites   = 0;
