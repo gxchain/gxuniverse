@@ -69,8 +69,12 @@ class starplan : public contract
     inline void         activateInvite(uint64_t sender);
     uint64_t            createVote(uint64_t sender, uint64_t super_id, uint64_t voteCount);
     inline void         updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
-    bool                isSuperStar(uint64_t sender);
+    inline bool         superstarEnabled(uint64_t superId);
+    inline bool         superstarExist(uint64_t superId);
     bool                addSuperStar(uint64_t sender, const std::string &memo);
+    inline void         createSuperstar(uint64_t sender, const std::string &memo);
+    void                enableSuperstar(uint64_t superId, const std::string &memo);
+    void                disableSuperStar(uint64_t superId);
     bool                isSmallPlanet(uint64_t sender);
     inline void         createSmallPlanet(uint64_t sender);
     bool                isBigPlanet(uint64_t sender);
@@ -104,7 +108,6 @@ class starplan : public contract
     inline uint64_t     checkSender();                                                  //验证调用者和原始调用者是否相同
     bool                isUpgrading();                                                    //验证合约状态升级
     void                cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount);
-    void                disableSuperStar(uint64_t superAccId);
 
     inline void         baseCheck();
     inline void         roundFinishCheck();
