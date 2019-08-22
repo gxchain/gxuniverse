@@ -806,7 +806,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
 {
     std::string rewardReason;
     buildRewardReason(invitee, rewardAccountId, rewardType, rewardReason);
-    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, rewardReason.c_str(), rewardReason.length());
+    inline_transfer(_self, rewardAccountId, CORE_ASSET_ID, Z2, rewardReason.c_str(), rewardReason.length());//TODO 异步发奖
 
     tbrounds.modify(lastRound(), invitee, [&](auto &obj)
     {
