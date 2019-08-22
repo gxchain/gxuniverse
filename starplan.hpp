@@ -93,20 +93,12 @@ class starplan : public contract
     void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
     void                calcBudgets();
-    void                decayActivePlanetWeight();
 
     void                getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
-    uint64_t            getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
     uint64_t            getCurrentRoundSuperStars(vector<SuperStar> &superStars);
     void                chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
 
-    inline uint64_t     calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t     calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t     calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t     calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
-
     bool                baseSecureCheck(vector<reward> &rewardList, uint64_t baseSecureCheck);
-    void                doReward(vector<reward> &rewardList);
 
     void                createNewRound();
 

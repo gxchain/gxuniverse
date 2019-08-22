@@ -852,7 +852,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
         });
     }
     auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor,subAccountId,[&](auto &obj){
+    tbglobals.modify(g_itor,activePlanetAccountId,[&](auto &obj){
         obj.total_weight      = obj.total_weight + WEIGHT;
     });
 }
@@ -892,20 +892,6 @@ void starplan::calcBudgets()
     });
 }
 
-void starplan::decayActivePlanetWeight()
-{
-    // 更新活力星的权重
-    auto act_itor = tbactiveplans.begin();
-    for(; act_itor != tbactiveplans.end(); act_itor++){
-        tbactiveplans.modify(act_itor, get_trx_sender(), [](auto &obj){                           //修改活力星的权重
-            uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
-            obj.weight = new_weight;
-            if(obj.weight == 0) obj.trave_index = obj.trave_index | 0x0000000000000000;
-            else obj.trave_index = obj.trave_index | 0x0100000000000000;
-        });
-    }
-}
-
 void starplan::getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets)
 {
     auto big_idx = tbbigplanets.get_index<N(byround)>();
@@ -916,22 +902,6 @@ void starplan::getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets)
         bigPlanets.push_back(itor->id);
         itor++;
     }
-}
-
-uint64_t starplan::getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets)
-{
-    auto act_idx = tbactiveplans.get_index<N(byweight)>();
-    uint64_t total_weights = 0;
-    auto itor = act_idx.upper_bound(0);
-    while (itor != act_idx.end() && itor->weight > 0)
-    {
-        if(itor->id == DEFAULT_INVITER) continue;
-        total_weights += itor->weight;
-        activePlanets.push_back(ActivePlanet { itor->id, itor->weight });
-        itor++;
-    }
-
-    return total_weights;
 }
 
 uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
@@ -993,87 +963,6 @@ const struct starplan::tbround& starplan::lastRound()
     return *round_itor;
 }
 
-uint64_t starplan::calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget)
-{
-    vector<uint64_t> bigPlanets;
-    vector<uint64_t> bigPlanetsToReward;
-
-    getCurrentRoundBigPlanets(bigPlanets);
-    chooseBigPlanet(bigPlanets, bigPlanetsToReward);
-
-    if(bigPlanetsToReward.size() == 0) return 0;
-
-    uint64_t actualRewardAmount = 0;
-    uint64_t rewardPerPlanet = rewardBudget / bigPlanetsToReward.size();
-
-    for(auto bigPlanetId : bigPlanetsToReward) {
-        actualRewardAmount += rewardPerPlanet;
-        rewardList.push_back(reward{bigPlanetId, rewardPerPlanet, RWD_TYPE_RANDOM});
-    }
-
-    return actualRewardAmount;
-}
-
-uint64_t starplan::calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget)
-{
-    vector<uint64_t> bigPlanets;
-    getCurrentRoundBigPlanets(bigPlanets);
-
-    if(bigPlanets.size() == 0) return 0;
-
-    uint64_t lastBigPlanet = 0;
-    if(isInviteTimeout(lastBigPlanet)) {// 如果超过12小时没有新的invitee则所有奖励归当轮最后一个大行星
-        rewardList.push_back(reward{lastBigPlanet, rewardBudget, RWD_TYPE_TIMEOUT});
-        return rewardBudget;
-    }
-
-    uint64_t actualRewardAmount = 0;
-    uint64_t rewardPerPlanet = rewardBudget / bigPlanets.size();
-
-    for(auto bigPlanetId : bigPlanets) {
-        actualRewardAmount += rewardPerPlanet;
-        rewardList.push_back(reward{bigPlanetId, rewardPerPlanet, RWD_TYPE_POOL});
-    }
-
-    return actualRewardAmount;
-}
-
-uint64_t starplan::calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget)
-{
-    vector<ActivePlanet> activePlanets;
-    uint64_t totalWeight = getCurrentRoundActivePlanets(activePlanets);
-    if(totalWeight == 0) return 0;
-
-    uint64_t amount = 0;
-    uint64_t totalAmount = 0;
-    for(const auto &activePlanet : activePlanets) {
-        amount = rewardBudget * activePlanet.weight / totalWeight;
-        totalAmount += amount;
-        rewardList.push_back(reward{activePlanet.id, amount, RWD_TYPE_ACTIVE});
-    }
-
-    return totalAmount;
-}
-
-uint64_t starplan::calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget)
-{
-    vector<SuperStar> superStars;
-
-    uint64_t totalVote = getCurrentRoundSuperStars(superStars);
-    if(totalVote == 0) return 0;
-
-    uint64_t amount = 0;
-    uint64_t totalAmount = 0;
-    for(const auto &superStar : superStars) {
-        if(superStar.vote <= 0) continue;
-        amount = rewardBudget * superStar.vote / totalVote;
-        totalAmount += amount;
-        rewardList.push_back(reward{superStar.id, amount, RWD_TYPE_SUPER});
-    }
-
-    return totalAmount;
-}
-
 bool starplan::baseSecureCheck(vector<reward> &rewardList, uint64_t randomBudget)
 {
     if (rewardList.size() == 0) {
@@ -1090,31 +979,6 @@ bool starplan::baseSecureCheck(vector<reward> &rewardList, uint64_t randomBudget
 
     //TODO add other secure check
     return true;
-}
-
-void starplan::doReward(vector<reward> &rewardList)
-{
-    for (const auto &reward : rewardList)
-    {
-        if(reward.amount == 0) continue;
-
-        inline_transfer(
-                _self,
-                reward.to,
-                CORE_ASSET_ID,
-                reward.amount,
-                reward_reasons[reward.type],
-                strlen(reward_reasons[reward.type])
-        );
-        tbrewards.emplace(get_trx_sender(), [&](auto &obj){
-            obj.index           = tbrewards.available_primary_key();
-            obj.round           = currentRound();
-            obj.from            = _self;
-            obj.to              = reward.to;
-            obj.amount          = reward.amount;
-            obj.type            = reward.type;
-        });
-    }
 }
 
 void starplan::createNewRound()
