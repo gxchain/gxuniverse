@@ -530,7 +530,7 @@ void starplan::dorwd(uint64_t limit)
 }
 void starplan::newround()
 {
-    bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == true && lastRound().rstate.randomPoolFlag == true && lastRound().rstate.superFlag == true;
+    bool check = lastRound().bstate.flag == true && lastRound().rstate.bigFlag == true && lastRound().rstate.randomPoolFlag == true && lastRound().rstate.activeFlag == true && lastRound().rstate.superFlag == true;
     endRoundCheck(check,MSG_CALC_REWARDS);
     uint64_t sender_id = get_trx_sender();
 
