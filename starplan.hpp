@@ -101,8 +101,6 @@ class starplan : public contract
     uint64_t            getCurrentRoundSuperStars(vector<SuperStar> &superStars);
     void                chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
 
-    bool                baseSecureCheck(vector<reward> &rewardList, uint64_t baseSecureCheck);
-
     void                createNewRound();
 
     inline uint64_t     checkSender();                                                  //验证调用者和原始调用者是否相同
@@ -119,18 +117,19 @@ class starplan : public contract
     inline void         endRoundCheck(bool check,const std::string &msg);
 
   private:
-    struct budgetstate{
+    struct budgetstate {
         uint64_t randomBudget;
         uint64_t bigPlanetBudget;
         uint64_t activePlanetBudget;
         uint64_t superStarBudget;
-        bool flag;
+        bool finished;
     };
-    struct rewardstate{
-        bool randomPoolFlag;
-        bool bigFlag;
-        bool activeFlag;
-        bool superFlag;
+
+    struct rewardstate {
+        bool randomPoolReady;
+        bool bigReady;
+        bool activeReady;
+        bool superReady;
         uint64_t traveIndex;
     };
 
@@ -345,14 +344,14 @@ class starplan : public contract
         uint64_t to;                        // 奖励去向账户
         uint64_t amount;                    // 奖励金额
         uint64_t type;                      // 奖励类型
-        uint64_t flag;                      // 是否已经发放
+        uint8_t rewarded;                   // 是否已经发放
 
         uint64_t primary_key() const { return index; }
         uint64_t by_round() const { return round; }
         uint64_t by_acc_id() const { return to; }
-        uint64_t by_flag() const { return flag;}
+        uint64_t by_flag() const { return rewarded;}
 
-        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(flag))
+        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(rewarded))
     };
     typedef multi_index<N(tbreward), tbreward,
                         indexed_by<N(byaccid), const_mem_fun<tbreward, uint64_t, &tbreward::by_round>>,
