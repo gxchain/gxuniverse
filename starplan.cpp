@@ -311,12 +311,18 @@ void starplan::calcrdmrwd()//TODO 测试性能
 
     getCurrentRoundBigPlanets(bigPlanets);
     chooseBigPlanet(bigPlanets, bigPlanetsToReward);
+    uint64_t sender_id = get_trx_sender();
 
-    graphene_assert(bigPlanetsToReward.size() > 0,MSG_BIG_PLANET_COUNTS); //TODO FIXME bigPlanetsToReward.size()当有100个自邀请的时候，这个判断是0
-
+    if(bigPlanetsToReward.size() == 0){
+        tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+            obj.rstate.randomPoolFlag       =   true;
+            obj.actualReward                +=  0;
+        });
+        return;
+    }
     uint64_t actualRewardAmount = 0;
     uint64_t rewardPerPlanet = lastRound().bstate.randomBudget / bigPlanetsToReward.size();
-    uint64_t sender_id = get_trx_sender();
+    
     for(auto bigPlanetId : bigPlanetsToReward) {
         actualRewardAmount += rewardPerPlanet;
         tbrewards.emplace(sender_id, [&](auto &obj){
@@ -345,7 +351,13 @@ void starplan::calcbigrwd()
     vector<uint64_t> bigPlanets;
     getCurrentRoundBigPlanets(bigPlanets);
 
-    graphene_assert(bigPlanets.size() > 0,MSG_BIG_PLANET_COUNTS);//TODO FIXME bigPlanets.size()可能是0，当100个自邀请的时候
+    if(bigPlanets.size() == 0){
+        tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
+            obj.rstate.bigFlag              =   true;
+            obj.actualReward                +=  0;
+        });
+        return;
+    }
 
     uint64_t lastBigPlanet = 0;
     uint64_t actualRewardAmount = 0;
