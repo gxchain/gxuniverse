@@ -456,7 +456,6 @@ void starplan::calcactrwd()
                 uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
                 obj.weight = new_weight;
                 if(obj.weight == 0) obj.trave_index = obj.trave_index & 0xF0FFFFFFFFFFFFFF;
-//                else obj.trave_index = obj.trave_index | 0x0100000000000000;
             });
         }
     }
