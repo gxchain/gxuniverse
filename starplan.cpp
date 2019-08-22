@@ -393,35 +393,12 @@ void starplan::calcbigrwd()
     });
 }
 
-void starplan::calctotalwei()//TODO 记录全局总权重并维护和更新，减少一次活力星表的全表遍历
-{
-    bool check = lastRound().bstate.flag == true && lastRound().rstate.activeFlag == false && lastRound().rstate.weightFlag == false;
-    endRoundCheck(true,MSG_PROGRESS_ACTIVE_REWARDS);
-    uint64_t sender_id = get_trx_sender();
-    auto act_idx = tbactiveplans.get_index<N(bytrave)>();
-    auto id = lastRound().rstate.weightIndex | 0x0100000000000000;
-    auto itor = act_idx.lower_bound(id);
-    uint64_t totalWeight = 0;
-    for(uint64_t count = 0;;itor != act_idx.end() && itor->traveIndex > 0x0100000000000000; itor++,count++){
-        if(count >= COUNT_OF_TRAVERSAL_PER) {
-            tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
-                obj.totalWeight                     +=  totalWeight;
-                obj.rstate.weightIndex              =   itor->trave_index;
-            });
-            return;
-        }else{
-            totalWeight = itor->weight ;
-        }
-    }
-    tbrounds.modify(lastRound(), sender_id, [](auto &obj) {
-        obj.rstate.weightFlag             =   true;
-        obj.totalWeight                   +=  totalWeight;
-    });
-}
 void starplan::calcactrwd()
 {
     // 1、校验
-    bool check = lastRound().bstate.flag == true && lastRound().rstate.activeFlag == false && lastRound().totalWeight != 0;
+    auto g_itor = tbglobals.find(0);
+
+    bool check = lastRound().bstate.flag == true && lastRound().rstate.activeFlag == false && g_itor->total_weight != 0;
     endRoundCheck(check,MSG_PROGRESS_ACTIVE_REWARDS);
     uint64_t sender_id = get_trx_sender();
     // 2 计算每个活力星发的奖励
@@ -438,7 +415,7 @@ void starplan::calcactrwd()
             });
             return;
         }else{
-            amount = lastRound().bstate.superStarBudget * itor->weight /  lastRound().totalWeight;
+            amount = lastRound().bstate.superStarBudget * itor->weight /  g_itor->total_weight;
             totalAmount += amount;
             tbrewards.emplace(sender_id, [&](auto &obj){
                 obj.index = tbrewards.available_primary_key();
@@ -538,6 +515,7 @@ void starplan::newround()
     auto g_itor = tbglobals.find(0);
     tbglobals.modify(g_itor, sender_id, [&](auto &obj) {
         obj.pool_amount -= lastRound().actualReward;
+        obj.total_weight = obj.total_weight * B_DECAY_PERCENT / 100;
     });
 
     tbrounds.modify(lastRound(),sender_id, [&](auto &obj) {
@@ -839,11 +817,13 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
 {
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(activePlanetAccountId);
+    bool is_add_weight = false;
     if (act_itor != act_idx.end()) {
         act_idx.modify(act_itor, subAccountId, [&](auto &obj) {
             obj.invite_list.push_back(subAccountId);
             if(obj.invite_list.size() == ACTIVE_PROMOT_INVITES) {
                 obj.weight += WEIGHT;
+                is_add_weight = true;
                 obj.invite_list.clear();
                 obj.trave_index = obj.trave_index | 0x0100000000000000;
             }
@@ -857,6 +837,13 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAcc
             obj.create_round = currentRound();
             obj.weight = 0;
             obj.trave_index = activePlanetAccountId | 0x0000000000000000;
+        });
+    }
+    if(is_add_weight == true)                                                                    //更新全局权重
+    {
+        auto g_itor = tbglobals.find(0);
+        tbglobals.modify(g_itor,subAccountId,[&](auto &obj){
+            obj.total_weight      = obj.total_weight + WEIGHT;
         });
     }
 }
@@ -881,6 +868,10 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
             obj.trave_index = activePlanetAccountId | 0x0100000000000000;
         });
     }
+    auto g_itor = tbglobals.find(0);
+    tbglobals.modify(g_itor,subAccountId,[&](auto &obj){
+        obj.total_weight      = obj.total_weight + WEIGHT;
+    });
 }
 
 void starplan::calcBudgets()
