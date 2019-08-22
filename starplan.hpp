@@ -59,7 +59,6 @@ class starplan : public contract
     ACTION              getbudget();
     ACTION              calcrdmrwd();
     ACTION              calcbigrwd();
-    ACTION              calctotalwei();
     ACTION              calcactrwd();
     ACTION              calcsuprwd();
     ACTION              dorwd(uint64_t limit);
@@ -94,20 +93,12 @@ class starplan : public contract
     void                updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
     void                calcBudgets();
-    void                decayActivePlanetWeight();
 
     void                getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
-    uint64_t            getCurrentRoundActivePlanets(vector<ActivePlanet> &activePlanets);
     uint64_t            getCurrentRoundSuperStars(vector<SuperStar> &superStars);
     void                chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
 
-    inline uint64_t     calcRandomReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t     calcBigPlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t     calcActivePlanetReward(vector<reward> &rewardList, uint64_t rewardBudget);
-    inline uint64_t     calcSuperStarReward(vector<reward> &rewardList, uint64_t rewardBudget);
-
     bool                baseSecureCheck(vector<reward> &rewardList, uint64_t baseSecureCheck);
-    void                doReward(vector<reward> &rewardList);
 
     void                createNewRound();
 
@@ -149,10 +140,11 @@ class starplan : public contract
         uint64_t pool_amount;               // 总资金池剩余资产
         uint64_t current_round;             // 当前轮数
         uint8_t upgrading;                  // 合约升级
+        uint64_t total_weight;              // 总权重
 
         uint64_t primary_key() const { return index; }
 
-        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(upgrading))
+        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(upgrading)(total_weight))
     };
     typedef multi_index<N(tbglobal), tbglobal> tbglobal_index;
     tbglobal_index tbglobals;
@@ -171,11 +163,10 @@ class starplan : public contract
         budgetstate bstate;                 // 当前轮endround获取应发奖励状态
         rewardstate rstate;                 // 当前轮endround奖励计算进度状态
         uint64_t actualReward;              // 当前轮endround实际发放奖励统计
-        uint64_t totalWeight;               // 当前轮的总权重
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(actualReward)(totalWeight))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(actual_rewards)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(actualReward))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
@@ -371,4 +362,4 @@ class starplan : public contract
 
     inline const struct starplan::tbround& lastRound();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calctotalwei)(calcactrwd)(calcsuprwd)(dorwd)(newround))
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(endround)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcsuprwd)(dorwd)(newround))
