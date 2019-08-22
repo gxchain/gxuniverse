@@ -515,6 +515,7 @@ void starplan::dorwd(uint64_t limit)
 
     for (auto i = 0; i < limit; i++) {
         if (itor->amount == 0) continue;
+//        if (get_head_block_time() - itor->createTime <= 60) continue;//TODO 防止之前的交易被回滚，等到reward记录不可逆之后再发奖励
         if (itor == rwd_idx.end() || itor->rewarded == true) break;
 
         inline_transfer(_self,
