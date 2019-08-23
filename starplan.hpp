@@ -122,6 +122,7 @@ class starplan : public contract
         uint64_t bigPlanetBudget;
         uint64_t activePlanetBudget;
         uint64_t superStarBudget;
+        uint64_t reserve;
         bool finished;
     };
 
@@ -130,6 +131,7 @@ class starplan : public contract
         bool bigReady;
         bool activeReady;
         bool superReady;
+        uint64_t reserve;
         uint64_t traveIndex;
     };
 
@@ -140,10 +142,12 @@ class starplan : public contract
         uint64_t current_round;             // 当前轮数
         uint8_t upgrading;                  // 合约升级
         uint64_t total_weight;              // 总权重
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
 
-        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(upgrading)(total_weight))
+        GRAPHENE_SERIALIZE(tbglobal, (index)(pool_amount)(current_round)(upgrading)(total_weight)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbglobal), tbglobal> tbglobal_index;
     tbglobal_index tbglobals;
@@ -157,14 +161,15 @@ class starplan : public contract
         uint64_t invite_reward_amount;      // 当前邀请奖励池资产数
         uint64_t start_time;                // 当前轮的启动时间
         uint64_t end_time;                  // 当前轮的结束时间
-
         budgetstate bstate;                 // 当前轮endround获取应发奖励状态
         rewardstate rstate;                 // 当前轮endround奖励计算进度状态
         uint64_t actualReward;              // 当前轮endround实际发放奖励统计
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(actualReward))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(actualReward)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
@@ -173,10 +178,12 @@ class starplan : public contract
     struct tbaccount {
         uint64_t account_id;
         uint64_t vote_count;
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return account_id; }
 
-        GRAPHENE_SERIALIZE(tbaccount, (account_id)(vote_count))
+        GRAPHENE_SERIALIZE(tbaccount, (account_id)(vote_count)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbaccount), tbaccount> tbaccount_index;
     tbaccount_index tbaccounts;
@@ -190,13 +197,15 @@ class starplan : public contract
         uint64_t to;                        // 被投票者id
         uint64_t vote_time;                 // 投票时间
         uint64_t disabled;                  // 是否撤销投票
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_vote_from() const { return from; }
         uint64_t by_vote_to() const { return to; }
         uint64_t by_round() const { return round;}
 
-        GRAPHENE_SERIALIZE(tbvote, (index)(round)(staking_amount)(from)(to)(vote_time)(disabled))
+        GRAPHENE_SERIALIZE(tbvote, (index)(round)(staking_amount)(from)(to)(vote_time)(disabled)(reserve1)(reserve2))
 
     };
     typedef multi_index<N(tbvote), tbvote,
@@ -213,15 +222,16 @@ class starplan : public contract
         uint64_t end_time;                  // 抵押时间
         uint64_t staking_to;                // 为哪个账户抵押（小行星投票给超级星 / 超级星升级）
         uint64_t staking_type;              // 抵押类型
-
         uint64_t claimed;                   // 是否解除抵押
         uint64_t claim_time;                // 解除抵押的时间
         uint64_t vote_index;                // 记录对应投票表项id
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return account; }
 
-        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(staking_type)(claimed)(claim_time)(vote_index))
+        GRAPHENE_SERIALIZE(tbstaking, (index)(account)(amount)(end_time)(staking_to)(staking_type)(claimed)(claim_time)(vote_index)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbstaking), tbstaking,
                         indexed_by<N(byaccid), const_mem_fun<tbstaking, uint64_t, &tbstaking::by_acc_id>>> tbstaking_index;
@@ -233,12 +243,14 @@ class starplan : public contract
         uint64_t id;                        // 账户id
         uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
 
-        GRAPHENE_SERIALIZE(tbsmallplan, (index)(id)(create_time)(create_round))
+        GRAPHENE_SERIALIZE(tbsmallplan, (index)(id)(create_time)(create_round)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbsmallplan), tbsmallplan,
                         indexed_by<N(byaccid), const_mem_fun<tbsmallplan, uint64_t, &tbsmallplan::by_acc_id>>,
@@ -251,12 +263,14 @@ class starplan : public contract
         uint64_t id;                        // 账户id
         uint64_t create_time;               // 创建时间
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
 
-        GRAPHENE_SERIALIZE(tbbigplanet, (index)(id)(create_time)(create_round))
+        GRAPHENE_SERIALIZE(tbbigplanet, (index)(id)(create_time)(create_round)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbbigplanet), tbbigplanet,
                         indexed_by<N(byaccid), const_mem_fun<tbbigplanet, uint64_t, &tbbigplanet::by_acc_id>>,
@@ -272,6 +286,8 @@ class starplan : public contract
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t weight;                    // 权重，每小轮0.85的幅度衰减，衰减为0，重新计算
         uint64_t trave_index;               // 遍历索引，高位字节为bool值，保存是否为活力星（权重是否大于0），低7位字节表示账户id。0x01FFFFFFFFFFFFFF
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
@@ -279,7 +295,7 @@ class starplan : public contract
         uint64_t by_weight() const { return weight; }
         uint64_t by_trave() const { return trave_index; }
 
-        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invitees)(create_time)(create_round)(weight)(trave_index))
+        GRAPHENE_SERIALIZE(tbactiveplan, (index)(id)(invitees)(create_time)(create_round)(weight)(trave_index)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbactiveplan), tbactiveplan,
                         indexed_by<N(byaccid), const_mem_fun<tbactiveplan, uint64_t, &tbactiveplan::by_acc_id>>,
@@ -296,14 +312,16 @@ class starplan : public contract
         uint64_t create_round;              // 晋升轮数（第几轮晋升）
         uint64_t vote_num;                  // 得票数
         uint64_t disabled;                  // 是否已经撤销抵押
+        uint64_t reserve1;
         std::string memo;                   // 超级星memo
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_acc_id() const { return id; }
         uint64_t by_create_round() const { return create_round; }
         uint64_t by_vote_num() const { return vote_num; }
 
-        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num)(disabled)(memo))
+        GRAPHENE_SERIALIZE(tbsuperstar, (index)(id)(create_time)(create_round)(vote_num)(disabled)(reserve1)(memo)(reserve2))
     };
     typedef multi_index<N(tbsuperstar), tbsuperstar,
                         indexed_by<N(byaccid), const_mem_fun<tbsuperstar, uint64_t, &tbsuperstar::by_acc_id>>,
@@ -319,6 +337,8 @@ class starplan : public contract
         bool     enabled;                   // 邀请关系是否⽣生效(invitee是否升级为⼤行星)
         uint64_t create_round;              // 当前轮数
         uint64_t create_time;               // 邀请时间
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_invitee() const { return invitee; }
@@ -326,7 +346,7 @@ class starplan : public contract
         uint64_t by_round() const { return create_round; }
         uint64_t by_enable() const { return enabled; }
 
-        GRAPHENE_SERIALIZE(tbinvite, (index)(invitee)(inviter)(enabled)(create_round)(create_time))
+        GRAPHENE_SERIALIZE(tbinvite, (index)(invitee)(inviter)(enabled)(create_round)(create_time)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbinvite), tbinvite,
                         indexed_by<N(byinvitee), const_mem_fun<tbinvite, uint64_t, &tbinvite::by_invitee>>,
@@ -346,13 +366,15 @@ class starplan : public contract
         uint64_t create_time;               // 创建时间
         uint64_t reward_time;               // 发奖时间
         uint8_t rewarded;                   // 是否已经发放
+        uint64_t reserve1;
+        std::string reserve2;
 
         uint64_t primary_key() const { return index; }
         uint64_t by_round() const { return round; }
         uint64_t by_acc_id() const { return to; }
         uint64_t by_flag() const { return rewarded;}
 
-        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(create_time)(reward_time)(rewarded))
+        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(create_time)(reward_time)(rewarded)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbreward), tbreward,
                         indexed_by<N(byaccid), const_mem_fun<tbreward, uint64_t, &tbreward::by_round>>,
