@@ -63,7 +63,7 @@ const uint64_t      MAX_USER_REWARD         = MAX_ROUND_REWARD * ACTIVE_PERCENT 
 #define STAKING_TYPE_SELF_ACTIVATE  2
 
 #define RWD_TYPE_RANDOM             0
-#define RWD_TYPE_POOL               1
+#define RWD_TYPE_BIG                1
 #define RWD_TYPE_ACTIVE             2
 #define RWD_TYPE_SUPER              3
 #define RWD_TYPE_TIMEOUT            4

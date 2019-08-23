@@ -312,7 +312,7 @@ void starplan::calcbigrwd()
                 obj.from = _self;
                 obj.to = bigPlanetId;
                 obj.amount = rewardPerPlanet;
-                obj.type = RWD_TYPE_POOL;
+                obj.type = RWD_TYPE_BIG;
                 obj.create_time = get_head_block_time();
                 obj.rewarded = 0;
             });
