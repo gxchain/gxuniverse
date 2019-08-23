@@ -506,14 +506,25 @@ void starplan::dorwd(uint64_t limit)
         if (itor->amount == 0) continue;
 //        if (get_head_block_time() - itor->createTime <= 60) continue;//TODO 防止之前的交易被回滚，等到reward记录不可逆之后再发奖励
         if (itor == rwd_idx.end() || itor->rewarded == true) break;
-
-        inline_transfer(_self,
-                        itor->to,
-                        CORE_ASSET_ID,
-                        itor->amount,
-                        reward_reasons[itor->type],
-                        strlen(reward_reasons[itor->type])
-        );
+        if(itor->type == RWD_TYPE_INVITE || itor->type == RWD_TYPE_SELF_ACTIVATE){
+            std::string rewardReason;
+            buildRewardReason(itor->from, itor->to, itor->type, rewardReason);
+            inline_transfer(_self, 
+                            itor->to, 
+                            CORE_ASSET_ID, 
+                            itor->amount, 
+                            rewardReason.c_str(), 
+                            rewardReason.length()
+            );
+        }else{
+            inline_transfer(_self,
+                            itor->to,
+                            CORE_ASSET_ID,
+                            itor->amount,
+                            reward_reasons[itor->type],
+                            strlen(reward_reasons[itor->type])
+            );
+        }
 
         auto pri_itor = tbrewards.find(itor->index);
         itor++;
