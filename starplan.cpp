@@ -507,17 +507,18 @@ void starplan::dorwd(uint64_t limit)
         if (itor->amount == 0) continue;
         if (now - itor->create_time < REWARD_DELAY_TIME) continue;
         if (itor == rwd_idx.end() || itor->rewarded == true) break;
-        if(itor->type == RWD_TYPE_INVITE || itor->type == RWD_TYPE_SELF_ACTIVATE){
+
+        if(itor->type == RWD_TYPE_INVITE || itor->type == RWD_TYPE_SELF_ACTIVATE) {
             std::string rewardReason;
             buildRewardReason(itor->from, itor->to, itor->type, rewardReason);
-            inline_transfer(_self, 
-                            itor->to, 
-                            CORE_ASSET_ID, 
-                            itor->amount, 
-                            rewardReason.c_str(), 
+            inline_transfer(_self,
+                            itor->to,
+                            CORE_ASSET_ID,
+                            itor->amount,
+                            rewardReason.c_str(),
                             rewardReason.length()
             );
-        }else{
+        } else {
             inline_transfer(_self,
                             itor->to,
                             CORE_ASSET_ID,
@@ -645,10 +646,10 @@ bool starplan::isBigPlanet(uint64_t sender)
 void starplan::createBigPlanet(uint64_t sender)
 {
     tbbigplanets.emplace(sender, [&](auto &obj) {
-        obj.index = tbbigplanets.available_primary_key();
-        obj.id = sender;
-        obj.create_time = get_head_block_time();
-        obj.create_round = currentRound();
+        obj.index           = tbbigplanets.available_primary_key();
+        obj.id              = sender;
+        obj.create_time     = get_head_block_time();
+        obj.create_round    = currentRound();
     });
 }
 
@@ -796,6 +797,7 @@ void starplan::buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t re
         graphene_assert(0 == get_account_name_by_id(inviterName, 63, inviter), MSG_GET_INVITER_NAME_FAIL);
         rewardReason = std::string(inviterName) + " get reward for inviting " + std::string(inviteeName);
     } else {
+        graphene_assert(false, MSG_INVALIDE_REWARD_TYPE);
     }
 } 
 
@@ -830,9 +832,10 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
 
 void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t inviteeId)
 {
+    bool is_add_weight = false;
+
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(activePlanetAccountId);
-    bool is_add_weight = false;
     if (act_itor != act_idx.end()) {
         act_idx.modify(act_itor, inviteeId, [&](auto &obj) {
             obj.invitees.push_back(inviteeId);
@@ -854,11 +857,11 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t invit
             obj.trave_index = activePlanetAccountId | 0x0000000000000000;
         });
     }
-    if(is_add_weight == true)                                                                    //更新全局权重
-    {
+
+    if(is_add_weight == true) {
         auto g_itor = tbglobals.find(0);
-        tbglobals.modify(g_itor,inviteeId,[&](auto &obj){
-            obj.total_weight      = obj.total_weight + WEIGHT;
+        tbglobals.modify(g_itor, inviteeId, [&](auto &obj) {
+            obj.total_weight = obj.total_weight + WEIGHT;
         });
     }
 }
@@ -874,15 +877,16 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
         });
     } else {
         tbactiveplans.emplace(activePlanetAccountId, [&](auto &obj) {                                      //创建活力星
-            obj.index = tbactiveplans.available_primary_key();
-            obj.id = activePlanetAccountId;
-            obj.invitees = {};
-            obj.create_time = get_head_block_time();
-            obj.create_round = currentRound();
-            obj.weight = WEIGHT;
-            obj.trave_index = activePlanetAccountId | 0x0100000000000000;
+            obj.index           = tbactiveplans.available_primary_key();
+            obj.id              = activePlanetAccountId;
+            obj.invitees        = {};
+            obj.create_time     = get_head_block_time();
+            obj.create_round    = currentRound();
+            obj.weight          = WEIGHT;
+            obj.trave_index     = activePlanetAccountId | 0x0100000000000000;
         });
     }
+
     auto g_itor = tbglobals.find(0);
     tbglobals.modify(g_itor,activePlanetAccountId, [&](auto &obj){
         obj.total_weight += WEIGHT;
@@ -921,7 +925,7 @@ void starplan::calcBudgets()
         obj.bstate.bigPlanetBudget      = bigPlanetBudget;
         obj.bstate.activePlanetBudget   = activePlanetBudget;
         obj.bstate.superStarBudget      = superStarBudget;
-        obj.bstate.finished                 = true;
+        obj.bstate.finished             = true;
     });
 }
 
