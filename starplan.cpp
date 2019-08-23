@@ -32,7 +32,6 @@ void starplan::init()
     tbrounds.emplace(sender_id, [&](auto &obj) {
         obj.round                   = tbrounds.available_primary_key();
         obj.current_round_invites   = 0;
-        obj.actual_rewards          = 0;
         obj.base_pool_amount        = 0;
         obj.random_pool_amount      = 0;
         obj.invite_reward_amount    = 0;
@@ -561,10 +560,6 @@ void starplan::newround()
         obj.total_weight = obj.total_weight * B_DECAY_PERCENT / 100;
     });
 
-    tbrounds.modify(curRound, sender_id, [&](auto &obj) {
-        obj.actual_rewards = curRound.actualReward;
-    });
-
     createNewRound();
 }
 
@@ -1018,7 +1013,6 @@ void starplan::createNewRound()
     tbrounds.emplace(sender,[&](auto &obj) {
         obj.round                   = tbrounds.available_primary_key();
         obj.current_round_invites   = 0;
-        obj.actual_rewards          = 0;
         obj.base_pool_amount        = 0;
         obj.random_pool_amount      = 0;
         obj.invite_reward_amount    = 0;
