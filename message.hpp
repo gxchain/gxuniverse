@@ -20,6 +20,7 @@ const char* MSG_UPGRADING = "Error: Smart contract is upgrading";
 const char* MSG_UNKNOWN_CLAIM_REASON = "Error: Unknown reason for unstaking";
 const char* MSG_INVALID_ITOR = "Error: Unfound itor";
 const char* MSG_INVALID_VOTE_MODIFY = "Error: crtical err, invalid superstar vote modify";
+const char* MSG_INVALID_POOL_AMOUNT_MODIFY = "Error: crtical err, invalid global pool_amount modify";
 const char* MSG_CORE_ASSET_REQUIRED = "Error: Core asset GXC required";
 const char* MSG_SELF_ACTIVATE_AUTH_ERR = "Error: Only big planet or super planet can active themselves";
 const char* MSG_USER_REWARD_TOO_MUCH = "Error: User reward too much";

@@ -343,7 +343,9 @@ class starplan : public contract
         uint64_t from;                      // 奖励来源账户
         uint64_t to;                        // 奖励去向账户
         uint64_t amount;                    // 奖励金额
-        uint64_t type;                      // 奖励类型
+        uint64_t type;                      // 奖励类型 //TODO check type
+        uint64_t create_time;               // 创建时间
+        uint64_t reward_time;               // 发奖时间
         uint8_t rewarded;                   // 是否已经发放
 
         uint64_t primary_key() const { return index; }
@@ -351,7 +353,7 @@ class starplan : public contract
         uint64_t by_acc_id() const { return to; }
         uint64_t by_flag() const { return rewarded;}
 
-        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(rewarded))
+        GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(create_time)(reward_time)(rewarded))
     };
     typedef multi_index<N(tbreward), tbreward,
                         indexed_by<N(byaccid), const_mem_fun<tbreward, uint64_t, &tbreward::by_round>>,
