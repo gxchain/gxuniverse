@@ -505,7 +505,7 @@ void starplan::dorwd(uint64_t limit)
     uint64_t now = get_head_block_time();
     for (auto i = 0; i < limit; i++) {
         if (itor->amount == 0) continue;
-        if (now - itor->createTime < REWARD_DELAY_TIME) continue;
+        if (now - itor->create_time < REWARD_DELAY_TIME) continue;
         if (itor == rwd_idx.end() || itor->rewarded == true) break;
         if(itor->type == RWD_TYPE_INVITE || itor->type == RWD_TYPE_SELF_ACTIVATE){
             std::string rewardReason;
