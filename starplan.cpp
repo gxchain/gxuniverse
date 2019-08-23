@@ -529,7 +529,7 @@ void starplan::dorwd(uint64_t limit)
 
         auto pri_itor = tbrewards.find(itor->index);
         itor++;
-        tbrewards.modify(pri_itor, get_trx_sender(), [](auto &obj) {
+        tbrewards.modify(pri_itor, get_trx_sender(), [&](auto &obj) {
             obj.rewarded = 1;
             obj.reward_time = now;
         });
