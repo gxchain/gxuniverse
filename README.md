@@ -7,6 +7,8 @@
 - 活力星（小行星邀请超过5人）
 - 大行星（小行星消耗3GXC）
 
+[繁星计划细则说明](https://mp.weixin.qq.com/s/N0Cqm-r2_ybdIxkQIqT4Dg)
+
 ## 静态变量（Static Parameters）
 
 静态变量在合约初始化时定义，会在合约中参与计算
