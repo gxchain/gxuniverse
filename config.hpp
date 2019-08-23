@@ -32,6 +32,7 @@ const uint64_t      INIT_POOL               = 400 * PRECISION;          //初始
 const uint64_t      STAKING_DURATION_TIME   = 1800;                     //抵押30分钟后解锁
 const uint64_t      DELAY_TIME              = 2 * 3600;                 //最后一个大行星的延迟时间（2小时）
 const uint64_t      MAX_DECAY_COUNT         = 5;                        //最大衰减次数（5）
+const uint64_t      REWARD_DELAY_TIME       = 60;                       //延迟发奖时间1min
 
 //////////////////////// for release ////////////////////////
 /*
@@ -50,6 +51,7 @@ const uint64_t      INIT_POOL               = 2000000 * PRECISION;      //初始
 const uint64_t      STAKING_DELAY_TIME      = 90 * 24 * 3600;           //抵押90天后解锁
 const uint64_t      DELAY_TIME              = 12 * 3600;                //最后一个大行星的延迟时间（12小时）
 const uint64_t      MAX_DECAY_COUNT         = 20;                       //最大衰减次数（20）
+const uint64_t      REWARD_DELAY_TIME       = 60 * 20;                  //延迟发奖时间20min
 */
 
 //////////////////////// common ////////////////////////

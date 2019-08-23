@@ -502,9 +502,11 @@ void starplan::dorwd(uint64_t limit)
     auto itor = rwd_idx.find(0);
     graphene_assert(itor != rwd_idx.end(), MSG_REWARDS_NOT_FOUND);
 
+    //TODO get_head_block_time()可以放在这里做？因为一次合约调用最多10ms，1个区块3s，最多有10ms的误差
+    uint64_t now = get_head_block_time();
     for (auto i = 0; i < limit; i++) {
         if (itor->amount == 0) continue;
-//        if (get_head_block_time() - itor->createTime <= 60) continue;//TODO 防止之前的交易被回滚，等到reward记录不可逆之后再发奖励
+        if (now - itor->createTime < REWARD_DELAY_TIME) continue;
         if (itor == rwd_idx.end() || itor->rewarded == true) break;
 
         inline_transfer(_self,
@@ -519,7 +521,7 @@ void starplan::dorwd(uint64_t limit)
         itor++;
         tbrewards.modify(pri_itor, get_trx_sender(), [](auto &obj) {
             obj.rewarded = 1;
-            obj.reward_tiome = get_head_block_time();;
+            obj.reward_time = now;
         });
     }
 }
