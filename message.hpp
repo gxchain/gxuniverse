@@ -1,4 +1,5 @@
 const char* MSG_CHECK_SENDER = "Error: Prohibit inline contract calls";
+const char* MSG_CHECK_SENDER_NOT_DEFAULT = "Error: default inviter can not play";
 const char* MSG_CHECK_ADMIN = "Error: Only admin account can init!";
 const char* MSG_INIT_FAIL = "Error: The bonus pool has been initialized";
 const char* MSG_INIT_ROUND_FAIL = "Error: The Current bonus pool has been initialized";

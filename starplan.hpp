@@ -156,20 +156,20 @@ class starplan : public contract
     struct tbround {
         uint64_t round;                     // 索引
         uint64_t current_round_invites;     // 当前轮完成邀请数
-        uint64_t base_pool_amount;          // 当前轮底池资产数
-        uint64_t random_pool_amount;        // 当前轮随机池资产数
-        uint64_t invite_reward_amount;      // 当前邀请奖励池资产数
+        uint64_t base_pool;                 // 当前轮底池资产数
+        uint64_t random_rewards;            // 当前轮随机池资产数
+        uint64_t invite_rewards;            // 当前邀请奖励池资产数
+        uint64_t actual_rewards;            // 当前轮endround实际发放奖励统计
         uint64_t start_time;                // 当前轮的启动时间
         uint64_t end_time;                  // 当前轮的结束时间
         budgetstate bstate;                 // 当前轮endround获取应发奖励状态
         rewardstate rstate;                 // 当前轮endround奖励计算进度状态
-        uint64_t actualReward;              // 当前轮endround实际发放奖励统计
         uint64_t reserve1;
         std::string reserve2;
 
         uint64_t primary_key() const { return round; }
 
-        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(base_pool_amount)(random_pool_amount)(invite_reward_amount)(start_time)(end_time)(bstate)(rstate)(actualReward)(reserve1)(reserve2))
+        GRAPHENE_SERIALIZE(tbround, (round)(current_round_invites)(base_pool)(random_rewards)(invite_rewards)(actual_rewards)(start_time)(end_time)(bstate)(rstate)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbround), tbround> tbround_index;
     tbround_index tbrounds;
@@ -372,7 +372,7 @@ class starplan : public contract
         uint64_t primary_key() const { return index; }
         uint64_t by_round() const { return round; }
         uint64_t by_acc_id() const { return to; }
-        uint64_t by_flag() const { return rewarded;}
+        uint64_t by_flag() const { return rewarded; }
 
         GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(create_time)(reward_time)(rewarded)(reserve1)(reserve2))
     };
