@@ -597,11 +597,7 @@ void starplan::newround()
         obj.pool_amount = obj.pool_amount + curRound.random_rewards + curRound.invite_rewards - curRound.actual_rewards;
         obj.total_weight = obj.total_weight * B_DECAY_PERCENT / 100;
     });
-    // 2、清空当前轮大行星列表
-    tbcurbigplans.modify(itor,get_trx_sender(),[&](auto &obj){//TODO 可以不用清理，可以追溯
-        obj.bigplanets      = {};
-        obj.rewarded_index  = 0;
-    });
+
     createNewRound();
 }
 
