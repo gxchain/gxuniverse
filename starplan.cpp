@@ -434,7 +434,7 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
         if(itor == tbactiveplans.end()) {
             tbrounds.modify(curRound, sender_id, [&](auto &obj) {
                 obj.rstate.activeReady = true;
-                obj.rstate.traveIndex += count;
+                obj.rstate.primaryIndex += count;
                 obj.actual_rewards += totalAmount;
                 graphene_assert(obj.actual_rewards <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
             });
@@ -443,7 +443,7 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
         }
     } while (true);
 
-    tbrounds.modify(curRound, sender_id, [&](auto &obj) {
+    tbrounds.modify(curRound, sender_id, [&COUNT_OF_TRAVERSAL_PER, &totalAmount](auto &obj) {
         obj.actual_rewards += totalAmount;
         obj.rstate.primaryIndex += COUNT_OF_TRAVERSAL_PER;
         graphene_assert(obj.actual_rewards <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
@@ -461,7 +461,7 @@ void starplan::calcsuprwd()
     uint64_t sender_id = get_trx_sender();
 
     vector<SuperStar> superStars;
-    uint64_t totalVote = getCurrentRoundSuperStars(superStars);//TODO totalVote是否要展示，是否要放到tbaccount表中
+    uint64_t totalVote = getCurrentRoundSuperStars(superStars);//TODO totalVote是否要展示，是否要放到tbglobal表中
     if (totalVote == 0) {
         tbrounds.modify(curRound, sender_id, [](auto &obj) {
             obj.rstate.superReady = true;
@@ -477,7 +477,7 @@ void starplan::calcsuprwd()
         amount = curRound.bstate.superStarBudget * superStar.vote / totalVote;
         graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
         totalAmount += amount;
-        tbrewards.emplace(sender_id, [&](auto &obj){
+        tbrewards.emplace(sender_id, [&](auto &obj) {
             obj.index = tbrewards.available_primary_key();
             obj.round = curRound.round;
             obj.from = _self;
