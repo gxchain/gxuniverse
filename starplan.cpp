@@ -246,28 +246,27 @@ void starplan::getbigplans()
 	});
 }
 
-void starplan::calcrdmrwd()//TODO 测试性能
+void starplan::calcrdmrwd()
 {
     baseCheck();
 
     const struct tbround &curRound = lastRound();
-    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == true && curRound.rstate.randomPoolReady == false;
+    bool check = curRound.bstate.finished == true &&
+                 curRound.rstate.curbigplanetsReady == true &&
+                 curRound.rstate.randomPoolReady == false;
     endRoundCheck(check, MSG_PROGRESS_RANDOM_REWARDS);
 
-    vector<uint64_t> bigPlanets;
-    vector<uint64_t> bigPlanetsToReward;
-
-    auto curBigPlanItor = tbcurbigplans.find(0);
-    graphene_assert(curBigPlanItor != tbcurbigplans.end(), MSG_CUR_BIG_PLANETS_NOT_FOUND);
-    bigPlanets = curBigPlanItor->bigplanets;
-    //getCurrentRoundBigPlanets(bigPlanets);
-
-    chooseBigPlanet(bigPlanets, bigPlanetsToReward);
     uint64_t sender_id = get_trx_sender();
-
     uint64_t actualRewardAmount = 0;
 
-    if(bigPlanetsToReward.size() > 0) {
+    const struct starplan::tbcurbigplan curBigPlanet = curRoundBigPlanets();
+    const vector<uint64_t> &bigPlanets = curBigPlanet.bigplanets;
+    vector<uint64_t> bigPlanetsToReward;
+
+    do {
+        if(bigPlanets.size() == 0) break;
+
+        chooseBigPlanet(bigPlanets, bigPlanetsToReward);
         uint64_t rewardPerPlanet = curRound.bstate.randomBudget / bigPlanetsToReward.size();
         graphene_assert(rewardPerPlanet <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
         for(auto bigPlanetId : bigPlanetsToReward) {
@@ -283,13 +282,17 @@ void starplan::calcrdmrwd()//TODO 测试性能
                 obj.rewarded    = 0;
             });
         }
-    }
+    } while(0);
 
     tbrounds.modify(curRound, sender_id, [&](auto &obj) {
         obj.rstate.randomPoolReady = true;
         obj.actual_rewards += actualRewardAmount;
 
         graphene_assert(obj.actual_rewards <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
+    });
+
+    tbcurbigplans.modify(curBigPlanet, sender_id, [&](auto &obj) {
+        obj.rwdplanets = bigPlanetsToReward;
     });
 }
 
@@ -999,7 +1002,7 @@ uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
 
 void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed)
 {
-    if(bigPlanets.size() <= RANDOM_COUNT){
+    if(bigPlanets.size() <= RANDOM_COUNT) {
         choosed = bigPlanets;
         return;
     }
@@ -1039,6 +1042,14 @@ const struct starplan::tbround& starplan::lastRound()
     graphene_assert(round_itor != tbrounds.begin(), MSG_ROUND_NOT_FOUND);
     round_itor--;
     return *round_itor;
+}
+
+const struct starplan::tbcurbigplan& starplan::curRoundBigPlanets()
+{
+    auto itor = tbcurbigplans.end();
+    graphene_assert(itor != tbcurbigplans.begin(), MSG_CUR_BIG_PLANETS_NOT_FOUND);
+    itor--;
+    return *itor;
 }
 
 void starplan::createNewRound()

@@ -403,6 +403,7 @@ class starplan : public contract
     tbcurbigplan_index tbcurbigplans;
 
     inline const struct starplan::tbround& lastRound();
+    inline const struct starplan::tbcurbigplan& curRoundBigPlanets();
 };
 GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(getbigplans)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround))
 
