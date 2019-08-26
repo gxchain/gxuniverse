@@ -395,7 +395,7 @@ class starplan : public contract
 
         uint64_t primary_key() const { return index; }
         GRAPHENE_SERIALIZE(tbcurbigplan, (index)(bigplanets)(rewarded_index)(reserve1)(reserve2))
-    }
+    };
     typedef multi_index<N(tbcurbigplan), tbcurbigplan> tbcurbigplan_index;
     tbcurbigplan_index tbcurbigplans;
 
