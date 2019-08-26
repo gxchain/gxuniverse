@@ -129,14 +129,15 @@ class starplan : public contract
     };
 
     struct rewardstate {
+    	bool bigPlanetsReady;
         bool randomPoolReady;
         bool curbigplanetsReady;
         bool bigReady;
         bool activeReady;
         bool superReady;
-        uint64_t reserve;
         uint64_t traveIndex;
         uint64_t primaryIndex;
+        uint64_t reserve;
     };
 
     //@abi table tbglobal i64

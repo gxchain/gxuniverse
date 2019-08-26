@@ -226,25 +226,24 @@ void starplan::getbudget()
 void starplan::getbigplans()
 {
     baseCheck();
-    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == false;
+    const struct tbround &curRound = lastRound();
+    bool check = curRound.bstate.finished == true && curRound.rstate.bigPlanetsReady == false;//TODO curRound.bstate.finished == true可以去掉？
     endRoundCheck(check, MSG_GET_CUR_BIG_PLANETS);
 
+    uint64_t sender_id = get_trx_sender();
     vector<uint64_t> bigPlanets;
     getCurrentRoundBigPlanets(bigPlanets);
 
-    auto itor = tbcurbigplans.find(0);
-    if(itor!=tbcurbigplans.end()){
-        tbcurbigplans.modify(itor,get_trx_sender(),[&](auto &obj){
-            obj.bigplanets      = bigPlanets;
-            obj.rewarded_index  = 0;
-        });
-    }else{
-        tbcurbigplans.emplace(get_trx_sender(),[&](auto &obj){
-            obj.index           = 0;
-            obj.bigplanets      = bigPlanets;
-            obj.rewarded_index  = 0;
-        });
-    }
+	tbcurbigplans.emplace(sender_id, [&](auto &obj) {
+		obj.index           = tbcurbigplans.available_primary_key();
+		obj.bigplanets      = bigPlanets;
+		obj.rwdplanets      = {};
+		obj.rewarded_index  = 0;
+	});
+
+	tbrounds.modify(curRound, sender_id, [&](auto &obj) {
+		obj.rstate.bigPlanetsReady = true;
+	});
 }
 
 void starplan::calcrdmrwd()//TODO 测试性能
