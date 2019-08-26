@@ -223,18 +223,46 @@ void starplan::getbudget()
     calcBudgets();
 }
 
+void starplan::getbigplans()
+{
+    baseCheck();
+    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == false;
+    endRoundCheck(check, MSG_GET_CUR_BIG_PLANETS);
+
+    vector<uint64_t> bigPlanets;
+    getCurrentRoundBigPlanets(bigPlanets);
+
+    auto itor = tbcurbigplans.find(0);
+    if(itor!=tbcurbigplans.end()){
+        tbcurbigplans.modify(itor,get_trx_sender(),[&](auto &obj){
+            obj.bigplanets      = bigPlanets;
+            obj.rewarded_index  = 0;
+        });
+    }else{
+        tbcurbigplans.emplace(get_trx_sender(),[&](auto &obj){
+            obj.index           = 0;
+            obj.bigplanets      = bigPlanets;
+            obj.rewarded_index  = 0;
+        });
+    }
+}
+
 void starplan::calcrdmrwd()//TODO 测试性能
 {
     baseCheck();
 
     const struct tbround &curRound = lastRound();
-    bool check = curRound.bstate.finished == true && curRound.rstate.randomPoolReady == false;
+    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == true && curRound.rstate.randomPoolReady == false;
     endRoundCheck(check, MSG_PROGRESS_RANDOM_REWARDS);
 
     vector<uint64_t> bigPlanets;
     vector<uint64_t> bigPlanetsToReward;
 
-    getCurrentRoundBigPlanets(bigPlanets);
+    auto curBigPlanItor = tbcurbigplans.find(0);
+    graphene_assert(curBigPlanItor != tbcurbigplans.end(), MSG_CUR_BIG_PLANETS_NOT_FOUND);
+    bigPlanets = curBigPlanItor->bigplanets;
+    //getCurrentRoundBigPlanets(bigPlanets);
+
     chooseBigPlanet(bigPlanets, bigPlanetsToReward);
     uint64_t sender_id = get_trx_sender();
 
@@ -271,11 +299,14 @@ void starplan::calcbigrwd()
     baseCheck();
 
     const struct tbround &curRound = lastRound();
-    bool check = curRound.bstate.finished == true && curRound.rstate.bigReady == false;
+    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == true && curRound.rstate.bigReady == false;
     endRoundCheck(check,MSG_PROGRESS_BIG_REWARDS);
 
     vector<uint64_t> bigPlanets;
-    getCurrentRoundBigPlanets(bigPlanets);
+    //getCurrentRoundBigPlanets(bigPlanets);
+    auto curBigPlanItor = tbcurbigplans.find(0);
+    graphene_assert(curBigPlanItor != tbcurbigplans.end(), MSG_CUR_BIG_PLANETS_NOT_FOUND);
+    bigPlanets = curBigPlanItor->bigplanets;
 
     uint64_t sender_id = get_trx_sender();
     if (bigPlanets.size() == 0) {
@@ -565,7 +596,11 @@ void starplan::newround()
         obj.pool_amount = obj.pool_amount + curRound.random_rewards + curRound.invite_rewards - curRound.actual_rewards;
         obj.total_weight = obj.total_weight * B_DECAY_PERCENT / 100;
     });
-
+    // 2、清空当前轮大行星列表
+    tbcurbigplans.modify(itor,get_trx_sender(),[&](auto &obj){
+        obj.bigplanets      = {};
+        obj.rewarded_index  = 0;
+    });
     createNewRound();
 }
 
