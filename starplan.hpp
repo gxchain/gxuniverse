@@ -133,6 +133,7 @@ class starplan : public contract
         bool superReady;
         uint64_t reserve;
         uint64_t traveIndex;
+        uint64_t primaryIndex;
     };
 
     //@abi table tbglobal i64
