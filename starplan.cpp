@@ -259,7 +259,7 @@ void starplan::calcrdmrwd()
     uint64_t sender_id = get_trx_sender();
     uint64_t actualRewardAmount = 0;
 
-    const struct starplan::tbcurbigplan curBigPlanet = curRoundBigPlanets();
+    const struct starplan::tbcurbigplan &curBigPlanet = curRoundBigPlanets();
     const vector<uint64_t> &bigPlanets = curBigPlanet.bigplanets;
     vector<uint64_t> bigPlanetsToReward;
 
@@ -306,7 +306,7 @@ void starplan::calcbigrwd()
                  curRound.rstate.bigReady == false;
     endRoundCheck(check, MSG_PROGRESS_BIG_REWARDS);
 
-    const struct starplan::tbcurbigplan curBigPlanet = curRoundBigPlanets();
+    const struct starplan::tbcurbigplan &curBigPlanet = curRoundBigPlanets();
     const vector<uint64_t> &bigPlanets = curBigPlanet.bigplanets;
 
     uint64_t sender_id = get_trx_sender();
