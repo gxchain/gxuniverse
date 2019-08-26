@@ -42,7 +42,8 @@ class starplan : public contract
             tbactiveplans(_self, _self),
             tbsuperstars(_self, _self),
             tbinvites(_self, _self),
-            tbrewards(_self,_self)
+            tbrewards(_self, _self),
+            tbcurbigplans(_self, _self)
     {
     }
 
