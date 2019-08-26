@@ -371,7 +371,7 @@ void starplan::calcactrwd()
             graphene_assert(pri_itor != tbactiveplans.end(), MSG_ACTIVE_PLANET_NOT_FOUND);
             itor++,count++;
             tbactiveplans.modify(pri_itor, get_trx_sender(), [&](auto &obj){                           //修改活力星的权重
-                uint64_t new_weight  = obj.weight * B_DECAY_PERCENT / 100;
+                uint64_t new_weight = obj.weight * B_DECAY_PERCENT / 100;
                 obj.weight = new_weight;
                 if(obj.weight == 0) obj.trave_index = obj.trave_index & 0xF0FFFFFFFFFFFFFF;
             });
@@ -432,7 +432,7 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
 
         itor++;
         if(itor == tbactiveplans.end()) {
-            tbrounds.modify(curRound, sender_id, [&](auto &obj) {
+            tbrounds.modify(curRound, sender_id, [&count, &totalAmount, &curRound](auto &obj) {
                 obj.rstate.activeReady = true;
                 obj.rstate.primaryIndex += count;
                 obj.actual_rewards += totalAmount;
@@ -443,7 +443,7 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
         }
     } while (true);
 
-    tbrounds.modify(curRound, sender_id, [&COUNT_OF_TRAVERSAL_PER, &totalAmount](auto &obj) {
+    tbrounds.modify(curRound, sender_id, [&totalAmount, &curRound](auto &obj) {
         obj.actual_rewards += totalAmount;
         obj.rstate.primaryIndex += COUNT_OF_TRAVERSAL_PER;
         graphene_assert(obj.actual_rewards <= MAX_ROUND_REWARD + curRound.bstate.randomBudget, MSG_ROUND_REWARD_TOO_MUCH);
@@ -1156,3 +1156,4 @@ void starplan::endRoundCheck(bool check, const std::string &msg)
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
     graphene_assert(check, msg.c_str());
 }
+
