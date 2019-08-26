@@ -597,7 +597,7 @@ void starplan::newround()
         obj.total_weight = obj.total_weight * B_DECAY_PERCENT / 100;
     });
     // 2、清空当前轮大行星列表
-    tbcurbigplans.modify(itor,get_trx_sender(),[&](auto &obj){
+    tbcurbigplans.modify(itor,get_trx_sender(),[&](auto &obj){//TODO 可以不用清理，可以追溯
         obj.bigplanets      = {};
         obj.rewarded_index  = 0;
     });

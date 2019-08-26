@@ -389,6 +389,7 @@ class starplan : public contract
     struct tbcurbigplan {
         uint64_t index;                     // 主键，值为0
         std::vector<uint64_t> bigplanets;   // 当前轮所有的大行星
+        std::vector<uint64_t> rwdplanets;   // 当前轮得到随机奖励的行星
         uint64_t rewarded_index;            // 发奖遍历索引
         uint64_t reserve1;
         std::string reserve2;
