@@ -129,7 +129,6 @@ class starplan : public contract
     };
 
     struct rewardstate {
-    	bool bigPlanetsReady;
         bool randomPoolReady;
         bool curbigplanetsReady;
         bool bigReady;

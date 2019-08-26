@@ -227,7 +227,7 @@ void starplan::getbigplans()
 {
     baseCheck();
     const struct tbround &curRound = lastRound();
-    bool check = curRound.bstate.finished == true && curRound.rstate.bigPlanetsReady == false;//TODO curRound.bstate.finished == true可以去掉？
+    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == false;//TODO curRound.bstate.finished == true可以去掉？
     endRoundCheck(check, MSG_GET_CUR_BIG_PLANETS);
 
     uint64_t sender_id = get_trx_sender();
@@ -242,7 +242,7 @@ void starplan::getbigplans()
 	});
 
 	tbrounds.modify(curRound, sender_id, [&](auto &obj) {
-		obj.rstate.bigPlanetsReady = true;
+		obj.rstate.curbigplanetsReady = true;
 	});
 }
 
@@ -301,14 +301,13 @@ void starplan::calcbigrwd()
     baseCheck();
 
     const struct tbround &curRound = lastRound();
-    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == true && curRound.rstate.bigReady == false;
-    endRoundCheck(check,MSG_PROGRESS_BIG_REWARDS);
+    bool check = curRound.bstate.finished == true &&
+                 curRound.rstate.curbigplanetsReady == true &&
+                 curRound.rstate.bigReady == false;
+    endRoundCheck(check, MSG_PROGRESS_BIG_REWARDS);
 
-    vector<uint64_t> bigPlanets;
-    //getCurrentRoundBigPlanets(bigPlanets);
-    auto curBigPlanItor = tbcurbigplans.find(0);
-    graphene_assert(curBigPlanItor != tbcurbigplans.end(), MSG_CUR_BIG_PLANETS_NOT_FOUND);
-    bigPlanets = curBigPlanItor->bigplanets;
+    const struct starplan::tbcurbigplan curBigPlanet = curRoundBigPlanets();
+    const vector<uint64_t> &bigPlanets = curBigPlanet.bigplanets;
 
     uint64_t sender_id = get_trx_sender();
     if (bigPlanets.size() == 0) {
