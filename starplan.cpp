@@ -38,6 +38,11 @@ void starplan::init()
         obj.start_time              = get_head_block_time();;
         obj.end_time                = 0;
     });
+    tbcurbigplans.emplace(sender_id,[&](auto &obj){
+        obj.index           = tbcurbigplans.available_primary_key();
+		obj.bigplanets      = {};
+		obj.rwdplanets      = {};
+    });
 }
 
 void starplan::vote(const std::string &inviter, const std::string &superstar)
@@ -223,35 +228,12 @@ void starplan::getbudget()
     calcBudgets();
 }
 
-void starplan::getbigplans()
-{
-    baseCheck();
-    const struct tbround &curRound = lastRound();
-    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == false;//TODO curRound.bstate.finished == true可以去掉？
-    endRoundCheck(check, MSG_GET_CUR_BIG_PLANETS);
-
-    uint64_t sender_id = get_trx_sender();
-    vector<uint64_t> bigPlanets;
-    getCurrentRoundBigPlanets(bigPlanets);
-
-	tbcurbigplans.emplace(sender_id, [&](auto &obj) {
-		obj.index           = tbcurbigplans.available_primary_key();
-		obj.bigplanets      = bigPlanets;
-		obj.rwdplanets      = {};
-	});
-
-	tbrounds.modify(curRound, sender_id, [&](auto &obj) {
-		obj.rstate.curbigplanetsReady = true;
-	});
-}
-
 void starplan::calcrdmrwd()
 {
     baseCheck();
 
     const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true &&
-                 curRound.rstate.curbigplanetsReady == true &&
                  curRound.rstate.randomPoolReady == false;
     endRoundCheck(check, MSG_PROGRESS_RANDOM_REWARDS);
 
@@ -294,7 +276,6 @@ void starplan::calcbigrwd()
 
     const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true &&
-                 curRound.rstate.curbigplanetsReady == true &&
                  curRound.rstate.bigReady == false;
     endRoundCheck(check, MSG_PROGRESS_BIG_REWARDS);
 
@@ -643,6 +624,10 @@ void starplan::createBigPlanet(uint64_t sender)
         obj.id              = sender;
         obj.create_time     = get_head_block_time();
         obj.create_round    = currentRound();
+    });
+    auto itor = tbcurbigplans.find(currentRound());
+    tbcurbigplans.modify(itor,sender,[&](auto &obj){
+		obj.bigplanets.push_back(sender);
     });
 }
 
@@ -1015,6 +1000,12 @@ void starplan::createNewRound()
         obj.invite_rewards          = 0;
         obj.start_time              = get_head_block_time();
         obj.end_time                = 0;
+    });
+
+    tbcurbigplans.emplace(sender,[&](auto &obj){
+        obj.index           = tbcurbigplans.available_primary_key();
+		obj.bigplanets      = {};
+		obj.rwdplanets      = {};
     });
 }
 
