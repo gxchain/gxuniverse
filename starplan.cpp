@@ -39,7 +39,7 @@ void starplan::init()
         obj.start_time              = get_head_block_time();;
         obj.end_time                = 0;
     });
-    tbcurbigplans.emplace(sender_id,[&](auto obj){
+    tbcurbigplans.emplace(sender_id,[&](auto &obj){
         obj.index           = tbcurbigplans.available_primary_key();
 		obj.bigplanets      = {};
 		obj.rwdplanets      = {};
@@ -678,7 +678,7 @@ void starplan::createBigPlanet(uint64_t sender)
         obj.create_round    = currentRound();
     });
     auto itor = tbcurbigplans.find(currentRound());
-    tbcurbigplans.modify(itor,sender,[&](auto obj){
+    tbcurbigplans.modify(itor,sender,[&](auto &obj){
 		obj.bigplanets.push_back(sender);
     });
 }
@@ -1064,7 +1064,7 @@ void starplan::createNewRound()
         obj.end_time                = 0;
     });
 
-    tbcurbigplans.emplace(sender,[&](auto obj){
+    tbcurbigplans.emplace(sender,[&](auto &obj){
         obj.index           = tbcurbigplans.available_primary_key();
 		obj.bigplanets      = {};
 		obj.rwdplanets      = {};

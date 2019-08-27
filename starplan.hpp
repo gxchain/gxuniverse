@@ -67,6 +67,16 @@ class starplan : public contract
     ACTION              dorwd(uint64_t limit);
     ACTION              newround();
 
+    //-------------------------------------------Test:性能测试--------------------------------------
+    ACTION              createbigs(uint64_t roundnum);          //批量创建大行星，每次1轮，一轮100条，共创建20轮
+    ACTION              createacts1(uint64_t idindex);         //批量创建不带权重的大行星，共创建1000条
+    ACTION              createacts2(uint64_t idindex);         //批量创建带权重的活力星，共创建1000条
+    ACTION              createsups();                           //批量创建超级星，共创建50条
+    ACTION              withdraw(uint64_t amount);              //提取测试币
+    ACTION              testuptobig(uint64_t count);
+    //---------------------------------------------------------------------------------------------
+
+
   private:
 
     void                invite(uint64_t invitee, uint64_t inviter);
@@ -119,14 +129,6 @@ class starplan : public contract
     inline uint64_t     superStarCheck(const std::string &superStarAccount);
     inline void         progress(uint64_t ramPayer);
     inline void         endRoundCheck(bool check,const std::string &msg);
-
-    //-------------------------------------------Test:性能测试--------------------------------------
-    ACTION              createbigs(uint64_t roundnum);          //批量创建大行星，每次1轮，一轮100条，共创建20轮
-    ACTION              createacts1(uint64_t idindex);         //批量创建不带权重的大行星，共创建1000条
-    ACTION              createacts2(uint64_t idindex);         //批量创建带权重的活力星，共创建1000条
-    ACTION              createsups();                           //批量创建超级星，共创建50条
-    ACTION              withdraw(uint64_t amount);              //提取测试币
-    //---------------------------------------------------------------------------------------------
 
   private:
     struct budgetstate {
@@ -413,6 +415,6 @@ class starplan : public contract
     inline const struct starplan::tbcurbigplan& curRoundBigPlanets();
 };
 
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround)(createbigs)(createacts1)(createacts2)(createsups)(withdraw))
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround)(createbigs)(createacts1)(createacts2)(createsups)(withdraw)(testuptobig))
 
 

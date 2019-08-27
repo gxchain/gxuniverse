@@ -68,3 +68,21 @@ void starplan::withdraw(uint64_t amount)
 {
     inline_transfer(_self, get_trx_sender(), CORE_ASSET_ID, amount * PRECISION, LOG_CLAIM, strlen(LOG_CLAIM));
 }
+
+void starplan::testuptobig(uint64_t count)
+{
+    for(auto i=0;i<count;i++){
+        auto idx = tbbigplanets.available_primary_key();
+        uint64_t sender = get_trx_sender();
+        tbbigplanets.emplace(sender, [&](auto &obj) {
+            obj.index           = idx;
+            obj.id              = idx + 10;
+            obj.create_time     = get_head_block_time();
+            obj.create_round    = currentRound();
+        });
+        auto itor = tbcurbigplans.find(currentRound());
+        tbcurbigplans.modify(itor,sender,[&](auto &obj){
+            obj.bigplanets.push_back(idx + 10);
+        });
+    }
+}
