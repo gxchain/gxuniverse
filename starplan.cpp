@@ -250,19 +250,12 @@ void starplan::calcrdmrwd()
 
         chooseBigPlanet(bigPlanets, bigPlanetsToReward);
         uint64_t rewardPerPlanet = curRound.bstate.randomBudget / bigPlanetsToReward.size();
+        if(rewardPerPlanet == 0) break;
+
         graphene_assert(rewardPerPlanet <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
         for(auto bigPlanetId : bigPlanetsToReward) {
             actualRewardAmount += rewardPerPlanet;
-            tbrewards.emplace(sender_id, [&](auto &obj) {
-                obj.index       = tbrewards.available_primary_key();
-                obj.round       = currentRound();
-                obj.from        = sender_id;
-                obj.to          = bigPlanetId;
-                obj.amount      = rewardPerPlanet;
-                obj.type        = RWD_TYPE_RANDOM;
-                obj.create_time = get_head_block_time();
-                obj.rewarded    = 0;
-            });
+            createReward(sender_id, curRound.round, sender_id, bigPlanetId, rewardPerPlanet, RWD_TYPE_RANDOM);
         }
     } while(0);
 
@@ -302,33 +295,17 @@ void starplan::calcbigrwd()
     uint64_t actualRewardAmount = 0;
 
     if(isInviteTimeout(lastBigPlanet)) {// 如果超过12小时没有新的invitee则所有奖励归当轮最后一个大行星
-        tbrewards.emplace(sender_id, [&](auto &obj){
-            obj.index = tbrewards.available_primary_key();
-            obj.round = curRound.round;
-            obj.from = _self;
-            obj.to = lastBigPlanet;
-            obj.amount = curRound.bstate.bigPlanetBudget;
-            obj.type = RWD_TYPE_TIMEOUT;
-            obj.create_time = get_head_block_time();
-            obj.rewarded = 0;
-        });
+        createReward(sender_id, curRound.round, _self, lastBigPlanet, curRound.bstate.bigPlanetBudget, RWD_TYPE_TIMEOUT);
         graphene_assert(curRound.bstate.bigPlanetBudget <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
         actualRewardAmount = curRound.bstate.bigPlanetBudget;
     } else {
         uint64_t rewardPerPlanet = curRound.bstate.bigPlanetBudget / bigPlanets.size();
-        graphene_assert(rewardPerPlanet <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
-        for(auto bigPlanetId : bigPlanets) {
-            actualRewardAmount += rewardPerPlanet;
-            tbrewards.emplace(sender_id, [&](auto &obj){
-                obj.index = tbrewards.available_primary_key();
-                obj.round = curRound.round;
-                obj.from = _self;
-                obj.to = bigPlanetId;
-                obj.amount = rewardPerPlanet;
-                obj.type = RWD_TYPE_BIG;
-                obj.create_time = get_head_block_time();
-                obj.rewarded = 0;
-            });
+        if(rewardPerPlanet != 0) {
+            graphene_assert(rewardPerPlanet <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
+            for(auto bigPlanetId : bigPlanets) {
+                actualRewardAmount += rewardPerPlanet;
+                createReward(sender_id, curRound.round, _self, bigPlanetId, rewardPerPlanet, RWD_TYPE_BIG);
+            }
         }
     }
 
@@ -366,24 +343,14 @@ void starplan::calcactrwd()
             return;
         } else {
             amount = curRound.bstate.activePlanetBudget * itor->weight /  g_itor->total_weight;
+            if(amount == 0) break;//对于amount为0的奖励不插入reward表，优化性能
             graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
             totalAmount += amount;
-
-            tbrewards.emplace(sender_id, [&](auto &obj){
-                obj.index = tbrewards.available_primary_key();
-                obj.round = currentRound();
-                obj.from = _self;
-                obj.to = itor->id;
-                obj.amount = amount;
-                obj.type = RWD_TYPE_ACTIVE;
-                obj.create_time = get_head_block_time();
-                obj.rewarded = 0;
-            });
-
+            createReward(sender_id, currentRound(), _self, itor->id, amount, RWD_TYPE_ACTIVE);
             auto pri_itor = tbactiveplans.find(itor->index);
             graphene_assert(pri_itor != tbactiveplans.end(), MSG_ACTIVE_PLANET_NOT_FOUND);
             itor++,count++;
-            tbactiveplans.modify(pri_itor, get_trx_sender(), [&](auto &obj){                           //修改活力星的权重
+            tbactiveplans.modify(pri_itor, get_trx_sender(), [&](auto &obj) {                           //修改活力星的权重
                 uint64_t new_weight = obj.weight * B_DECAY_PERCENT / 100;
                 obj.weight = new_weight;
                 if(obj.weight == 0) obj.trave_index = obj.trave_index & 0xF0FFFFFFFFFFFFFF;
@@ -421,20 +388,10 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
     do {
         if(itor->weight > 0) {
             amount = curRound.bstate.activePlanetBudget * itor->weight / g_itor->total_weight;
+            if(amount == 0) continue;
             graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
             totalAmount += amount;
-
-            tbrewards.emplace(sender_id, [&](auto &obj) {
-                obj.index       = tbrewards.available_primary_key();
-                obj.round       = curRound.round;
-                obj.from        = _self;
-                obj.to          = itor->id;
-                obj.amount      = amount;
-                obj.type        = RWD_TYPE_ACTIVE;
-                obj.create_time = get_head_block_time();
-                obj.rewarded    = 0;
-            });
-
+            createReward(sender_id, curRound.round, _self, itor->id, amount, RWD_TYPE_ACTIVE);
             tbactiveplans.modify(itor, sender_id, [](auto &obj) {
                 obj.weight = obj.weight * B_DECAY_PERCENT / 100;
             });
@@ -488,18 +445,10 @@ void starplan::calcsuprwd()
     for(const auto &superStar : superStars) {
         if(superStar.vote <= 0) continue;
         amount = curRound.bstate.superStarBudget * superStar.vote / totalVote;
+        if(amount == 0) continue;
         graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
         totalAmount += amount;
-        tbrewards.emplace(sender_id, [&](auto &obj) {
-            obj.index = tbrewards.available_primary_key();
-            obj.round = curRound.round;
-            obj.from = _self;
-            obj.to = superStar.id;
-            obj.amount = amount;
-            obj.type = RWD_TYPE_SUPER;
-            obj.create_time = get_head_block_time();
-            obj.rewarded = 0;
-        });
+        createReward(sender_id, curRound.round, _self, superStar.id, amount, RWD_TYPE_SUPER);
     }
 
     tbrounds.modify(curRound, sender_id, [&](auto &obj) {
@@ -847,17 +796,7 @@ void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountI
         obj.invite_rewards = obj.invite_rewards + Z1;
     });
 
-    tbrewards.emplace(invitee, [&](auto &obj)
-    {
-        obj.index = tbrewards.available_primary_key();
-        obj.round = currentRound();
-        obj.from = invitee;
-        obj.to = rewardAccountId;
-        obj.amount = Z2;
-        obj.type = rewardType;
-        obj.create_time = get_head_block_time();
-        obj.rewarded = 0;
-    });
+    createReward(invitee, currentRound(), invitee, rewardAccountId, Z2, rewardType);
 }
 
 void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t inviteeId)
@@ -1194,5 +1133,20 @@ void starplan::endRoundCheck(bool check, const std::string &msg)
     uint64_t sender_id = get_trx_origin();
     graphene_assert(sender_id == ADMIN_ID, MSG_CHECK_ADMIN);
     graphene_assert(check, msg.c_str());
+}
+
+void starplan::createReward(uint64_t feePayer, uint64_t round, uint64_t from, uint64_t to, uint64_t amount, uint8_t type)
+{
+    if(amount == 0) return;//对于amount为0的奖励不插入reward表，优化性能，节省内存
+    tbrewards.emplace(feePayer, [&](auto &obj) {
+        obj.index       = tbrewards.available_primary_key();
+        obj.round       = round;
+        obj.from        = from;
+        obj.to          = to;
+        obj.amount      = amount;
+        obj.type        = type;
+        obj.create_time = get_head_block_time();
+        obj.rewarded    = 0;
+    });
 }
 

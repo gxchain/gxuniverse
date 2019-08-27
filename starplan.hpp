@@ -93,7 +93,7 @@ class starplan : public contract
     inline void         createSmallPlanet(uint64_t sender);
     bool                isBigPlanet(uint64_t sender);
     inline void         createBigPlanet(uint64_t sender);
-    uint64_t            currentRound();
+    inline uint64_t     currentRound();
     inline bool         isInviteTimeout(uint64_t &lastBigPlanet);//>12 hours
     inline bool         isRoundFull();//>=100 inviatees
     inline bool         isRoundFinish();
@@ -129,6 +129,7 @@ class starplan : public contract
     inline uint64_t     superStarCheck(const std::string &superStarAccount);
     inline void         progress(uint64_t ramPayer);
     inline void         endRoundCheck(bool check,const std::string &msg);
+    inline void         createReward(uint64_t feePayer, uint64_t round, uint64_t from, uint64_t to, uint64_t amount, uint8_t type);
 
   private:
     struct budgetstate {
