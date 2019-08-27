@@ -134,6 +134,7 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     baseCheck();
     roundFinishCheck();
     superstarMax50Check();
+    return;
     uint64_t amount = assetEqualCheck(X);
 
     uint64_t sender_id = get_trx_origin();
@@ -343,7 +344,6 @@ void starplan::calcactrwd()
             return;
         } else {
             amount = curRound.bstate.activePlanetBudget * itor->weight /  g_itor->total_weight;
-            if(amount == 0) continue;//对于amount为0的奖励不插入reward表，优化性能
             graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
             totalAmount += amount;
             createReward(sender_id, currentRound(), _self, itor->id, amount, RWD_TYPE_ACTIVE);
@@ -388,7 +388,6 @@ void starplan::calcactrwd1()//全表遍历 假设10ms可以遍历200条，1秒�
     do {
         if(itor->weight > 0) {
             amount = curRound.bstate.activePlanetBudget * itor->weight / g_itor->total_weight;
-            if(amount == 0) continue;
             graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
             totalAmount += amount;
             createReward(sender_id, curRound.round, _self, itor->id, amount, RWD_TYPE_ACTIVE);
