@@ -14,7 +14,7 @@ const uint64_t      MIN_VOTE_AMOUNT         = 10 * PRECISION;
 const uint64_t      MAX_MEMO_LENGTH         = 15;
 const uint64_t      ACTIVE_PROMOT_INVITES   = 5;
 const uint64_t      RANDOM_COUNT            = 10;
-const uint64_t      COUNT_OF_TRAVERSAL_PER  = 100;
+const uint64_t      COUNT_OF_TRAVERSAL_PER  = 50;
 
 //////////////////////// for test ////////////////////////
 const uint64_t      ADMIN_ID                = 426;                      //admin账户id
