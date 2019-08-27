@@ -59,7 +59,6 @@ class starplan : public contract
     ACTION              updatememo(const std::string &memo);
 
     ACTION              getbudget();
-    ACTION              getbigplans();
     ACTION              calcrdmrwd();
     ACTION              calcbigrwd();
     ACTION              calcactrwd();
@@ -76,6 +75,7 @@ class starplan : public contract
     inline void         updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
     inline bool         superstarEnabled(uint64_t superId);
     inline bool         superstarExist(uint64_t superId);
+    inline void         superstarMax50Check();
     inline void         createSuperstar(uint64_t sender, const std::string &memo);
     void                enableSuperstar(uint64_t superId, const std::string &memo);
     void                disableSuperStar(uint64_t superId);
@@ -140,7 +140,6 @@ class starplan : public contract
 
     struct rewardstate {
         bool randomPoolReady;
-        bool curbigplanetsReady;
         bool bigReady;
         bool activeReady;
         bool superReady;
@@ -398,15 +397,14 @@ class starplan : public contract
 
     //@abi table tbcurbigplan i64
     struct tbcurbigplan {
-        uint64_t index;                     // 主键，值为0
+        uint64_t index;                     // 主键&随轮数增长
         std::vector<uint64_t> bigplanets;   // 当前轮所有的大行星
         std::vector<uint64_t> rwdplanets;   // 当前轮得到随机奖励的行星
-        uint64_t rewarded_index;            // 发奖遍历索引
         uint64_t reserve1;
         std::string reserve2;
 
         uint64_t primary_key() const { return index; }
-        GRAPHENE_SERIALIZE(tbcurbigplan, (index)(bigplanets)(rwdplanets)(rewarded_index)(reserve1)(reserve2))
+        GRAPHENE_SERIALIZE(tbcurbigplan, (index)(bigplanets)(rwdplanets)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbcurbigplan), tbcurbigplan> tbcurbigplan_index;
     tbcurbigplan_index tbcurbigplans;
@@ -414,5 +412,7 @@ class starplan : public contract
     inline const struct starplan::tbround& lastRound();
     inline const struct starplan::tbcurbigplan& curRoundBigPlanets();
 };
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(getbigplans)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround)(createbigs)(createacts1)(createacts2)(createsups)(withdraw))
+
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround)(createbigs)(createacts1)(createacts2)(createsups)(withdraw))
+
 

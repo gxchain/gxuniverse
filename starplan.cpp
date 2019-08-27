@@ -39,6 +39,11 @@ void starplan::init()
         obj.start_time              = get_head_block_time();;
         obj.end_time                = 0;
     });
+    tbcurbigplans.emplace(sender_id,[&](auto obj){
+        obj.index           = tbcurbigplans.available_primary_key();
+		obj.bigplanets      = {};
+		obj.rwdplanets      = {};
+    });
 }
 
 void starplan::vote(const std::string &inviter, const std::string &superstar)
@@ -128,7 +133,7 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     //////////////////////////////// 校验 ////////////////////////////////
     baseCheck();
     roundFinishCheck();
-
+    superstarMax50Check();
     uint64_t amount = assetEqualCheck(X);
 
     uint64_t sender_id = get_trx_origin();
@@ -224,36 +229,12 @@ void starplan::getbudget()
     calcBudgets();
 }
 
-void starplan::getbigplans()
-{
-    baseCheck();
-    const struct tbround &curRound = lastRound();
-    bool check = curRound.bstate.finished == true && curRound.rstate.curbigplanetsReady == false;//TODO curRound.bstate.finished == true可以去掉？
-    endRoundCheck(check, MSG_GET_CUR_BIG_PLANETS);
-
-    uint64_t sender_id = get_trx_sender();
-    vector<uint64_t> bigPlanets;
-    getCurrentRoundBigPlanets(bigPlanets);
-
-	tbcurbigplans.emplace(sender_id, [&](auto &obj) {
-		obj.index           = tbcurbigplans.available_primary_key();
-		obj.bigplanets      = bigPlanets;
-		obj.rwdplanets      = {};
-		obj.rewarded_index  = 0;
-	});
-
-	tbrounds.modify(curRound, sender_id, [&](auto &obj) {
-		obj.rstate.curbigplanetsReady = true;
-	});
-}
-
 void starplan::calcrdmrwd()
 {
     baseCheck();
 
     const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true &&
-                 curRound.rstate.curbigplanetsReady == true &&
                  curRound.rstate.randomPoolReady == false;
     endRoundCheck(check, MSG_PROGRESS_RANDOM_REWARDS);
 
@@ -303,7 +284,6 @@ void starplan::calcbigrwd()
 
     const struct tbround &curRound = lastRound();
     bool check = curRound.bstate.finished == true &&
-                 curRound.rstate.curbigplanetsReady == true &&
                  curRound.rstate.bigReady == false;
     endRoundCheck(check, MSG_PROGRESS_BIG_REWARDS);
 
@@ -629,6 +609,14 @@ bool starplan::superstarExist(uint64_t superId)
     return sup_itor != sup_idx.end();
 }
 
+void starplan::superstarMax50Check()
+{
+    auto itor = tbsuperstars.end();
+    if(itor == tbsuperstars.begin()) return;
+    itor--;
+    graphene_assert(itor->index < MAX_SUPERSTAR_NUMBER - 1, MSG_CHECK_MAX_SUPERSTAR_50);
+}
+
 void starplan::createSuperstar(uint64_t accountId, const std::string &memo)
 {
     tbsuperstars.emplace(accountId, [&](auto &obj) {
@@ -688,6 +676,10 @@ void starplan::createBigPlanet(uint64_t sender)
         obj.id              = sender;
         obj.create_time     = get_head_block_time();
         obj.create_round    = currentRound();
+    });
+    auto itor = tbcurbigplans.find(currentRound());
+    tbcurbigplans.modify(itor,sender,[&](auto obj){
+		obj.bigplanets.push_back(sender);
     });
 }
 
@@ -1070,6 +1062,12 @@ void starplan::createNewRound()
         obj.invite_rewards          = 0;
         obj.start_time              = get_head_block_time();
         obj.end_time                = 0;
+    });
+
+    tbcurbigplans.emplace(sender,[&](auto obj){
+        obj.index           = tbcurbigplans.available_primary_key();
+		obj.bigplanets      = {};
+		obj.rwdplanets      = {};
     });
 }
 
