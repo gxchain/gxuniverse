@@ -5,7 +5,7 @@ void starplan::createbigs(uint64_t roundnum)
     for(auto i = 0; i < 100; i++){
         tbbigplanets.emplace(get_trx_sender(), [&](auto &obj) {
             obj.index           = tbbigplanets.available_primary_key();
-            obj.id              = (roundnum << 8) | i;
+            obj.id              = ((roundnum << 8)) | i + 11;                                       // account id > 10
             obj.create_time     = get_head_block_time();
             obj.create_round    = roundnum;
         });
@@ -14,6 +14,7 @@ void starplan::createbigs(uint64_t roundnum)
 
 void starplan::createacts1(uint64_t idindex)
 {
+    idindex++;
     for(auto i = 0; i < 100; i++){
         uint64_t activePlanetAccountId = (idindex << 8) | i;
         tbactiveplans.emplace(get_trx_sender(), [&](auto &obj) {                                      //创建活力星
@@ -30,6 +31,7 @@ void starplan::createacts1(uint64_t idindex)
 void starplan::createacts2(uint64_t idindex)
 {
     uint64_t total_weight = 0;
+    idindex++;
     for(auto i = 0; i < 100; i++){
         uint64_t activePlanetAccountId = (idindex << 8) | i;
         tbactiveplans.emplace(get_trx_sender(), [&](auto &obj) {                                      //创建活力星
@@ -53,7 +55,7 @@ void starplan::createsups()
     for(auto i = 0; i < 50; i++){
         tbsuperstars.emplace(get_trx_sender(), [&](auto &obj) {
             obj.index                   = tbsuperstars.available_primary_key();
-            obj.id                      = i;
+            obj.id                      = i + 11;       // account id > 10
             obj.create_time             = get_head_block_time();
             obj.create_round            = 0;
             obj.vote_num                = i * 10 * PRECISION;
