@@ -9,6 +9,7 @@ const char* MSG_CHECK_INVITE_SELF = "Error: Can't invite yourself ";
 const char* MSG_ROUND_END = "Error: Current round is ended";
 const char* MSG_CHECK_ROUND_ENDED = "Error: Current round is end, waiting for a new round";
 const char* MSG_ROUND_NOT_END = "Error: Current round is not end";
+const char* MSG_CHECK_MAX_SUPERSTAR_50 = "Error: super star max number is 50";
 const char* MSG_SUPER_STAR_NOT_EXIST = "Error: The indicated super star not exist";
 const char* MSG_NOT_INITIALIZED = "Error: Please initialize the game first";
 const char* MSG_NOT_SMALL_PLANET = "Error: You have to become a small planet first";

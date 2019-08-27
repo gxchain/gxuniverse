@@ -14,7 +14,8 @@ const uint64_t      MIN_VOTE_AMOUNT         = 10 * PRECISION;
 const uint64_t      MAX_MEMO_LENGTH         = 15;
 const uint64_t      ACTIVE_PROMOT_INVITES   = 5;
 const uint64_t      RANDOM_COUNT            = 10;
-const uint64_t      COUNT_OF_TRAVERSAL_PER  = 100;
+const uint64_t      COUNT_OF_TRAVERSAL_PER  = 50;
+const uint64_t      MAX_SUPERSTAR_NUMBER    = 50;
 
 //////////////////////// for test ////////////////////////
 const uint64_t      ADMIN_ID                = 426;                      //admin账户id
@@ -22,7 +23,7 @@ const uint64_t      DEFAULT_INVITER         = 0;                        //默认
 const uint64_t      SUPER_STAR_LIMIT        = 5;                        //超级星最大数量（50）
 const uint64_t      BIG_ROUND_SIZE          = 5;                        //一个大轮包含小轮数（50）
 const uint64_t      ROUND_AMOUNT            = 40 * PRECISION;           //每一小轮的底池资产数（20GXC）
-const uint64_t      ROUND_SIZE              = 10;                       //每一轮的参与人数（10）
+const uint64_t      ROUND_SIZE              = 5;                       //每一轮的参与人数（10）
 const uint64_t      X                       = 20 * PRECISION;           //成为超级星需要抵押的资产数（20GXC）
 const uint64_t      Y                       = 10 * PRECISION;           //成为小行星需要抵押的资产数（10GXC）
 const uint64_t      Z                       = 11 * PRECISION;           //自激活需要抵押的资产数（11GXC）
