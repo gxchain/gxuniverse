@@ -343,7 +343,7 @@ void starplan::calcactrwd()
             return;
         } else {
             amount = curRound.bstate.activePlanetBudget * itor->weight /  g_itor->total_weight;
-            if(amount == 0) break;//对于amount为0的奖励不插入reward表，优化性能
+            if(amount == 0) continue;//对于amount为0的奖励不插入reward表，优化性能
             graphene_assert(amount <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
             totalAmount += amount;
             createReward(sender_id, currentRound(), _self, itor->id, amount, RWD_TYPE_ACTIVE);
