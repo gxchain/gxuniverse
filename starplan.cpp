@@ -133,7 +133,6 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     baseCheck();
     roundFinishCheck();
     superstarMax50Check();
-    return;
     uint64_t amount = assetEqualCheck(X);
 
     uint64_t sender_id = get_trx_origin();
