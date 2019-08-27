@@ -50,15 +50,16 @@ void starplan::createacts2(uint64_t idindex)
     });
 }
 
-void starplan::createsups()
+void starplan::createsups(uint64_t count)
 {
-    for(auto i = 0; i < 50; i++){
+    for(auto i = 0; i < count; i++){
+        auto idx = tbsuperstars.available_primary_key();
         tbsuperstars.emplace(get_trx_sender(), [&](auto &obj) {
-            obj.index                   = tbsuperstars.available_primary_key();
-            obj.id                      = i + 11;       // account id > 10
+            obj.index                   = idx;
+            obj.id                      = idx + 11;       // account id > 10
             obj.create_time             = get_head_block_time();
             obj.create_round            = 0;
-            obj.vote_num                = i * 10 * PRECISION;
+            obj.vote_num                = idx * 10 * PRECISION;
             obj.disabled                = false;
             obj.memo                    = "test";
         });
