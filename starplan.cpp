@@ -1,4 +1,5 @@
 #include "starplan.hpp"
+#include "test.cpp"
 
 void starplan::init()
 {
