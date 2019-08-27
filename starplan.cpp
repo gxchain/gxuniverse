@@ -132,7 +132,7 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     //////////////////////////////// 校验 ////////////////////////////////
     baseCheck();
     roundFinishCheck();
-
+    superstarMax50Check();
     uint64_t amount = assetEqualCheck(X);
 
     uint64_t sender_id = get_trx_origin();
@@ -606,6 +606,14 @@ bool starplan::superstarExist(uint64_t superId)
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superId);
     return sup_itor != sup_idx.end();
+}
+
+void starplan::superstarMax50Check()
+{
+    auto itor = tbsuperstars.end();
+    if(itor == tbsuperstars.begin()) return;
+    itor--;
+    graphene_assert(itor->index < MAX_SUPERSTAR_NUMBER - 1, MSG_CHECK_MAX_SUPERSTAR_50);
 }
 
 void starplan::createSuperstar(uint64_t accountId, const std::string &memo)
