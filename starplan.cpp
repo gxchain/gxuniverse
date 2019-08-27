@@ -1064,7 +1064,7 @@ void starplan::createNewRound()
     });
 
     tbcurbigplans.emplace(sender,[&](auto obj){
-        obj.index           = currentRound();
+        obj.index           = tbcurbigplans.available_primary_key();
 		obj.bigplanets      = {};
 		obj.rwdplanets      = {};
     });
