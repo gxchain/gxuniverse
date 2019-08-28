@@ -254,7 +254,7 @@ void starplan::calcrdmrwd()
         }
     }
 
-    tbrounds.modify(curRound, sender_id, [actualRewardAmount](auto &obj) {
+    tbrounds.modify(curRound, sender_id, [actualRewardAmount, &curRound](auto &obj) {
         obj.rstate.randomPoolReady = true;
         obj.actual_rewards += actualRewardAmount;
 
