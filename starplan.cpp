@@ -609,7 +609,7 @@ void starplan::createBigPlanet(uint64_t sender)
         obj.create_round    = currentRound();
     });
     auto itor = tbcurbigplans.find(currentRound());
-    tbcurbigplans.modify(itor, sender, [&](auto &obj) {
+    tbcurbigplans.modify(itor, sender, [&sender](auto &obj) {
         obj.bigplanets.push_back(sender);
     });
 }
@@ -772,7 +772,7 @@ void starplan::buildDepositMsg(uint64_t amount, bool equalCheck, std::string &ms
 
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
 {
-    tbrounds.modify(lastRound(), invitee, [&](auto &obj) {
+    tbrounds.modify(lastRound(), invitee, [](auto &obj) {
         obj.random_rewards = obj.random_rewards + Z3;
         obj.invite_rewards = obj.invite_rewards + Z1;
     });
@@ -812,7 +812,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t invit
 
     if (is_add_weight == true) {
         auto g_itor = tbglobals.find(0);
-        tbglobals.modify(g_itor, inviteeId, [&](auto &obj) {
+        tbglobals.modify(g_itor, inviteeId, [](auto &obj) {
             obj.total_weight = obj.total_weight + WEIGHT;
         });
     }
@@ -955,7 +955,7 @@ void starplan::createNewRound()
 
     // 2 创建新的一轮
     auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor, sender, [&](auto &obj) {
+    tbglobals.modify(g_itor, sender, [](auto &obj) {
         obj.current_round += 1;
     });
 
@@ -1004,7 +1004,7 @@ void starplan::cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amou
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superAccId);
     graphene_assert(sup_itor != sup_idx.end(), MSG_INVALID_ITOR);
-    sup_idx.modify(sup_itor, get_trx_sender(), [&](auto &obj) {
+    sup_idx.modify(sup_itor, get_trx_sender(), [&amount](auto &obj) {
         graphene_assert(obj.vote_num >= amount, MSG_INVALID_VOTE_MODIFY);
         obj.vote_num -= amount;
     });
@@ -1015,7 +1015,7 @@ void starplan::disableSuperStar(uint64_t superId)
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superId);
     graphene_assert(sup_itor != sup_idx.end(), MSG_SUPER_STAR_NOT_EXIST);
-    sup_idx.modify(sup_itor, get_trx_sender(), [&](auto &obj) {
+    sup_idx.modify(sup_itor, get_trx_sender(), [](auto &obj) {
         obj.disabled = true;
     });
 }
@@ -1077,13 +1077,13 @@ uint64_t starplan::updateAccountVote(uint64_t sender, uint64_t voteCount)
 
     auto itor = tbaccounts.find(sender);
     if (itor == tbaccounts.end()) {
-        tbaccounts.emplace(sender, [&](auto &obj) {
+        tbaccounts.emplace(sender, [&sender, &voteCount, &totalVotes](auto &obj) {
             obj.account_id      = sender;
             obj.vote_count      = voteCount;
             totalVotes          = obj.vote_count;
         });
     } else {
-        tbaccounts.modify(itor, sender, [&](auto &obj) {
+        tbaccounts.modify(itor, sender, [&voteCount, &totalVotes](auto &obj) {
             obj.vote_count += voteCount;
             totalVotes = obj.vote_count;
         });
