@@ -884,17 +884,6 @@ void starplan::calcBudgets()
     });
 }
 
-void starplan::getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets)
-{
-    auto big_idx = tbbigplanets.get_index<N(byround)>();
-    auto round = currentRound();
-    auto itor = big_idx.find(round);
-    while (itor != big_idx.end() && itor->create_round == round) {
-        bigPlanets.push_back(itor->id);
-        itor++;
-    }
-}
-
 uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
 {
     uint64_t total_votes = 0;

@@ -96,7 +96,6 @@ private:
     //大行星相关
     inline bool         isBigPlanet(uint64_t sender);
     inline void         createBigPlanet(uint64_t sender);
-    inline void         getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
     void                chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
 
     //活力星相关
@@ -431,22 +430,5 @@ private:
     inline const struct starplan::tbcurbigplan& curRoundBigPlanets();
 };
 
-GRAPHENE_ABI(starplan,
-        (init)
-        (vote)
-        (selfactivate)
-        (uptobig)
-        (uptosuper)
-        (claim)
-        (upgrade)
-        (updatememo)
-        (getbudget)
-        (calcrdmrwd)
-        (calcbigrwd)
-        (calcactrwd)
-        (calcactrwd1)
-        (calcsuprwd)
-        (dorwd)
-        (newround)
-        )
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround))
 
