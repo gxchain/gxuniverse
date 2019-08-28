@@ -1057,6 +1057,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 {
     if ("" != inviter) {
         uint64_t inviter_id = accountCheck(inviter);
+        graphene_assert(isInviter(inviter_id), MSG_CHECK_INVITER_VALID);
         graphene_assert(inviter_id != inviteeId, MSG_CHECK_INVITE_SELF);
         return inviter_id;
     }
