@@ -77,6 +77,7 @@ private:
     inline bool         isInviter(uint64_t inviter_id);
     inline void         invite(uint64_t invitee, uint64_t inviter);
     inline void         activateInvite(uint64_t sender);
+    inline bool         isInviteTimeout(uint64_t &lastBigPlanet);
 
     //超级星相关
     inline bool         superstarEnabled(uint64_t superId);
@@ -125,7 +126,6 @@ private:
     inline uint64_t     assetLargerCheck(uint64_t expectedAmount);
     inline void         buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason);
     inline void         buildDepositMsg(uint64_t amount, bool equalCheck, std::string &msg);
-    inline bool         isInviteTimeout(uint64_t &lastBigPlanet);
     inline void         createStaking(uint64_t sender, uint64_t amount, uint64_t to, uint64_t reason, uint64_t index = 0);
     inline void         createReward(uint64_t feePayer, uint64_t round, uint64_t from, uint64_t to, uint64_t amount, uint8_t type);
     inline void         distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);

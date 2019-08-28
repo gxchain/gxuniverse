@@ -594,13 +594,9 @@ void starplan::createSmallPlanet(uint64_t sender)
 
 bool starplan::isBigPlanet(uint64_t sender)
 {
-    bool retValue = false;
     auto big_idx = tbbigplanets.get_index<N(byaccid)>();
     auto big_itor = big_idx.find(sender);
-    if (big_itor != big_idx.end()) {
-        retValue = true;
-    }
-    return retValue;
+    return big_itor != big_idx.end();
 }
 
 void starplan::createBigPlanet(uint64_t sender)
@@ -843,7 +839,7 @@ void starplan::updateActivePlanetForSuper(uint64_t activePlanetAccountId)
     }
 
     auto g_itor = tbglobals.find(0);
-    tbglobals.modify(g_itor, activePlanetAccountId, [&](auto &obj) {
+    tbglobals.modify(g_itor, activePlanetAccountId, [](auto &obj) {
         obj.total_weight += WEIGHT;
     });
 }
