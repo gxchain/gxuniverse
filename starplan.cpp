@@ -867,21 +867,21 @@ void starplan::calcBudgets()
 {
     auto &round = lastRound();
 
-    auto pool_amount = ROUND_AMOUNT + round.invite_rewards;
-
-    uint64_t decayAmountUnit = (currentRound() % BIG_ROUND_SIZE + 1) * PRECISION;
+    auto pool_amount = ROUND_AMOUNT + round.invite_rewards;         //未衰减的底池 pool_amount
 
     uint64_t now = (uint64_t)get_head_block_time();
     graphene_assert(now > round.start_time, MSG_BLOCK_TIME_ERR);
     uint64_t curRoundElapseTime = now - round.start_time;
 
-    uint64_t decayCount = (curRoundElapseTime - DECAY_TIME) / DECAY_DURATION;
-    decayCount += (curRoundElapseTime - DECAY_TIME) % DECAY_DURATION > 0 ? 1 : 0;
-    decayCount = decayCount > MAX_DECAY_COUNT ? MAX_DECAY_COUNT : decayCount;
-
-    uint64_t decayAmount = decayAmountUnit * decayCount;
-    graphene_assert(pool_amount > decayAmount, MSG_POOL_AMOUNT_DECAY_ERR);
-    pool_amount = pool_amount - decayAmount;
+    if(curRoundElapseTime > DECAY_TIME){                            //开奖时超过DECAY_TIME时间，奖励进行衰减，
+        uint64_t decayAmountUnit = (currentRound() % BIG_ROUND_SIZE + 1) * PRECISION;       //每次衰减奖励数量
+        uint64_t decayCount = (curRoundElapseTime - DECAY_TIME) / DECAY_DURATION;           //衰减次数
+        decayCount += (curRoundElapseTime - DECAY_TIME) % DECAY_DURATION > 0 ? 1 : 0;       //存在余数，衰减次数+1
+        decayCount = decayCount > MAX_DECAY_COUNT ? MAX_DECAY_COUNT : decayCount;           //最多衰减 MAX_DECAY_COUNT次
+        uint64_t decayAmount = decayAmountUnit * decayCount;                                //每次衰减数量 * 衰减次数 = 总衰减金额
+        graphene_assert(pool_amount > decayAmount, MSG_POOL_AMOUNT_DECAY_ERR);
+        pool_amount = pool_amount - decayAmount;                    //计算衰减之后的底池 pool_amount
+    }
 
     uint64_t randomBudget = round.random_rewards;
     uint64_t bigPlanetBudget = pool_amount * PAYBACK_PERCENT / 100;
