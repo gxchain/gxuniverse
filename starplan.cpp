@@ -535,6 +535,13 @@ bool starplan::superstarExist(uint64_t superId)
     return sup_itor != sup_idx.end();
 }
 
+uint64_t starplan::accountCheck(const std::string &account)
+{
+    int64_t acc_id = get_account_id(account.c_str(), account.length());
+    graphene_assert(-1 != acc_id, MSG_CHECK_ACCOUNT_EXIST);
+    return acc_id;
+}
+
 void starplan::superstarMax50Check()
 {
     auto itor = tbsuperstars.end();
@@ -1061,8 +1068,7 @@ uint64_t starplan::assetLargerCheck(uint64_t expectedAmount)
 uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 {
     if ("" != inviter) {
-        int64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
-        graphene_assert(-1 != inviter_id, MSG_CHECK_INVITER_VALID);
+        uint64_t inviter_id = accountCheck(inviter);
         graphene_assert(inviter_id != inviteeId, MSG_CHECK_INVITE_SELF);
         return inviter_id;
     }
@@ -1072,7 +1078,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
 {
-    int64_t super_id = get_account_id(superStarAccount.c_str(), superStarAccount.length());
+    uint64_t super_id = accountCheck(superStarAccount);
     graphene_assert(superstarEnabled(super_id), MSG_SUPER_STAR_NOT_EXIST);
     return super_id;
 }

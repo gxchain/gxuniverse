@@ -120,6 +120,7 @@ private:
     inline bool         isInit();
     inline void         baseCheck();
     inline uint64_t     checkSender();
+    inline uint64_t     accountCheck(const std::string &account);
     inline bool         isUpgrading();
     inline uint64_t     assetEqualCheck(uint64_t expectedAmount);
     inline uint64_t     assetLargerCheck(uint64_t expectedAmount);
