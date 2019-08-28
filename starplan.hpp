@@ -431,22 +431,5 @@ private:
     inline const struct starplan::tbcurbigplan& curRoundBigPlanets();
 };
 
-GRAPHENE_ABI(starplan,
-        (init)
-        (vote)
-        (selfactivate)
-        (uptobig)
-        (uptosuper)
-        (claim)
-        (upgrade)
-        (updatememo)
-        (getbudget)
-        (calcrdmrwd)
-        (calcbigrwd)
-        (calcactrwd)
-        (calcactrwd1)
-        (calcsuprwd)
-        (dorwd)
-        (newround)
-        )
+GRAPHENE_ABI(starplan,(init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround))
 
