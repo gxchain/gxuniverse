@@ -463,6 +463,7 @@ void starplan::dorwd(uint64_t limit)
     uint64_t now = get_head_block_time();
     for (auto i = 0; i < limit; i++) {
         if (itor->amount == 0) continue;
+        graphene_assert(now >= itor->create_time,MSG_CREATE_TIME_ERR);
         if (now - itor->create_time < REWARD_DELAY_TIME) continue;
         if (itor == rwd_idx.end() || itor->rewarded == true) break;
 
@@ -867,10 +868,12 @@ void starplan::calcBudgets()
     uint64_t randomBudget = round.random_rewards;
     uint64_t bigPlanetBudget = pool_amount * PAYBACK_PERCENT / 100;
     uint64_t activePlanetBudget = pool_amount * ACTIVE_PERCENT / 100;
+    graphene_assert(pool_amount >= bigPlanetBudget + activePlanetBudget, MSG_CACL_POOL_BUDGET_ERR);
     uint64_t superStarBudget = pool_amount - bigPlanetBudget - activePlanetBudget;
 
     auto sender = get_trx_sender();
     tbrounds.modify(round, sender, [&](auto &obj) {
+        graphene_assert(pool_amount >= round.invite_rewards, MSG_CACL_POOL_BUDGET_ERR);
         obj.base_pool = pool_amount - round.invite_rewards;
         obj.bstate.randomBudget = randomBudget;
         obj.bstate.bigPlanetBudget = bigPlanetBudget;
