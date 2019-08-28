@@ -546,6 +546,7 @@ void starplan::superstarMax50Check()
     auto itor = tbsuperstars.end();
     if (itor == tbsuperstars.begin()) return;
     itor--;
+    //TODO 90天以后部分超级星claim之后不能够按照这个条件来判断
     graphene_assert(itor->index < MAX_SUPERSTAR_NUMBER - 1, MSG_CHECK_MAX_SUPERSTAR_50);
 }
 
