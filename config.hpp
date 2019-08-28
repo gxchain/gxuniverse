@@ -75,6 +75,8 @@ const char* const reward_reasons[7] = {
         "reward current round base pool to big planet",
         "reward current round base pool to active planet",
         "reward current round base pool to super star",
-        "reward current round base pool to last big planet for invite timeout"
+        "reward current round base pool to last big planet for invite timeout",
+        "",
+        ""
 };
 
