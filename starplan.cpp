@@ -916,8 +916,8 @@ void starplan::chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64
         auto j = i;
         while (true) {
             uint8_t share = (uint8_t) (sum160.hash[j % 20] * (j + 1));
-            uint8_t number = (share + block_hash.hash[j % 20]) % bigplanet_size;
-            auto it = std::find(choosed.begin(), choosed.end(), number);
+            uint8_t number = (share + block_hash.hash[j % 20]) % bigPlanets.size();
+            auto it = std::find(choosed.begin(), choosed.end(), bigPlanets[number]);
             if (it != choosed.end()) {
                 j++;
                 continue;
