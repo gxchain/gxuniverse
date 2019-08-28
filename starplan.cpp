@@ -242,19 +242,17 @@ void starplan::calcrdmrwd()
     const vector<uint64_t> &bigPlanets = curBigPlanet.bigplanets;
     vector<uint64_t> bigPlanetsToReward;
 
-    do {
-        if (bigPlanets.size() == 0) break;
-
+    if(bigPlanets.size() > 0){
         chooseBigPlanet(bigPlanets, bigPlanetsToReward);
         uint64_t rewardPerPlanet = curRound.bstate.randomBudget / bigPlanetsToReward.size();
-        if (rewardPerPlanet == 0) break;
-
-        graphene_assert(rewardPerPlanet <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
-        for (auto bigPlanetId : bigPlanetsToReward) {
-            actualRewardAmount += rewardPerPlanet;
-            createReward(sender_id, curRound.round, sender_id, bigPlanetId, rewardPerPlanet, RWD_TYPE_RANDOM);
+        if (rewardPerPlanet > 0){
+            graphene_assert(rewardPerPlanet <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
+            for (auto bigPlanetId : bigPlanetsToReward) {
+                actualRewardAmount += rewardPerPlanet;
+                createReward(sender_id, curRound.round, sender_id, bigPlanetId, rewardPerPlanet, RWD_TYPE_RANDOM);
+            }
         }
-    } while (0);
+    }
 
     tbrounds.modify(curRound, sender_id, [&](auto &obj) {
         obj.rstate.randomPoolReady = true;
