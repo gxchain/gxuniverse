@@ -1061,8 +1061,8 @@ uint64_t starplan::assetLargerCheck(uint64_t expectedAmount)
 uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 {
     if ("" != inviter) {
-        uint64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
-        graphene_assert(inviter_id, MSG_CHECK_INVITER_VALID);
+        int64_t inviter_id = get_account_id(inviter.c_str(), inviter.length());
+        graphene_assert(-1 != inviter_id, MSG_CHECK_INVITER_VALID);
         graphene_assert(inviter_id != inviteeId, MSG_CHECK_INVITE_SELF);
         return inviter_id;
     }
