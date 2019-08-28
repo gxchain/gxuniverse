@@ -70,8 +70,7 @@ public:
     ACTION              newround();
 
 private:
-    inline bool         isInit();
-
+    //邀请者相关
     inline uint64_t     inviterCheck(const std::string &inviter, uint64_t inviteeId);
     inline uint64_t     getInviter(uint64_t invitee);
     inline bool         hasInvited(uint64_t invitee);
@@ -79,56 +78,59 @@ private:
     inline void         invite(uint64_t invitee, uint64_t inviter);
     inline void         activateInvite(uint64_t sender);
 
-    inline uint64_t     createVote(uint64_t sender, uint64_t super_id, uint64_t voteCount);
-    inline void         updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
-
+    //超级星相关
     inline bool         superstarEnabled(uint64_t superId);
     inline bool         superstarExist(uint64_t superId);
     inline void         superstarMax50Check();
     inline void         createSuperstar(uint64_t sender, const std::string &memo);
     inline void         enableSuperstar(uint64_t superId, const std::string &memo);
     inline void         disableSuperStar(uint64_t superId);
+    inline uint64_t     superStarCheck(const std::string &superStarAccount);
+    inline void         updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
+    inline uint64_t     getCurrentRoundSuperStars(vector<SuperStar> &superStars);
 
+    //小行星相关
     inline bool         isSmallPlanet(uint64_t sender);
     inline void         createSmallPlanet(uint64_t sender);
 
+    //大行星相关
     inline bool         isBigPlanet(uint64_t sender);
     inline void         createBigPlanet(uint64_t sender);
+    inline void         getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
+    void                chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
 
+    //活力星相关
     void                updateActivePlanet(uint64_t activePlanetAccountId, uint64_t subAccountId);
     void                updateActivePlanetForSuper(uint64_t activePlanetAccountId);
 
+    //round相关
     inline uint64_t     currentRound();
     inline bool         isRoundFull();
     inline bool         isRoundFinish();
-    inline void         getCurrentRoundBigPlanets(vector<uint64_t> &bigPlanets);
-    inline uint64_t     getCurrentRoundSuperStars(vector<SuperStar> &superStars);
     void                createNewRound();
+    inline void         roundFinishCheck();
+    inline void         endRoundCheck(bool check, const std::string &msg);
 
-    inline bool         isInviteTimeout(uint64_t &lastBigPlanet);
+    //投票相关
+    inline uint64_t     createVote(uint64_t sender, uint64_t super_id, uint64_t voteCount);
+    void                cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amount);
     inline uint64_t     updateAccountVote(uint64_t sender, uint64_t voteCount);
 
-    inline void         createStaking(uint64_t sender, uint64_t amount, uint64_t to, uint64_t reason, uint64_t index = 0);
-    inline void         buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason);
-    inline void         buildDepositMsg(uint64_t amount, bool equalCheck, std::string &msg);
-    inline void         distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);
-
-    void                calcBudgets();
-    void                chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
-
+    //common
+    inline bool         isInit();
+    inline void         baseCheck();
     inline uint64_t     checkSender();
     inline bool         isUpgrading();
-    void                cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amount);
-
-    inline void         baseCheck();
-    inline void         roundFinishCheck();
     inline uint64_t     assetEqualCheck(uint64_t expectedAmount);
     inline uint64_t     assetLargerCheck(uint64_t expectedAmount);
-
-    inline uint64_t     superStarCheck(const std::string &superStarAccount);
-    inline void         progress(uint64_t ramPayer);
-    inline void         endRoundCheck(bool check, const std::string &msg);
+    inline void         buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason);
+    inline void         buildDepositMsg(uint64_t amount, bool equalCheck, std::string &msg);
+    inline bool         isInviteTimeout(uint64_t &lastBigPlanet);
+    inline void         createStaking(uint64_t sender, uint64_t amount, uint64_t to, uint64_t reason, uint64_t index = 0);
     inline void         createReward(uint64_t feePayer, uint64_t round, uint64_t from, uint64_t to, uint64_t amount, uint8_t type);
+    inline void         distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);
+    void                calcBudgets();
+    inline void         progress(uint64_t ramPayer);
 
 private:
     struct budgetstate

@@ -677,7 +677,7 @@ void starplan::activateInvite(uint64_t sender)
     auto invite_idx = tbinvites.get_index<N(byinvitee)>();
     auto invite_itor = invite_idx.find(sender);
     if (invite_itor != invite_idx.end()) {
-        invite_idx.modify(invite_itor, sender, [&](auto &obj) {
+        invite_idx.modify(invite_itor, sender, [](auto &obj) {
             obj.enabled = true;
         });
     }
