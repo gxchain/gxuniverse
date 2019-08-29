@@ -28,13 +28,11 @@ const uint64_t      MAX_MEMO_LENGTH         = 15;                       //最大
 const uint64_t      ACTIVE_PROMOT_INVITES   = 5;                        //活力星需要邀请成功大行星个数(5)
 const uint64_t      RANDOM_COUNT            = 10;                       //随机的大行星个数（10）
 const uint64_t      COUNT_OF_TRAVERSAL_PER  = 30;                       //遍历计数（30)
-const uint64_t      MAX_SUPERSTAR_NUMBER    = 50;                       //超级星最大数量（50）
 
 const uint64_t      ADMIN_ID                = 426;                      //admin账户id
 const uint64_t      DEFAULT_INVITER         = 0;                        //默认邀请账户id//TODO blockcity account id
-const uint64_t      SUPER_STAR_LIMIT        = 50;                       //超级星最大数量（50）
 const uint64_t      BIG_ROUND_SIZE          = 50;                       //一个大轮包含小轮数（50）
-const uint64_t      ROUND_AMOUNT            = 2000 * PRECISION;         //每一小轮的底池资产数（20GXC）
+const uint64_t      ROUND_AMOUNT            = 2000 * PRECISION;         //每一小轮的底池资产数（2000GXC）
 const uint64_t      ROUND_SIZE              = 100;                      //每一轮的参与人数（100）
 const uint64_t      X                       = 20000 * PRECISION;        //成为超级星需要抵押的资产数（20000GXC）
 const uint64_t      Y                       = 100 * PRECISION;          //成为小行星需要抵押的资产数（100GXC）
@@ -490,76 +488,70 @@ inline bool isInviteTimeout(uint64_t sender);
 
 ### 超级星相关
 
-#### 8. 超级星是否可用
+#### 1. 超级星是否可用
 
 ``` c++
 inline bool superstarEnabled(uint64_t superId);
 ```
 
-#### 9. 超级星是否存在
+#### 2. 超级星是否存在
 
 ``` c++
 inline bool superstarExist(uint64_t superId);
 ```
 
-#### 10. 添加超级星
+#### 3. 添加超级星
 
 ``` c++
 inline void createSuperstar(uint64_t sender, const std::string &memo);
 ```
 
-#### 11. 启用超级星
+#### 4. 启用超级星
 
 ``` c++
 //适用于超级星解除抵押之后，再激活的状态
 inline void enableSuperstar(uint64_t superId, const std::string &memo);
 ```
 
-#### 12. 禁用超级星
+#### 5. 禁用超级星
 
 ``` c++
 inline void disableSuperStar(uint64_t superId);
 ```
 
-#### 13. 给超级星投票
+#### 6. 给超级星投票
 
 ``` c++
 inline uint64_t createVote(uint64_t sender, uint64_t super_id, uint64_t voteCount);
 ```
 
-#### 14. 更新超级星得票数
+#### 7. 更新超级星得票数
 
 ```c++
 inline void updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
 ```
 
-#### 15. 超级星检查
+#### 8. 超级星检查
 
 ```c++
 inline uint64_t superStarCheck(const std::string &superStarAccount);
 ```
 
-#### 16. 获取当前轮超级星
+#### 9. 获取当前轮超级星
 
 ``` c++
 inline uint64_t getCurrentRoundSuperStars(vector<SuperStar> &superStars);
 ```
 
-#### 17. 检查超级星数量是否超过最大限制50
-
-```c++
-inline void superstarMax50Check();
-```
-
 ### 小行星相关
 
-#### 18. 是否已经是小行星
+#### 1. 是否已经是小行星
 
 ``` c++
 inline bool isSmallPlanet(uint64_t sender);
 ```
 
-#### 19. 添加小行星
+#### 2. 添加小行星
 
 ``` c++
 inline void createSmallPlanet(uint64_t sender);
@@ -567,19 +559,19 @@ inline void createSmallPlanet(uint64_t sender);
 
 ### 大行星相关
 
-#### 20. 是否已经是大行星
+#### 1. 是否已经是大行星
 
 ``` c++
 inline bool isBigPlanet(uint64_t sender);
 ```
 
-#### 21. 添加大行星
+#### 2. 添加大行星
 
 ``` c++
 inline void createBigPlanet(uint64_t sender);
 ```
 
-#### 22.随机选择最多十个大行星
+#### 3.随机选择最多十个大行星
 
 ``` c++
 void chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choosed);
@@ -587,7 +579,7 @@ void chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choos
 
 ### 活力星相关
 
-#### 23. 升级大行星或者自邀请时，更新活力星信息
+#### 1. 升级大行星或者自邀请时，更新活力星信息
 
 - 大行星邀请满5人后，可以升级为活力星
 - 活力星的权重初始为1，即晋升的那一小轮，按照100%的权重分发，之后每一小轮权重降为原来的0.85，直至权重为0，权重取3位小数
@@ -597,7 +589,7 @@ void chooseBigPlanet(const vector<uint64_t> &bigPlanets, vector<uint64_t> &choos
 void updateActivePlanet(uint64_t activePlanetAccountId,uint64_t subAccountId);
 ```
 
-#### 24. 升级超级星时，更新活力星信息
+#### 2. 升级超级星时，更新活力星信息
 
 ``` c++
 void updateActivePlanetForSuper(uint64_t activePlanetAccountId);
@@ -605,37 +597,37 @@ void updateActivePlanetForSuper(uint64_t activePlanetAccountId);
 
 ### Round 相关
 
-#### 25. 获取当前轮数
+#### 1. 获取当前轮数
 
 ``` c++
 inline uint64_t currentRound();
 ```
 
-#### 26. 是否满足最大邀请数
+#### 2. 是否满足最大邀请数
 
 ``` c++
 inline bool isRoundFull(uint64_t sender);
 ```
 
-#### 27. 获当前轮是否结束
+#### 3. 获当前轮是否结束
 
 ``` c++
 inline bool isRoundFinish();
 ```
 
-#### 28. 创建新的一轮
+#### 4. 创建新的一轮
 
 ``` c++
 void createNewRound();
 ```
 
-#### 29. 检查当前轮是否完成
+#### 5. 检查当前轮是否完成
 
 ```c++
 inline void roundFinishCheck();
 ```
 
-#### 30. 结束当前轮，计算奖励时的检查
+#### 6. 结束当前轮，计算奖励时的检查
 
 ```c++
 inline void endRoundCheck(bool check,const std::string &msg);
@@ -643,13 +635,13 @@ inline void endRoundCheck(bool check,const std::string &msg);
 
 ### 投票相关
 
-#### 31. 解除抵押时，取消投票项
+#### 1. 解除抵押时，取消投票项
 
 ```c++
 void cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount);;
 ```
 
-#### 32. 更新账户投票数
+#### 2. 更新账户投票数
 
 ``` c++
 inline uint64_t updateAccountVote(uint64_t sender,uint64_t voteCount);
@@ -657,37 +649,37 @@ inline uint64_t updateAccountVote(uint64_t sender,uint64_t voteCount);
 
 ### 其他
 
-#### 33. 是否已经初始化
+#### 1. 是否已经初始化
 
 ``` c++
 inline bool isInit();
 ```
 
-#### 34. 创建抵押项
+#### 2. 创建抵押项
 
 ``` c++
 inline void createStaking(uint64_t sender,uint64_t amount,uint64_t to,uint64_t reason,uint64_t index=0);
 ```
 
-#### 35. 构建发奖原因字符串
+#### 3. 构建发奖原因字符串
 
 ``` c++
 inline void buildRewardReason(uint64_t invitee, uint64_t inviter, uint64_t rewardType, std::string &rewardReason);
 ```
 
-#### 36. 构建充值日志字符串
+#### 4. 构建充值日志字符串
 
 ``` c++
 inline void buildDepositMsg(uint64_t amount, bool equalCheck, std::string &msg);
 ```
 
-#### 37. 分发大行星和自邀请消耗的3个GXC
+#### 5. 分发大行星和自邀请消耗的3个GXC
 
 ``` c++
 inline void distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType);
 ```
 
-#### 38. 计算应发奖励
+#### 6. 计算应发奖励
 
 在当前轮结束时，需要计算当前轮奖励数额：
 - 每一轮默认底池为default_amount = 2000GXC（不包含邀请增加的部分）
@@ -698,49 +690,49 @@ inline void distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, 
 void calcBudgets();
 ```
 
-#### 39. 检查调用者
+#### 7. 检查调用者
 
 ``` c++
 inline uint64_t checkSender();;
 ```
 
-#### 40. 检查合约是否升级
+#### 8. 检查合约是否升级
 
 ``` c++
 inline bool isUpgrading();
 ```
 
-#### 41. 调用基本检查
+#### 9. 调用基本检查
 
 ```c++
 inline void baseCheck();
 ```
 
-#### 42. 验证充值金额是否等于某个值
+#### 10. 验证充值金额是否等于某个值
 
 ```c++
 inline uint64_t assetEqualCheck(uint64_t expectedAmount);
 ```
 
-#### 43. 验证充值金额是否不小于某个值
+#### 11. 验证充值金额是否不小于某个值
 
 ```c++
 inline uint64_t assetLargerCheck(uint64_t expectedAmount);
 ```
 
-#### 44. 有效邀请数自增1，满一百结束当前轮
+#### 12. 有效邀请数自增1，满一百结束当前轮
 
 ```c++
 inline void progress(uint64_t ramPayer);
 ```
 
-#### 45. 账户检测
+#### 13. 账户检测
 
 ```c++
 inline uint64_t accountCheck(const std::string &account);
 ```
 
-#### 46. 生成奖励
+#### 14. 生成奖励
 
 ```c++
  inline void createReward(uint64_t feePayer, uint64_t round, uint64_t from, uint64_t to, uint64_t amount, uint8_t type);
