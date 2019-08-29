@@ -57,6 +57,7 @@ const uint64_t      REWARD_DELAY_TIME       = 60 * 20;                  //延迟
 //////////////////////// common ////////////////////////
 const uint64_t      MAX_ROUND_REWARD        = ROUND_AMOUNT + ROUND_SIZE * Z1;
 const uint64_t      MAX_USER_REWARD         = MAX_ROUND_REWARD * ACTIVE_PERCENT / 100 * 1;//只有一个活力星的时候
+const uint64_t      MAX_VOTE_CLAIM_COUNT    = 20000 * PRECISION;
 
 #define STAKING_TYPE_TO_SUPER       0
 #define STAKING_TYPE_VOTE           1

@@ -52,6 +52,7 @@ void starplan::vote(const std::string &inviter, const std::string &superstar)
     roundFinishCheck();
 
     uint64_t amount = assetLargerCheck(MIN_VOTE_AMOUNT);
+    graphene_assert(amount <= MAX_VOTE_CLAIM_COUNT, MSG_MAX_VOTE_COUNT);          // 为了安全，vote最多投票20000 GXC
 
     uint64_t sender_id = get_trx_origin();
     uint64_t inviter_id = inviterCheck(inviter, sender_id);
@@ -168,6 +169,7 @@ void starplan::claim(uint64_t stakingid)
     graphene_assert(itor != tbstakes.end(), MSG_MORTGAGE_NOT_FOUND);
     graphene_assert(get_head_block_time() > itor->end_time, MSG_MORTGAGE_LOCKED);
     graphene_assert(itor->claimed == false, MSG_MORTGAGE_CLAIMED);
+    graphene_assert(itor->amount <= MAX_VOTE_CLAIM_COUNT, MSG_MAX_VOTE_COUNT);          // 为了安全，claim最多提现20000 GXC
 
     inline_transfer(_self, itor->account, CORE_ASSET_ID, itor->amount, LOG_CLAIM, strlen(LOG_CLAIM));
 

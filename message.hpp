@@ -48,6 +48,7 @@ const char* MSG_ACTIVE_PLANET_NOT_FOUND = "Error: Active planet not found";
 const char* MSG_BLOCK_TIME_ERR = "Error: block time err";
 const char* MSG_CREATE_TIME_ERR = "Error: Item creation time is greater than the current time";
 const char* MSG_CACL_POOL_BUDGET_ERR = "Error: Calculate the pool budget error";
+const char* MSG_MAX_VOTE_COUNT = "Error: Vote and claim count must be no greater than 20000 GXC";
 const char* REWARD_ID_ERR_MSG = "Error: Reward id must larger than 0";
 const char* REWARD_ZERO_ERR_MSG = "Error: Reward amount is 0";
 const char* USER_REWARD_TOO_HIGH_ERR_MSG = "Error: User reward is too high ";
