@@ -792,9 +792,9 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t invit
                 if (DEFAULT_INVITER != activePlanetAccountId) { //默认账户权重总是0，不可以主动参与游戏，不参与活力星奖励的瓜分，但是可以接受邀请奖励；20190823和pm确认
                     obj.weight += WEIGHT;
                     is_add_weight = true;
+                    obj.trave_index = obj.trave_index | 0x0100000000000000;
                 }
                 obj.invitees.clear();
-                obj.trave_index = obj.trave_index | 0x0100000000000000;
             }
         });
     } else {
