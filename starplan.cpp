@@ -132,7 +132,6 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     //////////////////////////////// 校验 ////////////////////////////////
     baseCheck();
     roundFinishCheck();
-    superstarMax50Check();
     uint64_t amount = assetEqualCheck(X);
 
     uint64_t sender_id = get_trx_origin();
@@ -539,15 +538,6 @@ uint64_t starplan::accountCheck(const std::string &account)
     int64_t acc_id = get_account_id(account.c_str(), account.length());
     graphene_assert(-1 != acc_id, MSG_CHECK_ACCOUNT_EXIST);
     return acc_id;
-}
-
-void starplan::superstarMax50Check()
-{
-    auto itor = tbsuperstars.end();
-    if (itor == tbsuperstars.begin()) return;
-    itor--;
-    //TODO 90天以后部分超级星claim之后不能够按照这个条件来判断
-    graphene_assert(itor->index < MAX_SUPERSTAR_NUMBER - 1, MSG_CHECK_MAX_SUPERSTAR_50);
 }
 
 void starplan::createSuperstar(uint64_t accountId, const std::string &memo)

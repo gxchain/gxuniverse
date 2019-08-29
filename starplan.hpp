@@ -82,7 +82,6 @@ private:
     //超级星相关
     inline bool         superstarEnabled(uint64_t superId);
     inline bool         superstarExist(uint64_t superId);
-    inline void         superstarMax50Check();
     inline void         createSuperstar(uint64_t sender, const std::string &memo);
     inline void         enableSuperstar(uint64_t superId, const std::string &memo);
     inline void         disableSuperStar(uint64_t superId);
