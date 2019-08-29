@@ -289,7 +289,7 @@ void starplan::calcbigrwd()
     uint64_t lastBigPlanet = 0;
     uint64_t actualRewardAmount = 0;
 
-    if (isInviteTimeout(lastBigPlanet)) {    // 如果超过12小时没有新的invitee则所有奖励归当轮最后一个大行星
+    if (!isRoundFull() && isInviteTimeout(lastBigPlanet)) {             // 如果参与人数未满，并且超过12小时没有新的invitee则所有奖励归当轮最后一个大行星
         createReward(sender_id, curRound.round, _self, lastBigPlanet, curRound.bstate.bigPlanetBudget, RWD_TYPE_TIMEOUT);
         graphene_assert(curRound.bstate.bigPlanetBudget <= MAX_USER_REWARD, MSG_USER_REWARD_TOO_MUCH);
         actualRewardAmount = curRound.bstate.bigPlanetBudget;
