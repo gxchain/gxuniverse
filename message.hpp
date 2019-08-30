@@ -45,6 +45,7 @@ const char* MSG_ACTIVE_PLANET_NOT_FOUND = "Error: Active planet not found";
 const char* MSG_BLOCK_TIME_ERR = "Error: block time err";
 const char* MSG_CREATE_TIME_ERR = "Error: Item creation time is greater than the current time";
 const char* MSG_CACL_POOL_BUDGET_ERR = "Error: Calculate the pool budget error";
-const char* MSG_MAX_VOTE_COUNT = "Error: Vote and claim count must be no greater than 20000 GXC";
+const char* MSG_MAX_VOTE_AMOUNT = "Error: Vote amount can not greate than 20000 GXC";
+const char* MSG_MAX_CLAIM_AMOUNT = "Error: Claim amount can not greate than 20000 GXC";
 
 const char* LOG_CLAIM = "Log: Claim staking balances";
