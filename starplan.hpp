@@ -12,19 +12,6 @@
 
 using namespace graphene;
 
-struct reward
-{
-    uint64_t to;
-    uint64_t amount;
-    uint64_t type;
-};
-
-struct ActivePlanet
-{
-    uint64_t id;
-    uint64_t weight;
-};
-
 struct SuperStar
 {
     uint64_t id;
