@@ -392,7 +392,7 @@ private:
         GRAPHENE_SERIALIZE(tbreward, (index)(round)(from)(to)(amount)(type)(create_time)(reward_time)(rewarded)(reserve1)(reserve2))
     };
     typedef multi_index<N(tbreward), tbreward,
-                indexed_by<N(byaccid), const_mem_fun<tbreward, uint64_t, &tbreward::by_round>>,
+                indexed_by<N(byround), const_mem_fun<tbreward, uint64_t, &tbreward::by_round>>,
                 indexed_by<N(byinviteid), const_mem_fun<tbreward, uint64_t, &tbreward::by_acc_id>>,
                 indexed_by<N(byflag), const_mem_fun<tbreward, uint64_t, &tbreward::by_flag>>
             > tbreward_index;
