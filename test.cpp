@@ -1,5 +1,40 @@
 #include "starplan.hpp"
 
+void starplan::small(uint64_t count)
+{
+    /* 
+   for(auto i = 0; i < 100; i++){
+        tbbigplanets.emplace(get_trx_sender(), [&](auto &obj) {
+            obj.index           = tbbigplanets.available_primary_key();
+            obj.id              = ((roundnum << 8)) | i + 11;                                       // account id > 10
+            obj.create_time     = get_head_block_time();
+            obj.create_round    = roundnum;
+        });
+    } */
+}
+void starplan::bigcount(uint64_t count)
+{
+    for(auto i = 0; i < count; i++){
+        auto sender_id = ((currentRound() << 8)) | i + 11 ;
+        createBigPlanet(sender_id);
+        distributeInviteRewards(sender_id, sender_id + 100, RWD_TYPE_INVITE);
+        updateActivePlanet(sender_id + 100, sender_id);
+        progress(sender_id);
+        if(lastRound().current_round_invites >= 100) break;
+    } 
+}
+void starplan::bigfull()
+{
+    for(auto i = 0; i < 100; i++){
+        auto sender_id = ((currentRound() << 8)) | i + 11 ;
+        createBigPlanet(sender_id);
+
+        distributeInviteRewards(sender_id, sender_id + 100, RWD_TYPE_INVITE);
+        updateActivePlanet(sender_id + 100, sender_id);
+        progress(sender_id);
+        if(lastRound().current_round_invites >= 100) break;
+    } 
+}
 void starplan::createbigs(uint64_t roundnum)
 {
     for(auto i = 0; i < 100; i++){

@@ -57,10 +57,15 @@ public:
     ACTION              newround();
 
     //-------------------------------------------Test:性能测试--------------------------------------
+
+    PAYABLE             small(uint64_t count);                  //批量投票
+    PAYABLE             bigcount(uint64_t count);               //创建指定数量大行星
+    PAYABLE             bigfull();                              //创建满额大行星，创建到当前轮结束为止
+
     ACTION              createbigs(uint64_t roundnum);          //批量创建大行星，每次1轮，一轮100条，共创建20轮
-    ACTION              createacts1(uint64_t idindex);         //批量创建不带权重的大行星，共创建1000条
-    ACTION              createacts2(uint64_t idindex);         //批量创建带权重的活力星，共创建1000条
-    ACTION              createsups(uint64_t count);            //批量创建超级星，共创建50条
+    ACTION              createacts1(uint64_t idindex);          //批量创建不带权重的大行星，共创建1000条
+    ACTION              createacts2(uint64_t idindex);          //批量创建带权重的活力星，共创建1000条
+    ACTION              createsups(uint64_t count);             //批量创建超级星，共创建50条
     ACTION              withdraw(uint64_t amount);              //提取测试币
     ACTION              testuptobig(uint64_t count);
     //---------------------------------------------------------------------------------------------
@@ -425,6 +430,6 @@ private:
     inline const struct starplan::tbcurbigplan& curRoundBigPlanets();
 };
 
-GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround)(createbigs)(createacts1)(createacts2)(createsups)(withdraw)(testuptobig))
+GRAPHENE_ABI(starplan, (init)(vote)(selfactivate)(uptobig)(uptosuper)(claim)(upgrade)(updatememo)(getbudget)(calcrdmrwd)(calcbigrwd)(calcactrwd)(calcactrwd1)(calcsuprwd)(dorwd)(newround)(small)(bigcount)(bigfull)(createbigs)(createacts1)(createacts2)(createsups)(withdraw)(testuptobig))
 
 

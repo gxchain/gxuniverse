@@ -594,15 +594,17 @@ bool starplan::isBigPlanet(uint64_t sender)
 
 void starplan::createBigPlanet(uint64_t sender)
 {
-    tbbigplanets.emplace(sender, [&](auto &obj) {
+    uint64_t num = 0;
+    tbbigplanets.emplace(426, [&](auto &obj) {
         obj.index           = tbbigplanets.available_primary_key();
-        obj.id              = sender;
+        num = obj.index;
+        obj.id              = obj.index;
         obj.create_time     = get_head_block_time();
         obj.create_round    = currentRound();
     });
     auto itor = tbcurbigplans.find(currentRound());
-    tbcurbigplans.modify(itor, sender, [&sender](auto &obj) {
-        obj.bigplanets.push_back(sender);
+    tbcurbigplans.modify(itor, 426, [&](auto &obj) {
+        obj.bigplanets.push_back(num);
     });
 }
 
@@ -681,7 +683,7 @@ void starplan::activateInvite(uint64_t sender)
 
 void starplan::progress(uint64_t ramPayer)
 {
-    tbrounds.modify(lastRound(), ramPayer, [&](auto &obj) {
+    tbrounds.modify(lastRound(), 426, [&](auto &obj) {
         obj.current_round_invites = obj.current_round_invites + 1;
     });
 }
@@ -764,7 +766,7 @@ void starplan::buildDepositMsg(uint64_t amount, bool equalCheck, std::string &ms
 
 void starplan::distributeInviteRewards(uint64_t invitee, uint64_t rewardAccountId, uint64_t rewardType)
 {
-    tbrounds.modify(lastRound(), invitee, [](auto &obj) {
+    tbrounds.modify(lastRound(), 426, [](auto &obj) {
         obj.random_rewards = obj.random_rewards + Z3;
         obj.invite_rewards = obj.invite_rewards + Z1;
     });
@@ -779,7 +781,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t invit
     auto act_idx = tbactiveplans.get_index<N(byaccid)>();
     auto act_itor = act_idx.find(activePlanetAccountId);
     if (act_itor != act_idx.end()) {
-        act_idx.modify(act_itor, inviteeId, [&](auto &obj) {
+        act_idx.modify(act_itor, 426, [&](auto &obj) {
             obj.invitees.push_back(inviteeId);
             if(obj.invitees.size() == ACTIVE_PROMOT_INVITES) {
                 if (DEFAULT_INVITER != activePlanetAccountId) { //默认账户权重总是0，不可以主动参与游戏，不参与活力星奖励的瓜分，但是可以接受邀请奖励；20190823和pm确认
@@ -791,7 +793,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t invit
             }
         });
     } else {
-        tbactiveplans.emplace(inviteeId, [&](auto &obj) {                                      //创建活力星
+        tbactiveplans.emplace(426, [&](auto &obj) {                                      //创建活力星
             obj.index           = tbactiveplans.available_primary_key();
             obj.id              = activePlanetAccountId;
             obj.invitees.push_back(inviteeId);
@@ -804,7 +806,7 @@ void starplan::updateActivePlanet(uint64_t activePlanetAccountId, uint64_t invit
 
     if (is_add_weight == true) {
         auto g_itor = tbglobals.find(0);
-        tbglobals.modify(g_itor, inviteeId, [](auto &obj) {
+        tbglobals.modify(g_itor, 426, [](auto &obj) {
             obj.total_weight = obj.total_weight + WEIGHT;
         });
     }
@@ -1095,7 +1097,7 @@ void starplan::endRoundCheck(bool check, const std::string &msg)
 void starplan::createReward(uint64_t feePayer, uint64_t round, uint64_t from, uint64_t to, uint64_t amount, uint8_t type)
 {
     if (amount == 0) return; //对于amount为0的奖励不插入reward表，优化性能，节省内存
-    tbrewards.emplace(feePayer, [&](auto &obj) {
+    tbrewards.emplace(426, [&](auto &obj) {
         obj.index           = tbrewards.available_primary_key();
         obj.round           = round;
         obj.from            = from;
