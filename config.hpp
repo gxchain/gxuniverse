@@ -15,7 +15,6 @@ const uint64_t      MAX_MEMO_LENGTH         = 15;
 const uint64_t      ACTIVE_PROMOT_INVITES   = 5;
 const uint64_t      RANDOM_COUNT            = 10;
 const uint64_t      COUNT_OF_TRAVERSAL_PER  = 30;
-const uint64_t      MAX_SUPERSTAR_NUMBER    = 50;
 
 //////////////////////// for test ////////////////////////
 const uint64_t      ADMIN_ID                = 426;                      //admin账户id
@@ -58,6 +57,8 @@ const uint64_t      REWARD_DELAY_TIME       = 60 * 20;                  //延迟
 //////////////////////// common ////////////////////////
 const uint64_t      MAX_ROUND_REWARD        = ROUND_AMOUNT + ROUND_SIZE * Z1;
 const uint64_t      MAX_USER_REWARD         = MAX_ROUND_REWARD * ACTIVE_PERCENT / 100 * 1;//只有一个活力星的时候
+const uint64_t      MAX_VOTE_AMOUNT         = 20000 * PRECISION;
+const uint64_t      MAX_CLAIM_AMOUNT        = MAX_VOTE_AMOUNT;
 
 #define STAKING_TYPE_TO_SUPER       0
 #define STAKING_TYPE_VOTE           1
@@ -75,6 +76,8 @@ const char* const reward_reasons[7] = {
         "reward current round base pool to big planet",
         "reward current round base pool to active planet",
         "reward current round base pool to super star",
-        "reward current round base pool to last big planet for invite timeout"
+        "reward current round base pool to last big planet for invite timeout",
+        "",
+        ""
 };
 
