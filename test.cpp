@@ -75,7 +75,7 @@ void starplan::createacts2(uint64_t idindex)
             obj.create_time = get_head_block_time();
             obj.create_round = 0;
             obj.weight = i * 100 + 100;
-            total_weight += i*100;
+            total_weight += i * 100 + 100;
             obj.trave_index = activePlanetAccountId | 0x0100000000000000;
         });
     }
