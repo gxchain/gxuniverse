@@ -847,7 +847,7 @@ void starplan::calcBudgets()
     uint64_t curRoundElapseTime = now - round.start_time;
 
     if(curRoundElapseTime > DECAY_TIME){                            //开奖时超过DECAY_TIME时间，奖励进行衰减，
-        uint64_t decayAmountUnit = (currentRound() % BIG_ROUND_SIZE + 1) * PRECISION;       //每次衰减奖励数量
+        uint64_t decayAmountUnit = (currentRound() % BIG_ROUND_SIZE) * PRECISION;           //每次衰减奖励数量 fix: 衰减单位从1-50，修改为0-49
         uint64_t decayCount = (curRoundElapseTime - DECAY_TIME) / DECAY_DURATION;           //衰减次数
         decayCount += (curRoundElapseTime - DECAY_TIME) % DECAY_DURATION > 0 ? 1 : 0;       //存在余数，衰减次数+1
         decayCount = decayCount > MAX_DECAY_COUNT ? MAX_DECAY_COUNT : decayCount;           //最多衰减 MAX_DECAY_COUNT次
