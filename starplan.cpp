@@ -179,7 +179,7 @@ void starplan::claim(uint64_t stakingid)
     });
 
     if (itor->staking_type == STAKING_TYPE_VOTE || itor->staking_type == STAKING_TYPE_SELF_ACTIVATE) {
-        cancelVote(itor->vote_index, itor->staking_to, itor->amount);
+        cancelVote(itor->vote_index, itor->staking_to);
     } else if (itor->staking_type == STAKING_TYPE_TO_SUPER) {
         disableSuperStar(itor->staking_to);
     } else {
@@ -981,7 +981,7 @@ bool starplan::isUpgrading()
     return itor->upgrading > 0;
 }
 
-void starplan::cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amount)
+void starplan::cancelVote(uint64_t voteIndex, uint64_t superAccId)
 {
     // 修改投票表
     auto vote_itor = tbvotes.find(voteIndex);
@@ -994,9 +994,9 @@ void starplan::cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amou
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superAccId);
     graphene_assert(sup_itor != sup_idx.end(), MSG_INVALID_ITOR);
-    sup_idx.modify(sup_itor, get_trx_sender(), [&amount](auto &obj) {
-        graphene_assert(obj.vote_num >= amount, MSG_INVALID_VOTE_MODIFY);
-        obj.vote_num -= amount;
+    sup_idx.modify(sup_itor, get_trx_sender(), [&(vote_itor->staking_amount)](auto &obj) {
+        graphene_assert(obj.vote_num >= vote_itor->staking_amount, MSG_INVALID_VOTE_MODIFY);
+        obj.vote_num -= vote_itor->staking_amount;
     });
 }
 

@@ -638,7 +638,7 @@ inline void endRoundCheck(bool check,const std::string &msg);
 #### 1. 解除抵押时，取消投票项
 
 ```c++
-void cancelVote(uint64_t voteIndex,uint64_t superAccId,uint64_t amount);;
+void cancelVote(uint64_t voteIndex,uint64_t superAccId);
 ```
 
 #### 2. 更新账户投票数

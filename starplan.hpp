@@ -99,7 +99,7 @@ private:
 
     //投票相关
     inline uint64_t     createVote(uint64_t sender, uint64_t super_id, uint64_t voteCount);
-    void                cancelVote(uint64_t voteIndex, uint64_t superAccId, uint64_t amount);
+    void                cancelVote(uint64_t voteIndex, uint64_t superAccId);
     inline uint64_t     updateAccountVote(uint64_t sender, uint64_t voteCount);
 
     //common
