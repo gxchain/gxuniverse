@@ -461,17 +461,20 @@ void starplan::dorwd(uint64_t limit)
 
     uint64_t now = get_head_block_time();
     for (auto i = 0; i < limit; i++) {
-        if (itor->amount == 0) continue;
+        if (itor == rwd_idx.end() || itor->rewarded == true) break;     // 奖励发放完了，或者已经没有未发放的奖励，退出循环                              
         graphene_assert(now >= itor->create_time,MSG_CREATE_TIME_ERR);
-        if (now - itor->create_time < REWARD_DELAY_TIME) continue;
-        if (itor == rwd_idx.end() || itor->rewarded == true) break;
-
-        if (itor->type == RWD_TYPE_INVITE || itor->type == RWD_TYPE_SELF_ACTIVATE) {
-            std::string rewardReason;
-            buildRewardReason(itor->from, itor->to, itor->type, rewardReason);
-            inline_transfer(_self, itor->to, CORE_ASSET_ID, itor->amount, rewardReason.c_str(), rewardReason.length());
-        } else {
-            inline_transfer(_self, itor->to, CORE_ASSET_ID, itor->amount, reward_reasons[itor->type], strlen(reward_reasons[itor->type]));
+        if (now - itor->create_time < REWARD_DELAY_TIME){               // 奖励都是延迟发放的，未到发放时间则continue
+            itor++;
+            continue;
+        } 
+        if(itor->amount != 0){                                          // 如果某项奖励amount为0，则不调用inline_transfer
+            if (itor->type == RWD_TYPE_INVITE || itor->type == RWD_TYPE_SELF_ACTIVATE) {
+                std::string rewardReason;
+                buildRewardReason(itor->from, itor->to, itor->type, rewardReason);
+                inline_transfer(_self, itor->to, CORE_ASSET_ID, itor->amount, rewardReason.c_str(), rewardReason.length());
+            } else {
+                inline_transfer(_self, itor->to, CORE_ASSET_ID, itor->amount, reward_reasons[itor->type], strlen(reward_reasons[itor->type]));
+            }
         }
 
         auto pri_itor = tbrewards.find(itor->index);
