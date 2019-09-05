@@ -994,7 +994,7 @@ void starplan::cancelVote(uint64_t voteIndex, uint64_t superAccId)
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superAccId);
     graphene_assert(sup_itor != sup_idx.end(), MSG_INVALID_ITOR);
-    sup_idx.modify(sup_itor, get_trx_sender(), [&(vote_itor->staking_amount)](auto &obj) {
+    sup_idx.modify(sup_itor, get_trx_sender(), [&vote_itor](auto &obj) {
         graphene_assert(obj.vote_num >= vote_itor->staking_amount, MSG_INVALID_VOTE_MODIFY);
         obj.vote_num -= vote_itor->staking_amount;
     });
