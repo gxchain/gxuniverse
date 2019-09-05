@@ -344,7 +344,7 @@ void starplan::calcactrwd()
             auto pri_itor = tbactiveplans.find(itor->index);
             graphene_assert(pri_itor != tbactiveplans.end(), MSG_ACTIVE_PLANET_NOT_FOUND);
             itor++, count++;
-            tbactiveplans.modify(pri_itor, get_trx_sender(), [&](auto &obj) {                           //修改活力星的权重
+            tbactiveplans.modify(pri_itor, sender_id, [&](auto &obj) {                           //修改活力星的权重
                 uint64_t new_weight = obj.weight * B_DECAY_PERCENT / 100;
                 obj.weight = new_weight;
                 if(obj.weight == 0) obj.trave_index = obj.trave_index & 0xF0FFFFFFFFFFFFFF;
