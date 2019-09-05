@@ -81,7 +81,7 @@ void starplan::selfactivate(const std::string &superstar)
     assetEqualCheck(Z + Z1 + Z2 + Z3);
 
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(isBigPlanet(sender_id) || superstarEnabled(sender_id), MSG_SELF_ACTIVATE_AUTH_ERR);
+    graphene_assert(isBigPlanet(sender_id) || isSuperstarEnabled(sender_id), MSG_SELF_ACTIVATE_AUTH_ERR);
 
     uint64_t super_id = superStarCheck(superstar);
 
@@ -139,10 +139,10 @@ void starplan::uptosuper(const std::string &inviter, const std::string &memo)
     uint64_t inviter_id = inviterCheck(inviter, sender_id);
 
     graphene_assert(memo.size() <= MAX_MEMO_LENGTH, MSG_MEMO_TOO_LONG);
-    graphene_assert(!superstarEnabled(sender_id), MSG_ALREADY_SUPER_STAR);
+    graphene_assert(!isSuperstarEnabled(sender_id), MSG_ALREADY_SUPER_STAR);
 
     //////////////////////////////// 执行 ////////////////////////////////
-    if (superstarExist(sender_id)) {
+    if (isSuperstarExist(sender_id)) {
         enableSuperstar(sender_id, memo);
     } else {
         createSuperstar(sender_id, memo);
@@ -212,7 +212,7 @@ void starplan::updatememo(const std::string &memo)
 
     // 1、判断账户是否为超级星
     uint64_t sender_id = get_trx_origin();
-    graphene_assert(superstarEnabled(sender_id), MSG_SUPER_STAR_NOT_EXIST);
+    graphene_assert(isSuperstarEnabled(sender_id), MSG_SUPER_STAR_NOT_EXIST);
     // 2、更新账户memo
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(sender_id);
@@ -518,17 +518,17 @@ bool starplan::isInit()
 
 bool starplan::isInviter(uint64_t inviter_id)
 {
-    return superstarEnabled(inviter_id) || isBigPlanet(inviter_id);
+    return isSuperstarEnabled(inviter_id) || isBigPlanet(inviter_id);
 }
 
-bool starplan::superstarEnabled(uint64_t superId)
+bool starplan::isSuperstarEnabled(uint64_t superId)
 {
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superId);
     return sup_itor != sup_idx.end() && sup_itor->disabled == false;
 }
 
-bool starplan::superstarExist(uint64_t superId)
+bool starplan::isSuperstarExist(uint64_t superId)
 {
     auto sup_idx = tbsuperstars.get_index<N(byaccid)>();
     auto sup_itor = sup_idx.find(superId);
@@ -1058,7 +1058,7 @@ uint64_t starplan::inviterCheck(const std::string &inviter, uint64_t inviteeId)
 uint64_t starplan::superStarCheck(const std::string &superStarAccount)
 {
     uint64_t super_id = accountCheck(superStarAccount);
-    graphene_assert(superstarEnabled(super_id), MSG_SUPER_STAR_NOT_EXIST);
+    graphene_assert(isSuperstarEnabled(super_id), MSG_SUPER_STAR_NOT_EXIST);
     return super_id;
 }
 

@@ -491,13 +491,13 @@ inline bool isInviteTimeout(uint64_t sender);
 #### 1. 超级星是否可用
 
 ``` c++
-inline bool superstarEnabled(uint64_t superId);
+inline bool isSuperstarEnabled(uint64_t superId);
 ```
 
 #### 2. 超级星是否存在
 
 ``` c++
-inline bool superstarExist(uint64_t superId);
+inline bool isSuperstarExist(uint64_t superId);
 ```
 
 #### 3. 添加超级星
