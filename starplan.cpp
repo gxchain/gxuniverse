@@ -170,10 +170,12 @@ void starplan::claim(uint64_t stakingid)
     graphene_assert(get_head_block_time() > itor->end_time, MSG_MORTGAGE_LOCKED);
     graphene_assert(itor->claimed == false, MSG_MORTGAGE_CLAIMED);
     graphene_assert(itor->amount <= MAX_CLAIM_AMOUNT, MSG_MAX_CLAIM_AMOUNT);// 为了安全，claim最多提现20000 GXC
+    uint64_t sender_id = get_trx_sender();
+    graphene_assert(sender_id == ADMIN_ID || sender_id == itor->account, MSG_CLAIM_STAKING);
 
     inline_transfer(_self, itor->account, CORE_ASSET_ID, itor->amount, LOG_CLAIM, strlen(LOG_CLAIM));
 
-    tbstakes.modify(itor, get_trx_sender(), [&](auto &obj) {
+    tbstakes.modify(itor, sender_id, [&](auto &obj) {
         obj.claimed = true;
         obj.claim_time = get_head_block_time();
     });

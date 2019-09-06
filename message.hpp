@@ -47,5 +47,6 @@ const char* MSG_CREATE_TIME_ERR = "Error: Item creation time is greater than the
 const char* MSG_CACL_POOL_BUDGET_ERR = "Error: Calculate the pool budget error";
 const char* MSG_MAX_VOTE_AMOUNT = "Error: Vote amount can not greate than 20000 GXC";
 const char* MSG_MAX_CLAIM_AMOUNT = "Error: Claim amount can not greate than 20000 GXC";
+const char* MSG_CLAIM_STAKING = "Error: Can not claim assets from other account";
 
 const char* LOG_CLAIM = "Log: Claim staking balances";
