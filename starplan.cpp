@@ -422,7 +422,7 @@ void starplan::calcsuprwd()
     uint64_t sender_id = get_trx_sender();
 
     vector<SuperStar> superStars;
-    uint64_t totalVote = getCurrentRoundSuperStars(superStars);
+    uint64_t totalVote = getSuperStars(superStars);
     if (totalVote == 0) {
         tbrounds.modify(curRound, sender_id, [](auto &obj) {
             obj.rstate.superReady = true;
@@ -877,7 +877,7 @@ void starplan::calcBudgets()
     });
 }
 
-uint64_t starplan::getCurrentRoundSuperStars(vector<SuperStar> &superStars)
+uint64_t starplan::getSuperStars(vector<SuperStar> &superStars)
 {
     uint64_t total_votes = 0;
 

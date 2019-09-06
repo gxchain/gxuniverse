@@ -74,7 +74,7 @@ private:
     inline void         disableSuperStar(uint64_t superId);
     inline uint64_t     superStarCheck(const std::string &superStarAccount);
     inline void         updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t feePayer);
-    inline uint64_t     getCurrentRoundSuperStars(vector<SuperStar> &superStars);
+    inline uint64_t     getSuperStars(vector<SuperStar> &superStars);
 
     //小行星相关
     inline bool         isSmallPlanet(uint64_t sender);

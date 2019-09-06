@@ -537,10 +537,10 @@ inline void updateSuperstarVote(uint64_t account, uint64_t voteCount, uint64_t f
 inline uint64_t superStarCheck(const std::string &superStarAccount);
 ```
 
-#### 9. 获取当前轮超级星
+#### 9. 获取超级星
 
 ``` c++
-inline uint64_t getCurrentRoundSuperStars(vector<SuperStar> &superStars);
+inline uint64_t getSuperStars(vector<SuperStar> &superStars);
 ```
 
 ### 小行星相关
